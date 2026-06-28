@@ -89,7 +89,19 @@ export default function Navbar() {
 
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <Link href="/order">Order</Link>
+                <Link href="/dashboard">Dashboard</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <Link href="/admin">Admin</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <Link href="/cart">Cart</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
 
@@ -128,7 +140,8 @@ export default function Navbar() {
                   </div>
                 </div>
 
-                <Link href="/order">Order</Link>
+                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/cart">Cart</Link>
 
                 <hr />
 
