@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, Minus } from "lucide-react"
 import { useState } from "react"
+import Image from "next/image"
 
 type Dish = {
   id: number
@@ -20,9 +21,11 @@ export function DishCard({ dish }: { dish: Dish }) {
       
       {/* Image */}
       <div className="aspect-square w-full overflow-hidden relative">
-        <img
+        <Image
           src={dish.image}
           alt={dish.name}
+          width={300}
+          height={300}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
         <div className="absolute bottom-2 left-2 bg-white/90 dark:bg-black/80 rounded-full px-2 py-1">

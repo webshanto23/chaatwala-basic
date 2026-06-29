@@ -29,7 +29,7 @@ export function ContactSection() {
                 <div className="mb-2 flex flex-col gap-2">
                     <h1 className="font-bold text-xl md:text-2xl text-foreground">Get in touch</h1>{" "}
                     <p className="text-muted-foreground text-sm">
-                        Have a question, feedback, or want to collaborate? <br /> We&apos;d love
+                        Have a question, feedback, or want to collaborate? <br /> We wouldd love
                         to hear from you.
                     </p>
                 </div>

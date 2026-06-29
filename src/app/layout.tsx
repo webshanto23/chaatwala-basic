@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/shared/Navbar";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { Footer } from "@/components/shared/footer/Footer";
+import { CategoryFilter } from "@/components/shared/CategoryFilter";
+import { FloatingCart } from "@/components/shared/FloatingCart";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,9 +34,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <Navbar />
+        <CategoryFilter />
         <SearchBar />
         {children}
         <Footer />
+        <FloatingCart />
       </body>
     </html>
   );

@@ -1,9 +1,9 @@
 
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Menu } from "lucide-react";
+import { Logo } from "@/components/shared/footer/logo";
 
 import {
   NavigationMenu,
@@ -45,15 +45,9 @@ export default function Navbar() {
 
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <Image
-            src="/favicon.ico"
-            alt="Logo"
-            width={36}
-            height={36}
-            className="border-r pr-3 border-border"
-          />
           <Link href="/" className="font-heading font-bold text-lg text-primary hover:opacity-80 transition-opacity">
-            Chaatwala
+            <Logo className="h-9 md:h-8 w-auto" />
+
           </Link>
         </div>
 

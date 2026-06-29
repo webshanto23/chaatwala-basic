@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Minus } from "lucide-react"
 import { useState } from "react"
+import Image from "next/image"
 
 type FoodItem = {
   id: number
@@ -48,9 +49,11 @@ function FoodCard({ item }: { item: FoodItem }) {
     <div className="flex-shrink-0 w-48 sm:w-56 bg-background rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:scale-105 transition-all duration-200 snap-start">
       <div className="relative">
         <div className="aspect-square w-full overflow-hidden">
-          <img
+          <Image
             src={item.image}
             alt={item.name}
+            width={224}
+            height={224}
             className="w-full h-full object-cover"
           />
         </div>

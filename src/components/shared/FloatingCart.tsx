@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart, Plus, Minus } from "lucide-react"
+import Image from "next/image"
 
 interface CartItem {
   id: number
@@ -12,14 +12,14 @@ interface CartItem {
   quantity: number
 }
 
+const initialCart: CartItem[] = [
+  { id: 1, name: "Pani Puri", price: 120, quantity: 2 },
+  { id: 2, name: "Lassi", price: 80, quantity: 1 },
+]
+
 export function FloatingCart() {
-  const [cart, setCart] = useState<CartItem[]>([
-    { id: 1, name: "Pani Puri", price: 120, quantity: 2 },
-    { id: 2, name: "Lassi", price: 80, quantity: 1 },
-  ])
-  
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const totalItems = initialCart.reduce((sum, item) => sum + item.quantity, 0)
+  const total = initialCart.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
   return (
     <Sheet>
@@ -47,7 +47,7 @@ export function FloatingCart() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {cart.map((item) => (
+            {initialCart.map((item) => (
               <CartItem key={item.id} item={item} />
             ))}
           </div>
@@ -71,9 +71,11 @@ function CartItem({ item }: { item: CartItem }) {
   return (
     <div className="flex gap-3 p-3 rounded-xl bg-background border border-border">
       <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-        <img 
+        <Image 
           src="https://images.unsplash.com/photo-1603133872878-684f208fb84b" 
           alt={item.name}
+          width={64}
+          height={64}
           className="w-full h-full object-cover"
         />
       </div>

@@ -7,6 +7,9 @@ import { HistorySection } from "@/components/about/history"
 import MapSection from "@/components/about/map-section"
 import { OwnersTakeSection } from "@/components/about/owners-take"
 import { VisionSection } from "@/components/about/vision"
+import { GallerySection } from "@/components/about/GallerySection"
+import { MetricsStrip } from "@/components/home/MetricsStrip"
+import { WhyChaatwala } from "@/components/home/WhyChaatwala"
 
 export default function AboutPage() {
   return (
@@ -14,7 +17,10 @@ export default function AboutPage() {
       <section className="text-center space-y-3">
         <AboutHeader />
       </section>
-
+      <section>
+        <WhyChaatwala />
+              <GallerySection />
+      </section>
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <HistorySection />
         <VisionSection />
@@ -24,7 +30,10 @@ export default function AboutPage() {
       <section>
         <FaqSection />
       </section>
-
+      <section>
+              <MetricsStrip />
+        
+      </section>
       <section>
         <MapSection />
       </section>

@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import Image from "next/image"
 
 const initialCart = [
   {
@@ -77,13 +78,15 @@ export default function CartPage() {
           )}
 
           {cart.map((item) => (
-            <Card key={item.id}>
+            <Card key={item.id} className="bg-card border-border hover:shadow-md transition-shadow">
               <CardContent className="flex items-center gap-4 p-4">
                 
                 {/* Image */}
-                <img
+                <Image
                   src={item.image}
                   alt={item.name}
+                  width={80}
+                  height={80}
                   className="w-20 h-20 object-cover rounded-md"
                 />
 

@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { XIcon } from "../../icons/x-icon";
 import { GithubIcon } from "../../icons/github-icon";
 import { Logo } from "./logo";
+import Image from "next/image";
+import Link from "next/link";
 
 const navLinks = [
     { href: "#", label: "Features" },
@@ -72,19 +74,21 @@ export function Footer() {
 
                     <p className="flex items-center gap-1">
                         <span>Built by</span>
-                        <a
-                            href="https://x.com/shabanhr"
+                        <Link
+                            href="https://x.com/#"
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 text-foreground/80 hover:text-primary hover:underline transition-colors"
                         >
-                            <img
-                                src="https://github.com/shabanhr.png"
+                            <Image
+                                src="https://images.unsplash.com/photo-1603133872878-684f208fb84b"
                                 alt="shaban"
-                                className="size-4 rounded-full"
+                                width={16}
+                                height={16}
+                                className="rounded-full"
                             />
                             Fu Infotech Ltd.
-                        </a>
+                        </Link>
                     </p>
                 </div>
 

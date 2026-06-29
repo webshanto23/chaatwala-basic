@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus } from "lucide-react"
+import Image from "next/image"
 
 type Combo = {
   id: number
@@ -21,9 +22,11 @@ export function ComboCard({ combo }: { combo: Combo }) {
     <Card className="rounded-2xl overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-300 bg-card border-border">
       <div className="relative">
         <div className="aspect-video w-full overflow-hidden">
-          <img
+          <Image
             src={combo.image}
             alt={combo.name}
+            width={400}
+            height={224}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         </div>

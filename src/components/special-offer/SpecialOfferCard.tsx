@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 
 type Dish = {
   name: string
@@ -14,9 +15,11 @@ export function SpecialOfferCard({ dish }: { dish: Dish }) {
       
       {/* Image */}
       <div className="h-56 md:h-72 w-full">
-        <img
+        <Image
           src={dish.image}
           alt={dish.name}
+          width={800}
+          height={400}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
       </div>

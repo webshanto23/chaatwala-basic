@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, ShoppingBag } from "lucide-react"
+import Image from "next/image"
 
 export function HeroSection() {
   return (
@@ -18,7 +19,7 @@ export function HeroSection() {
             </Badge>
             
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
-              Taste the Streets of <span className="text-primary">India</span>
+              Taste the Streets of <span className="text-primary">Dhaka</span>
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-md">
@@ -55,9 +56,11 @@ export function HeroSection() {
           {/* Hero Image */}
           <div className="relative">
             <div className="aspect-square lg:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1627308595229-7830a5c91f9f"
                 alt="Delicious street food spread"
+                width={600}
+                height={450}
                 className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
               />
             </div>
