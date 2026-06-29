@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import { DishGrid } from "./DishGrid"
 
 const alldishes = [
@@ -44,14 +43,14 @@ const alldishes = [
 
 export function AllDishesShowcase() {
   return (
-    <section className="px-4 py-10 md:px-10 bg-zinc-50 dark:bg-zinc-900">
+    <section className="px-4 py-10 md:px-6 lg:px-8 bg-muted/20 dark:bg-muted">
       
       {/* Heading */}
       <div className="mb-8 text-center">
-        <h2 className="text-2xl md:text-3xl font-bold">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground">
           All Dishes
         </h2>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-sm mt-1">
           Explore our full menu
         </p>
       </div>

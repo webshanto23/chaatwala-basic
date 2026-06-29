@@ -12,10 +12,11 @@ export function DishGrid({ dishes }: { dishes: Dish[] }) {
     <div
       className="
         grid gap-4
-        grid-cols-2        /* mobile */
+        grid-cols-2
         sm:grid-cols-2
-        md:grid-cols-4     /* tablet */
-        xl:grid-cols-6     /* large */
+        md:grid-cols-3
+        lg:grid-cols-4
+        xl:grid-cols-6
       "
     >
       {dishes.map((dish) => (

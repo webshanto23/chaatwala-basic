@@ -18,8 +18,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Welcome Admin 👋</h1>
-      <p className="text-muted-foreground mt-2">
+      <h1 className="text-2xl md:text-3xl font-bold text-foreground">Welcome Admin 👋</h1>
+      <p className="text-muted-foreground">
         Manage your food platform here.
       </p>
       {/* ✅ Grid */}

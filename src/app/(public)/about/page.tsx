@@ -7,15 +7,10 @@ import { HistorySection } from "@/components/about/history"
 import MapSection from "@/components/about/map-section"
 import { OwnersTakeSection } from "@/components/about/owners-take"
 import { VisionSection } from "@/components/about/vision"
-import {
-  Phone,
-  Mail,
-  MapPin
-} from "lucide-react"
 
 export default function AboutPage() {
   return (
-    <main className="px-4 md:px-10 py-10 space-y-12  mx-auto">
+    <main className="px-4 md:px-6 lg:px-8 py-10 md:py-16 space-y-16 mx-auto max-w-7xl">
       <section className="text-center space-y-3">
         <AboutHeader />
       </section>

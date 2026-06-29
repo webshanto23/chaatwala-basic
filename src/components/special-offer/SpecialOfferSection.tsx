@@ -9,9 +9,9 @@ const specialDish = {
 
 export function SpecialOfferSection() {
   return (
-    <section className="px-2 py-6 max-w-7xl mx-auto">
-      <h2 className="text-lg font-semibold mb-4">
-        Today's Special Offer
+    <section className="px-4 py-6 md:px-6 lg:px-8 max-w-7xl mx-auto">
+      <h2 className="text-lg font-semibold text-foreground mb-4">
+        Today&apos;s Special Offer
       </h2>
 
       <SpecialOfferCard dish={specialDish} />

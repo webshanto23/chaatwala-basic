@@ -40,8 +40,8 @@ const components = [
 
 export default function Navbar() {
   return (
-    <header className="w-full border-b bg-zinc-100 dark:bg-zinc-900">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
+    <header className="w-full border-b bg-card dark:bg-card transition-colors duration-200">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
 
         {/* Logo */}
         <div className="flex items-center gap-3">
@@ -50,9 +50,9 @@ export default function Navbar() {
             alt="Logo"
             width={36}
             height={36}
-            className="border-r pr-3 border-zinc-300 dark:border-zinc-700"
+            className="border-r pr-3 border-border"
           />
-          <Link href="/" className="font-semibold text-lg">
+          <Link href="/" className="font-heading font-bold text-lg text-primary hover:opacity-80 transition-opacity">
             Chaatwala
           </Link>
         </div>
@@ -63,21 +63,21 @@ export default function Navbar() {
 
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <Link href="/">Home</Link>
+                <Link href="/" className="hover:text-primary transition-colors">Home</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
 
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <Link href="/about">About</Link>
+                <Link href="/about" className="hover:text-primary transition-colors">About</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
 
             {/* Products Dropdown */}
             <NavigationMenuItem>
-              <NavigationMenuTrigger>Products</NavigationMenuTrigger>
+              <NavigationMenuTrigger className="hover:text-primary transition-colors">Products</NavigationMenuTrigger>
               <NavigationMenuContent>
-                <ul className="grid w-[300px] gap-3 p-4">
+                <ul className="grid w-[300px] gap-3 p-4 bg-popover rounded-lg shadow-lg">
                   {components.map((item) => (
                     <ListItem key={item.title} href={item.href} title={item.title}>
                       {item.description}
@@ -89,19 +89,19 @@ export default function Navbar() {
 
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
 
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <Link href="/admin">Admin</Link>
+                <Link href="/admin" className="hover:text-primary transition-colors">Admin</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
 
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <Link href="/cart">Cart</Link>
+                <Link href="/cart" className="hover:text-primary transition-colors">Cart</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
 
@@ -110,43 +110,43 @@ export default function Navbar() {
 
         {/* Desktop Auth */}
         <div className="hidden md:flex gap-4">
-          <Link href="/sign-in">Sign In</Link>
-          <Link href="/sign-up">Sign Up</Link>
+          <Link href="/sign-in" className="text-sm hover:text-primary transition-colors">Sign In</Link>
+          <Link href="/sign-up" className="text-sm font-medium text-primary hover:opacity-80 transition-opacity">Sign Up</Link>
         </div>
 
         {/* Mobile Menu */}
         <div className="md:hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <button>
+              <button className="p-2 rounded-lg hover:bg-muted transition-colors">
                 <Menu className="w-6 h-6" />
               </button>
             </SheetTrigger>
 
-            <SheetContent side="right" className="w-64">
+            <SheetContent side="right" className="w-64 bg-card">
               <div className="flex flex-col gap-4 mt-6">
 
-                <Link href="/">Home</Link>
-                <Link href="/about">About</Link>
+                <Link href="/" className="hover:text-primary transition-colors py-2">Home</Link>
+                <Link href="/about" className="hover:text-primary transition-colors py-2">About</Link>
 
                 <div>
-                  <p className="font-medium">Products</p>
+                  <p className="font-medium py-2">Products</p>
                   <div className="ml-2 mt-2 flex flex-col gap-2">
                     {components.map((item) => (
-                      <Link key={item.title} href={item.href}>
+                      <Link key={item.title} href={item.href} className="text-sm hover:text-primary transition-colors py-1">
                         {item.title}
                       </Link>
                     ))}
                   </div>
                 </div>
 
-                <Link href="/dashboard">Dashboard</Link>
-                <Link href="/cart">Cart</Link>
+                <Link href="/dashboard" className="hover:text-primary transition-colors py-2">Dashboard</Link>
+                <Link href="/cart" className="hover:text-primary transition-colors py-2">Cart</Link>
 
-                <hr />
+                <hr className="border-border" />
 
-                <Link href="/sign-in">Sign In</Link>
-                <Link href="/sign-up">Sign Up</Link>
+                <Link href="/sign-in" className="hover:text-primary transition-colors py-2">Sign In</Link>
+                <Link href="/sign-up" className="font-medium text-primary hover:opacity-80 transition-opacity py-2">Sign Up</Link>
 
               </div>
             </SheetContent>
@@ -171,7 +171,7 @@ function ListItem({
   return (
     <li>
       <NavigationMenuLink asChild>
-        <Link href={href}>
+        <Link href={href} className="block p-2 rounded-md hover:bg-muted transition-colors">
           <div className="flex flex-col gap-1 text-sm">
             <div className="font-medium">{title}</div>
             <div className="text-muted-foreground text-xs">
@@ -185,32 +185,4 @@ function ListItem({
 }
 
 
-//basic nav layout with links to home, about, and contact pages
-// import Image from "next/image";
-// import Link from "next/link";
 
-// export default function Navbar() {
-//   return (
-//     <div>
-//       <div className="flex items-center justify-between font-sans bg-zinc-100 dark:bg-zinc-900">
-//       <nav className="flex gap-4 p-4 text-center items-center">
-//         <Image src="/favicon.ico" alt="Logo" width={50} height={50} />
-//         <Link href="/">Chaatwala</Link>
-//       </nav>
-      
-//       <nav className="flex gap-4 p-4 text-center">
-//         <Link href="/">Home</Link>
-//         <Link href="/about">About</Link>
-//         <Link href="/products">Products</Link>
-//         <Link href="/order">Order</Link>
-        
-//       </nav>
-//       <nav className="flex gap-4 p-4 text-center">
-//         <Link href="/sign-in">Sign In</Link>
-//         <Link href="/sign-up">Sign Up</Link>
-//       </nav>
-//       </div>
-//     </div>
-    
-//   );
-// }

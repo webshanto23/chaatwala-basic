@@ -9,19 +9,18 @@ export function FaqSection() {
 	return (
 		<div className="mx-auto w-full max-w-2xl space-y-7 px-4">
 			<div className="space-y-2">
-				<h2 className="font-semibold text-3xl md:text-4xl">
+				<h2 className="font-bold text-3xl md:text-4xl text-foreground">
 					Frequently Asked Questions
 				</h2>
 				<p className="max-w-2xl text-muted-foreground">
-					Here are some common questions and answers that you might encounter
-					when using Efferd. If you don't find the answer you're looking for,
-					feel free to reach out.
+					Everything you need to know about Chaatwala. Can&apos;t find the answer? 
+					Contact our customer support team.
 				</p>
 			</div>
-			<Accordion className="rounded-lg border" collapsible type="single">
+			<Accordion className="rounded-lg border-border bg-card" collapsible type="single">
 				{questions.map((item) => (
-					<AccordionItem className="px-4" key={item.id} value={item.id}>
-						<AccordionTrigger className="py-4 hover:no-underline focus-visible:underline focus-visible:ring-0">
+					<AccordionItem className="px-4 last:border-b-0" key={item.id} value={item.id}>
+						<AccordionTrigger className="py-4 hover:no-underline focus-visible:underline focus-visible:ring-0 text-foreground">
 							{item.title}
 						</AccordionTrigger>
 						<AccordionContent className="pb-4! text-muted-foreground">
@@ -31,7 +30,7 @@ export function FaqSection() {
 				))}
 			</Accordion>
 			<p className="text-muted-foreground">
-				Can't find what you're looking for? Contact our{" "}
+				Can&apos;t find what you&apos;re looking for? Contact our{" "}
 				<a className="text-primary hover:underline" href="#">
 					customer support team
 				</a>
@@ -43,44 +42,44 @@ export function FaqSection() {
 const questions = [
 	{
 		id: "item-1",
-		title: "What is Efferd?",
+		title: "What is Chaatwala?",
 		content:
-			"Efferd is a collection of beautifully crafted Shadcn UI blocks and components, designed to help developers build modern websites with ease.",
+			"Chaatwala is your one-stop destination for authentic Indian street food, bringing the flavors of chaat, biryani, and traditional snacks right to your doorstep.",
 	},
 	{
 		id: "item-2",
-		title: "Who can benefit from Efferd?",
+		title: "How do I place an order?",
 		content:
-			"Efferd is built for founders, product teams, and agencies that want to accelerate idea validation and delivery.",
+			"Browse our menu, select your favorite dishes, add them to cart, and checkout. We&apos;ll deliver fresh, hot food within 30 minutes!",
 	},
 	{
 		id: "item-3",
-		title: "What features does Efferd include?",
+		title: "What are your delivery hours?",
 		content:
-			"Efferd offers a collaborative workspace where you can design and build beautiful web applications, with reusable UI blocks, deployment automation, and comprehensive analytics all in one place. With Efferd, you can streamline your team’s workflow and deliver high-quality websites quickly and efficiently.",
+			"We deliver daily from 11:00 AM to 11:00 PM. Order anytime during these hours for fresh, delicious food.",
 	},
 	{
 		id: "item-4",
-		title: "Can I customize components in Efferd?",
+		title: "Do you offer vegetarian options?",
 		content:
-			"Yes. Efferd offers editable design systems and code scaffolding so you can tailor blocks to your brand and workflow.",
+			"Yes! We have a wide variety of vegetarian chaats, snacks, and main dishes. Look for the vegetarian badge on menu items.",
 	},
 	{
 		id: "item-5",
-		title: "Does Efferd integrate with my existing tools?",
+		title: "Can I customize my order?",
 		content:
-			"Efferd connects with popular source control, design tools, and cloud providers to fit into your current stack.",
+			"Absolutely! You can add special instructions for spice level, ingredients, and preparation during checkout.",
 	},
 	{
 		id: "item-6",
-		title: "How do I get support while using Efferd?",
+		title: "What payment methods do you accept?",
 		content:
-			"You can access detailed docs, community forums, and dedicated customer success channels for help at any time.",
+			"We accept all major credit/debit cards, mobile payment, and cash on delivery for your convenience.",
 	},
 	{
 		id: "item-7",
-		title: "How do I get started with Efferd?",
+		title: "How do I track my order?",
 		content:
-			"You can access detailed docs, community forums, and dedicated customer success channels for help at any time.",
+			"Once your order is confirmed, you can track its status in real-time from your dashboard or the order tracking page.",
 	},
 ];

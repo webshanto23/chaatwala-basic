@@ -16,17 +16,19 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-64 border-r bg-background p-4">
-      <h2 className="text-xl font-bold mb-6">Admin Panel</h2>
+    <aside className="w-64 border-r bg-card p-4 flex flex-col h-full">
+      <h2 className="text-xl font-bold mb-6 text-primary">Admin Panel</h2>
 
-      <nav className="space-y-2">
+      <nav className="space-y-2 flex-1">
         {links.map((link) => (
           <Link
             key={link.name}
             href={link.href}
             className={cn(
-              "block px-3 py-2 rounded-md text-sm hover:bg-muted",
-              pathname === link.href && "bg-muted font-medium"
+              "block px-3 py-2 rounded-md text-sm transition-colors",
+              pathname === link.href 
+                ? "bg-primary text-primary-foreground font-medium" 
+                : "hover:bg-muted text-foreground"
             )}
           >
             {link.name}

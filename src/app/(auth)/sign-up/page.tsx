@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import { GithubIcon } from "@/components/icons/github-icon";
 import { Button } from "@/components/ui/button";
 import {
   InputGroup,

@@ -28,12 +28,12 @@ const socialLinks = [
 
 export function Footer() {
     return (
-        <footer className="w-full border-t bg-background">
+        <footer className="w-full border-t bg-card dark:bg-card transition-colors duration-200">
             {/* Inner Container */}
             <div className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
 
                 {/* Top Section */}
-                <div className="flex flex-row  justify-evenly gap-6 py-6 md:flex-row md:items-center  md:justify-between">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-6">
 
                     {/* Logo */}
                     <div className="flex items-center gap-2">
@@ -43,7 +43,7 @@ export function Footer() {
                     {/* Social Icons */}
                     <div className="flex items-center gap-2">
                         {socialLinks.map(({ href, label, icon }) => (
-                            <Button asChild key={label} size="icon" variant="ghost">
+                            <Button asChild key={label} size="icon" variant="ghost" className="hover:text-primary transition-colors">
                                 <a aria-label={label} href={href}>
                                     {icon}
                                 </a>
@@ -57,7 +57,7 @@ export function Footer() {
                     <ul className="flex flex-wrap gap-4 text-sm font-medium text-muted-foreground md:gap-6 md:justify-center lg:justify-start">
                         {navLinks.map((link) => (
                             <li key={link.label}>
-                                <a className="hover:text-foreground transition-colors" href={link.href}>
+                                <a className="hover:text-primary transition-colors" href={link.href}>
                                     {link.label}
                                 </a>
                             </li>
@@ -66,7 +66,7 @@ export function Footer() {
                 </nav>
 
                 {/* Bottom Bar */}
-                <div className="flex flex-row justify-between gap-3 border-t py-4 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col sm:flex-row justify-between gap-3 border-t py-4 text-sm text-muted-foreground">
 
                     <p>&copy; {new Date().getFullYear()} | Chaatwala</p>
 
@@ -76,7 +76,7 @@ export function Footer() {
                             href="https://x.com/shabanhr"
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-foreground/80 hover:text-foreground hover:underline"
+                            className="inline-flex items-center gap-1 text-foreground/80 hover:text-primary hover:underline transition-colors"
                         >
                             <img
                                 src="https://github.com/shabanhr.png"

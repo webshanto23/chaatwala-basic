@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/input-group";
 import { AtSignIcon } from "lucide-react";
 import { Lock } from "lucide-react";
-import { User } from "lucide-react";
 import { DecorIcon } from "@/components/ui/decor-icon";
 import { AuthDivider } from "@/components/ui/auth-divider";
 import { GoogleIcon } from "@/components/icons/google-icon";
