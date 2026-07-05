@@ -1,11 +1,8 @@
 "use client"
 
-const metrics = [
-  { value: "10K+", label: "Happy Customers", color: "text-primary" },
-  { value: "86", label: "Unique Dishes", color: "text-secondary" },
-  { value: "4.8★", label: "Satisfaction", color: "text-accent" },
-  { value: "15+", label: "Years Experience", color: "text-primary" }
-]
+import data from "../../../sitedata.json"
+
+const metrics = data.homeSections.metrics
 
 export function MetricsStrip() {
   return (

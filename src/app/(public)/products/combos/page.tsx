@@ -1,11 +1,9 @@
-import { AllDishesShowcase } from "@/components/products/dishes/AllDishesShowcase";
-import { PopularDishes } from "@/components/products/dishes/PopularDishes";
+import { ComboSection } from "@/components/products/combos/ComboSection";
 
-export default function Combos() {
+export default function CombosPage() {
   return (
     <div className="flex flex-col flex-1 bg-background font-sans">
-      <PopularDishes />
-      <AllDishesShowcase />
+      <ComboSection />
     </div>
   );
 }

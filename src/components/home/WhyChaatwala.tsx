@@ -2,33 +2,19 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Leaf, Flame, Clock, Shield } from "lucide-react"
+import data from "../../../sitedata.json"
 
-const features = [
-  {
-    icon: Leaf,
-    title: "Fresh Ingredients",
-    description: "Locally sourced, seasonal produce",
-    color: "text-primary"
-  },
-  {
-    icon: Flame,
-    title: "Authentic Taste",
-    description: "Traditional recipes from the streets",
-    color: "text-secondary"
-  },
-  {
-    icon: Clock,
-    title: "Fast Delivery",
-    description: "30 min or less guaranteed",
-    color: "text-accent"
-  },
-  {
-    icon: Shield,
-    title: "Hygienic Prep",
-    description: "Contactless, safe packaging",
-    color: "text-primary"
-  }
-]
+const featureIcons = {
+  Leaf,
+  Flame,
+  Clock,
+  Shield,
+} as const
+
+const features = data.homeSections.whyChaatwala.features.map((feature) => ({
+  ...feature,
+  icon: featureIcons[feature.icon as keyof typeof featureIcons],
+}))
 
 function cn(...classes: string[]) {
   return classes.filter(Boolean).join(' ')

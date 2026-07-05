@@ -1,41 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import data from "../../../../sitedata.json"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
 
-const initialCart = [
-  {
-    id: 1,
-    name: "Pani Puri",
-    price: 120,
-    quantity: 2,
-    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
-  },
-  {
-    id: 2,
-    name: "Dahi Chaat",
-    price: 150,
-    quantity: 1,
-    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
-  },
-  {
-    id: 3,
-    name: "Chicken Tikka",
-    price: 150,
-    quantity: 1,
-    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
-  },
-  {
-    id: 4,
-    name: "Veggie Sandwich",
-    price: 150,
-    quantity: 4,
-    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
-  },
-]
+const initialCart = data.cart.initialItems
 
 export default function CartPage() {
   const [cart, setCart] = useState(initialCart)

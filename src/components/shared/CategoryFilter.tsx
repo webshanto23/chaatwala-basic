@@ -1,6 +1,5 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 const categories = [
@@ -11,28 +10,33 @@ const categories = [
   { id: "desserts", label: "Desserts" },
 ]
 
-export function CategoryFilter() {
+type CategoryFilterProps = {
+  activeCategory?: string
+  onCategoryChange?: (category: string) => void
+}
+
+export function CategoryFilter({ activeCategory = "all", onCategoryChange }: CategoryFilterProps) {
   return (
-    <div className="sticky top-0 z-40 bg-card/95 backdrop-blur-sm border-b py-3 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "rounded-full whitespace-nowrap transition-all duration-200",
-                "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
-                "hover:bg-muted"
-              )}
-              data-state={category.id === "all" ? "active" : undefined}
-            >
-              {category.label}
-            </Button>
-          ))}
-        </div>
-      </div>
+    <div className="flex flex-wrap justify-center gap-2">
+      {categories.map((category) => {
+        const isActive = activeCategory === category.id
+
+        return (
+          <button
+            key={category.id}
+            type="button"
+            onClick={() => onCategoryChange?.(category.id)}
+            className={cn(
+              "whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium transition-all duration-200",
+              isActive
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            {category.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

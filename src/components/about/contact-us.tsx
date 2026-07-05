@@ -1,25 +1,13 @@
 import { cn } from "@/lib/utils";
 import { Mail, Phone } from "lucide-react";
+import data from "../../../sitedata.json";
 import { ContactForm } from "./contact-form";
 import { AuthDivider } from "../ui/auth-divider";
 
-
-const data = [
-    {
-        title: "Call Us Today!",
-        value: "+1 (555) 123-4567",
-        icon: (
-            <Phone className="text-primary" />
-        ),
-    },
-    {
-        title: "Send an Email",
-        value: "mail@chaatwala.com",
-        icon: (
-            <Mail className="text-primary" />
-        ),
-    },
-];
+const contactItems = data.about.contact.contactItems.map((item) => ({
+    ...item,
+    icon: item.icon === "Phone" ? <Phone className="text-primary" /> : <Mail className="text-primary" />,
+}));
 
 export function ContactSection() {
     return (
@@ -27,14 +15,13 @@ export function ContactSection() {
             {/* top */}
             <div>
                 <div className="mb-2 flex flex-col gap-2">
-                    <h1 className="font-bold text-xl md:text-2xl text-foreground">Get in touch</h1>{" "}
+                    <h1 className="font-bold text-xl md:text-2xl text-foreground">{data.about.contact.heading}</h1>{" "}
                     <p className="text-muted-foreground text-sm">
-                        Have a question, feedback, or want to collaborate? <br /> We wouldd love
-                        to hear from you.
+                        {data.about.contact.description}
                     </p>
                 </div>
                 <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 max-w-md">
-                    {data.map((item) => (
+                    {contactItems.map((item) => (
                         <div className="flex items-center gap-4 p-2" key={item.title}>
                             <div className="[&_svg]:size-5 [&_svg]:text-primary">
                                 {item.icon}
@@ -52,9 +39,9 @@ export function ContactSection() {
             <div className="w-full max-w-md">
                 <AuthDivider className="md:hidden">OR</AuthDivider>
                 <div className="mb-8 flex flex-col gap-1.5">
-                    <h2 className="font-semibold text-xl text-foreground">Send a message</h2>{" "}
+                    <h2 className="font-semibold text-xl text-foreground">{data.about.contact.formHeading}</h2>{" "}
                     <p className="text-muted-foreground text-sm">
-                        Fill out the form below and our team will get back to you shortly.
+                        {data.about.contact.formDescription}
                     </p>
                 </div>
                 <ContactForm />

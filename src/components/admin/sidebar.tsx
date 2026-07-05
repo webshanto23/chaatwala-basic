@@ -1,8 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { LogOut } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/contexts/auth-context"
 
 const links = [
   { name: "Dashboard", href: "/admin" },
@@ -14,27 +16,43 @@ const links = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    router.push("/admin")
+  }
 
   return (
-    <aside className="w-64 border-r bg-card p-4 flex flex-col h-full">
-      <h2 className="text-xl font-bold mb-6 text-primary">Admin Panel</h2>
+    <aside className="flex h-full w-64 flex-col border-r bg-card p-4">
+      <h2 className="mb-6 text-xl font-bold text-primary">Admin Panel</h2>
 
-      <nav className="space-y-2 flex-1">
+      <nav className="flex-1 space-y-2">
         {links.map((link) => (
           <Link
             key={link.name}
             href={link.href}
             className={cn(
-              "block px-3 py-2 rounded-md text-sm transition-colors",
-              pathname === link.href 
-                ? "bg-primary text-primary-foreground font-medium" 
-                : "hover:bg-muted text-foreground"
+              "block rounded-md px-3 py-2 text-sm transition-colors",
+              pathname === link.href
+                ? "bg-primary font-medium text-primary-foreground"
+                : "text-foreground hover:bg-muted"
             )}
           >
             {link.name}
           </Link>
         ))}
       </nav>
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="mt-4 flex items-center gap-2 rounded-md border border-border/70 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+      >
+        <LogOut className="h-4 w-4" />
+        Logout
+      </button>
     </aside>
   )
 }

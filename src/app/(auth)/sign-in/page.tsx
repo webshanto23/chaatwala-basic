@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,8 +17,26 @@ import { GoogleIcon } from "@/components/icons/google-icon";
 import { Logo } from "@/components/shared/footer/logo";
 import { XIcon } from "@/components/icons/x-icon";
 import Link from "next/link";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function SignIn() {
+  const router = useRouter();
+  const { loginUser, loginAdmin } = useAuth();
+  const [mode, setMode] = useState<"user" | "admin">("user");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = () => {
+    if (mode === "admin") {
+      loginAdmin(email, password);
+      router.replace("/admin/dashboard");
+      return;
+    }
+
+    loginUser(email, password);
+    router.replace("/dashboard");
+  };
+
   return (
     <div className="relative flex h-screen w-full items-center justify-center overflow-hidden px-6 md:px-8">
       <div
@@ -38,13 +60,41 @@ export default function SignIn() {
             </p>
           </div>
           <div className="space-y-4">
-            <form className="space-y-2">
+            <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/70 p-1">
+              <button
+                type="button"
+                onClick={() => setMode("user")}
+                className={cn(
+                  "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  mode === "user" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                )}
+              >
+                User
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("admin")}
+                className={cn(
+                  "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  mode === "admin" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                )}
+              >
+                Admin
+              </button>
+            </div>
+
+            <form className="space-y-2" onSubmit={(event) => {
+              event.preventDefault();
+              handleSubmit();
+            }}>
 
               {/* Input fields for email */}
               <InputGroup>
                 <InputGroupInput
                   placeholder="email@example.com"
                   type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                 />
                 <InputGroupAddon align="inline-start">
                   <AtSignIcon
@@ -57,13 +107,15 @@ export default function SignIn() {
                 <InputGroupInput
                   placeholder="Password"
                   type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                 />
                 <InputGroupAddon align="inline-start">
                   <Lock />
                 </InputGroupAddon>
               </InputGroup>
 
-              <Button className="w-full" size="sm" type="button">
+              <Button className="w-full" size="sm" type="submit">
                 Sign In
               </Button>
             </form>

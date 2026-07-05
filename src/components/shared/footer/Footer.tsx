@@ -1,4 +1,5 @@
 
+import data from "../../../../sitedata.json";
 import { Button } from "@/components/ui/button";
 import { XIcon } from "../../icons/x-icon";
 import { GithubIcon } from "../../icons/github-icon";
@@ -6,15 +7,7 @@ import { Logo } from "./logo";
 import Image from "next/image";
 import Link from "next/link";
 
-const navLinks = [
-    { href: "#", label: "Features" },
-    { href: "#", label: "Blog" },
-    { href: "#", label: "About" },
-    { href: "#", label: "Contact" },
-    { href: "#", label: "Licence" },
-    { href: "#", label: "Privacy" },
-];
-
+const navLinks = data.navigation.footerNavLinks;
 const socialLinks = [
     {
         href: "#",

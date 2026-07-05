@@ -1,45 +1,9 @@
 "use client"
 
+import data from "../../../../sitedata.json"
 import { DishGrid } from "./DishGrid"
 
-const alldishes = [
-  {
-    id: 1,
-    name: "Raj Kachori",
-    price: 200,
-    image: "https://images.unsplash.com/photo-1601050690597-df0568f70950",
-  },
-  {
-    id: 2,
-    name: "Chole Bhature",
-    price: 300,
-    image: "https://images.unsplash.com/photo-1600891964599-f61ba0e24092",
-  },
-  {
-    id: 3,
-    name: "Gol Gappe",
-    price: 100,
-    image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b",
-  },
-  {
-    id: 4,
-    name: "Singara Chaat",
-    price: 150,
-    image: "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a",
-  },
-  {
-    id: 5,
-    name: "Pav Bhaji",
-    price: 250,
-    image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b",
-  },
-  {
-    id: 6,
-    name: "Dahi Puri",
-    price: 180,
-    image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b",
-  },
-]
+const alldishes = data.products.allDishes
 
 export function AllDishesShowcase() {
   return (

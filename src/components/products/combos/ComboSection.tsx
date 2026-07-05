@@ -1,42 +1,10 @@
 "use client"
 
+import data from "../../../../sitedata.json"
 import { ComboCard } from "./ComboCard"
 import { Button } from "@/components/ui/button"
 
-const combos = [
-  {
-    id: 1,
-    name: "Chaat Lover Combo",
-    items: ["Pani Puri", "Bhel Puri", "Dahi Puri"],
-    price: 299,
-    originalPrice: 399,
-    image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b"
-  },
-  {
-    id: 2,
-    name: "Meal Deal",
-    items: ["Chicken Biryani", "Raita", "Salad"],
-    price: 349,
-    originalPrice: 449,
-    image: "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f"
-  },
-  {
-    id: 3,
-    name: "Snack Pack",
-    items: ["Singara Chaat", "Aloo Tikki", "Thums Up"],
-    price: 199,
-    originalPrice: 249,
-    image: "https://images.unsplash.com/photo-1600891964599-f61ba0e24092"
-  },
-  {
-    id: 4,
-    name: "Family Feast",
-    items: ["Veg Biryani", "Paneer Tikka", "Naan", "Raita"],
-    price: 599,
-    originalPrice: 799,
-    image: "https://images.unsplash.com/photo-1600891964599-f61ba0e24092"
-  }
-]
+const combos = data.products.combos
 
 export function ComboSection() {
   return (

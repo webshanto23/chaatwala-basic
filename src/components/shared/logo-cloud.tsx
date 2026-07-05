@@ -1,11 +1,10 @@
-// https://motion-primitives.com/docs/infinite-slider
-import { InfiniteSlider } from "@/components/ui/infinite-slider";
+import data from "../../../sitedata.json";
 import Image from "next/image";
 
 export function LogoCloud() {
 	return (
-		<div className="mask-[linear-gradient(to_right,transparent,black,transparent)] overflow-hidden py-4">
-			<InfiniteSlider gap={42} reverse speed={80} speedOnHover={25}>
+		<div className="overflow-hidden py-4">
+			<div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
 				{logos.map((logo) => (
 					<Image
 						alt={logo.alt}
@@ -17,42 +16,9 @@ export function LogoCloud() {
 						width={120}
 					/>
 				))}
-			</InfiniteSlider>
+			</div>
 		</div>
 	);
 }
 
-const logos = [
-	{
-		src: "https://storage.efferd.com/logo/nvidia-wordmark.svg",
-		alt: "Nvidia Logo",
-	},
-	{
-		src: "https://storage.efferd.com/logo/supabase-wordmark.svg",
-		alt: "Supabase Logo",
-	},
-	{
-		src: "https://storage.efferd.com/logo/openai-wordmark.svg",
-		alt: "OpenAI Logo",
-	},
-	{
-		src: "https://storage.efferd.com/logo/turso-wordmark.svg",
-		alt: "Turso Logo",
-	},
-	{
-		src: "https://storage.efferd.com/logo/vercel-wordmark.svg",
-		alt: "Vercel Logo",
-	},
-	{
-		src: "https://storage.efferd.com/logo/github-wordmark.svg",
-		alt: "GitHub Logo",
-	},
-	{
-		src: "https://storage.efferd.com/logo/claude-wordmark.svg",
-		alt: "Claude AI Logo",
-	},
-	{
-		src: "https://storage.efferd.com/logo/clerk-wordmark.svg",
-		alt: "Clerk Logo",
-	},
-];
+const logos = data.shared.brandLogos;
