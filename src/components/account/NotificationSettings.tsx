@@ -30,13 +30,13 @@ function ToggleRow({ label, description, enabled, onToggle }: ToggleRowProps) {
         onClick={onToggle}
         aria-pressed={enabled}
         className={cn(
-          "relative h-6 w-11 rounded-full border transition-colors",
-          enabled ? "border-primary bg-primary" : "border-border bg-muted"
+          "relative inline-flex h-6 w-11 items-center rounded-full border transition-colors focus:outline-none",
+          enabled ? "bg-primary border-primary" : "bg-muted border-border"
         )}
       >
         <span
           className={cn(
-            "absolute top-0.5 h-5 w-5 rounded-full bg-background shadow-sm transition-transform",
+            "absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
             enabled ? "translate-x-5" : "translate-x-0"
           )}
         />
@@ -54,11 +54,11 @@ export function NotificationSettings({
   onEmailSmsChange,
 }: NotificationSettingsProps) {
   return (
-    <Card className="border-border/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-      <CardHeader className="px-4 pb-2 pt-4">
+    <Card className="group rounded-[2rem] border border-border/70 bg-white/95 shadow-xl">
+      <CardHeader className="px-6 pb-2 pt-6">
         <CardTitle className="text-base">Notifications</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 px-4 pb-4">
+      <CardContent className="space-y-3 px-6 pb-6">
         <ToggleRow
           label="Order updates"
           description="Receive updates about your purchases"

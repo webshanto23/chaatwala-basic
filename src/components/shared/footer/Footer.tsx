@@ -23,22 +23,25 @@ const socialLinks = [
 
 export function Footer() {
     return (
-        <footer className="w-full border-t bg-card dark:bg-card transition-colors duration-200">
-            {/* Inner Container */}
+        <footer className="w-full border-t border-border/70 bg-gradient-to-t from-card via-card to-background transition-colors duration-200">
             <div className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
 
                 {/* Top Section */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-6">
 
                     {/* Logo */}
-                    <div className="flex items-center gap-2">
-                        <Logo className="h-7 md:h-6" />
+                    <div className="flex items-center gap-3">
+                        <Logo className="h-9 md:h-8" />
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">Chaatwala</p>
+                          <p className="text-xs text-muted-foreground">Fresh street food every day</p>
+                        </div>
                     </div>
 
                     {/* Social Icons */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         {socialLinks.map(({ href, label, icon }) => (
-                            <Button asChild key={label} size="icon" variant="ghost" className="hover:text-primary transition-colors">
+                            <Button asChild key={label} size="icon" variant="secondary" className="hover:bg-muted hover:text-foreground transition-colors">
                                 <a aria-label={label} href={href}>
                                     {icon}
                                 </a>
@@ -61,11 +64,11 @@ export function Footer() {
                 </nav>
 
                 {/* Bottom Bar */}
-                <div className="flex flex-col sm:flex-row justify-between gap-3 border-t py-4 text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row justify-between gap-3 border-t border-border/70 py-4 text-sm text-muted-foreground">
 
-                    <p>&copy; {new Date().getFullYear()} | Chaatwala</p>
+                    <p className="text-foreground/90">&copy; {new Date().getFullYear()} | Chaatwala</p>
 
-                    <p className="flex items-center gap-1">
+                    <p className="flex items-center gap-1 text-foreground/80">
                         <span>Built by</span>
                         <Link
                             href="https://x.com/#"

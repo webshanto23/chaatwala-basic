@@ -33,20 +33,20 @@ export default function Navbar() {
   const userLinks = data.navigation.userLinks;
 
   return (
-    <header className="w-full border-b bg-card dark:bg-card transition-colors duration-200">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
+    <header className="w-full border-b border-border/50 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 backdrop-blur-xl transition-colors duration-200">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
 
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <Link href="/" className="font-heading font-bold text-lg text-primary hover:opacity-80 transition-opacity">
-            <Logo className="h-9 md:h-8 w-auto" />
-
+          <Link href="/" className="font-heading inline-flex items-center gap-3 text-lg font-semibold text-foreground hover:text-primary transition-colors duration-200">
+            <Logo className="h-10 w-auto" />
+            <span className="hidden md:inline-block">Chaatwala</span>
           </Link>
         </div>
 
         {/* Desktop Menu */}
-        <NavigationMenu className="hidden md:flex">
-          <NavigationMenuList className="gap-6">
+        <NavigationMenu className="hidden md:flex rounded-full bg-background/80 px-4 py-1 shadow-sm shadow-primary/5">
+          <NavigationMenuList className="gap-2">
 
             {(!isLoggedIn || isUser) && publicLinks.map((item) => (
               <NavigationMenuItem key={item.href}>
@@ -61,7 +61,7 @@ export default function Navbar() {
                 {userLinks.filter((item) => item.href !== "/").map((item) => (
                   <NavigationMenuItem key={item.href}>
                     <NavigationMenuLink asChild>
-                      <Link href={item.href} className="hover:text-primary transition-colors">{item.label}</Link>
+                      <Link href={item.href} className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary">{item.label}</Link>
                     </NavigationMenuLink>
                   </NavigationMenuItem>
                 ))}
@@ -80,11 +80,15 @@ export default function Navbar() {
         </NavigationMenu>
 
         {/* Desktop Auth */}
-        <div className="hidden md:flex gap-4">
+        <div className="hidden md:flex items-center gap-4">
           {!isLoggedIn ? (
             <>
-              <Link href="/signin" className="text-sm hover:text-primary transition-colors">Sign In</Link>
-              <Link href="/sign-up" className="text-sm font-medium text-primary hover:opacity-80 transition-opacity">Sign Up</Link>
+              <Link href="/signin" className="rounded-full px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-primary">
+                Sign In
+              </Link>
+              <Link href="/sign-up" className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">
+                Sign Up
+              </Link>
             </>
           ) : (
             <button
@@ -143,7 +147,7 @@ export default function Navbar() {
                   {isAdmin && (
                     <Link
                       href="/admin/dashboard"
-                      className="rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                      className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
                     >
                       Admin Dashboard
                     </Link>
@@ -167,7 +171,7 @@ export default function Navbar() {
                         logout();
                         router.push("/");
                       }}
-                      className="flex items-center gap-2 rounded-md px-2 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+                      className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
                     >
                       <LogOut className="h-4 w-4" />
                       Logout

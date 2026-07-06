@@ -11,42 +11,39 @@ const contactItems = data.about.contact.contactItems.map((item) => ({
 
 export function ContactSection() {
     return (
-        <div className="flex flex-col gap-6 md:flex-row items-center justify-evenly border border-border rounded-2xl bg-card p-6 shadow-sm">
-            {/* top */}
-            <div>
-                <div className="mb-2 flex flex-col gap-2">
-                    <h1 className="font-bold text-xl md:text-2xl text-foreground">{data.about.contact.heading}</h1>{" "}
-                    <p className="text-muted-foreground text-sm">
-                        {data.about.contact.description}
-                    </p>
+        <div className="rounded-[2rem] border border-border/70 bg-white/95 p-8 shadow-xl shadow-primary/10">
+            <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
+                <div className="space-y-6">
+                    <div className="space-y-3">
+                        <h1 className="text-2xl font-bold text-foreground">{data.about.contact.heading}</h1>
+                        <p className="text-muted-foreground text-sm">
+                            {data.about.contact.description}
+                        </p>
+                    </div>
+                    <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                        {contactItems.map((item) => (
+                            <div className="flex items-start gap-3 rounded-3xl border border-border/70 bg-muted/50 p-4" key={item.title}>
+                                <div className="text-primary">{item.icon}</div>
+                                <div className="flex flex-col gap-0.5">
+                                    <h2 className="text-sm font-medium text-foreground">{item.title}</h2>
+                                    <p className="text-xs text-muted-foreground">{item.value}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 max-w-md">
-                    {contactItems.map((item) => (
-                        <div className="flex items-center gap-4 p-2" key={item.title}>
-                            <div className="[&_svg]:size-5 [&_svg]:text-primary">
-                                {item.icon}
-                            </div>
-                            <div className={cn("flex flex-col gap-y-0.5")}>
-                                <h2 className="text-sm font-medium text-foreground">{item.title}</h2>
-                                <p className="text-muted-foreground text-xs">{item.value}</p>
-                            </div>
-                        </div>
-                    ))}
+
+                <div className="w-full max-w-md">
+                    <AuthDivider className="md:hidden">OR</AuthDivider>
+                    <div className="mb-8 space-y-2">
+                        <h2 className="text-xl font-semibold text-foreground">{data.about.contact.formHeading}</h2>
+                        <p className="text-muted-foreground text-sm">
+                            {data.about.contact.formDescription}
+                        </p>
+                    </div>
+                    <ContactForm />
                 </div>
             </div>
-
-            {/* form */}
-            <div className="w-full max-w-md">
-                <AuthDivider className="md:hidden">OR</AuthDivider>
-                <div className="mb-8 flex flex-col gap-1.5">
-                    <h2 className="font-semibold text-xl text-foreground">{data.about.contact.formHeading}</h2>{" "}
-                    <p className="text-muted-foreground text-sm">
-                        {data.about.contact.formDescription}
-                    </p>
-                </div>
-                <ContactForm />
-            </div>
-
         </div>
     );
 }

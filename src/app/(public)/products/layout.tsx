@@ -10,10 +10,10 @@ const categories = [
 export default function ProductsLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-1 flex-col bg-background font-sans">
-      <section className="border-b bg-card/70">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium uppercase tracking-[0.3em] text-primary">
+      <section className="border-b border-border/60 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-3">
+            <p className="text-sm font-medium uppercase tracking-[0.3em] text-secondary">
               Products
             </p>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -29,7 +29,7 @@ export default function ProductsLayout({ children }: { children: ReactNode }) {
               <Link
                 key={category.href}
                 href={category.href}
-                className="rounded-full border border-border/70 px-4 py-2 text-sm font-medium transition hover:bg-muted"
+                className="rounded-full border border-border/70 bg-white/80 px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary/10 hover:text-primary"
               >
                 {category.label}
               </Link>

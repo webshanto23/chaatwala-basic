@@ -313,7 +313,7 @@
     "userLinks": [
       { "href": "/", "label": "Home" },
       { "href": "/cart", "label": "Cart" },
-      { "href": "/profile", "label": "Profile" }
+      { "href": "/profile/dashboard", "label": "Profile" }
     ],
     "productMenu": [
       { "title": "Dishes", "href": "/products/dishes", "description": "Delicious street snacks and chaats." },

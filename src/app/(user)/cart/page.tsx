@@ -38,10 +38,10 @@ export default function CartPage() {
   )
 
   return (
-    <div className=" mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold mb-8">Your Cart</h1>
+    <div className="mx-auto px-4 py-10 max-w-7xl">
+      <h1 className="text-3xl font-bold mb-8 text-foreground">Your Cart</h1>
 
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-6">
         
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
@@ -50,16 +50,15 @@ export default function CartPage() {
           )}
 
           {cart.map((item) => (
-            <Card key={item.id} className="bg-card border-border hover:shadow-md transition-shadow">
-              <CardContent className="flex items-center gap-4 p-4">
-                
+            <Card key={item.id} className="group rounded-[1.5rem] overflow-hidden border-0 bg-gradient-to-br from-white via-secondary/10 to-white shadow-lg transition-all duration-200 hover:-translate-y-1">
+              <CardContent className="flex items-center gap-4 p-4 md:p-5">
                 {/* Image */}
                 <Image
                   src={item.image}
                   alt={item.name}
                   width={80}
                   height={80}
-                  className="w-20 h-20 object-cover rounded-md"
+                  className="w-20 h-20 object-cover rounded-[1rem]"
                 />
 
                 {/* Info */}
@@ -73,17 +72,19 @@ export default function CartPage() {
                   <div className="flex items-center gap-2 mt-2">
                     <Button
                       variant="outline"
-                      size="icon"
+                      size="sm"
+                      className="h-8 w-8 rounded-full"
                       onClick={() => updateQuantity(item.id, "dec")}
                     >
                       -
                     </Button>
 
-                    <span>{item.quantity}</span>
+                    <span className="w-8 text-center">{item.quantity}</span>
 
                     <Button
                       variant="outline"
-                      size="icon"
+                      size="sm"
+                      className="h-8 w-8 rounded-full"
                       onClick={() => updateQuantity(item.id, "inc")}
                     >
                       +
@@ -92,29 +93,32 @@ export default function CartPage() {
                 </div>
 
                 {/* Remove */}
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => removeItem(item.id)}
-                >
-                  Remove
-                </Button>
+                <div className="ml-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => removeItem(item.id)}
+                  >
+                    Remove
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
         {/* Summary */}
-        <div>
-          <Card>
+        <div className="w-full md:w-[360px]">
+          <Card className="rounded-[1.5rem] border border-border/70 bg-white/95 shadow-xl">
             <CardContent className="p-6 space-y-4">
-              <h2 className="text-xl font-semibold">Order Summary</h2>
+              <h2 className="text-xl font-semibold text-foreground">Order Summary</h2>
 
               <Separator />
 
               <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>৳ {total}</span>
+                <span className="text-sm text-muted-foreground">Subtotal</span>
+                <span className="text-sm font-medium">৳ {total}</span>
               </div>
 
               <div className="flex justify-between text-sm text-muted-foreground">
@@ -129,7 +133,7 @@ export default function CartPage() {
                 <span>৳ {total + 50}</span>
               </div>
 
-              <Button className="w-full mt-4">
+              <Button className="w-full mt-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
                 Proceed to Checkout
               </Button>
             </CardContent>

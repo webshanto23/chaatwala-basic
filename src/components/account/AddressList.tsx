@@ -27,22 +27,22 @@ const addresses: Address[] = [
 
 export function AddressList() {
   return (
-    <Card className="border-border/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-      <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-4">
+    <Card className="group rounded-[2rem] border border-border/70 bg-white/95 shadow-xl">
+      <CardHeader className="flex flex-row items-center justify-between px-6 pb-2 pt-6">
         <CardTitle className="text-base">Addresses</CardTitle>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className="rounded-full">
           <Plus className="mr-1.5 h-4 w-4" />
           Add
         </Button>
       </CardHeader>
-      <CardContent className="space-y-3 px-4 pb-4">
+      <CardContent className="space-y-4 px-6 pb-6">
         {addresses.map((address) => (
           <div
             key={address.id}
-            className="rounded-xl border border-border/70 bg-background/70 p-3"
+            className="rounded-2xl border border-border/70 bg-muted/50 p-4"
           >
             <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-muted text-foreground">
+              <div className="mt-0.5 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <MapPin className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
@@ -57,11 +57,11 @@ export function AddressList() {
               </div>
             </div>
             <div className="mt-3 flex justify-end gap-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="rounded-full">
                 <PencilLine className="mr-1.5 h-4 w-4" />
                 Edit
               </Button>
-              <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10">
+              <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 rounded-full">
                 <Trash2 className="mr-1.5 h-4 w-4" />
                 Delete
               </Button>

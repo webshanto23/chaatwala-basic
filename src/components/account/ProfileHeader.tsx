@@ -22,9 +22,9 @@ export function ProfileHeader({
     .toUpperCase();
 
   return (
-    <Card className="border-border/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-      <CardContent className="flex flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:px-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted text-lg font-semibold text-foreground">
+    <Card className="group rounded-[2rem] border border-border/70 bg-white/95 shadow-xl transition-all">
+      <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
           {initials}
         </div>
 
@@ -42,7 +42,7 @@ export function ProfileHeader({
           </div>
         </div>
 
-        <Button variant="outline" size="sm" className="w-full sm:w-auto">
+        <Button variant="outline" size="sm" className="w-full sm:w-auto rounded-full">
           <PencilLine className="mr-1.5 h-4 w-4" />
           Edit Profile
         </Button>

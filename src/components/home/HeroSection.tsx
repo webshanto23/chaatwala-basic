@@ -2,76 +2,86 @@
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, ShoppingBag } from "lucide-react"
+import { ArrowRight, ShoppingBag, Sparkles } from "lucide-react"
 import Image from "next/image"
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 to-secondary/10 dark:from-primary/10 dark:to-secondary/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          
-          {/* Hero Content */}
-          <div className="space-y-6 z-10">
-            <Badge variant="spicy" className="text-sm">
-              <ShoppingBag className="w-3 h-3 mr-1" />
+    <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.18),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(236,72,153,0.12),_transparent_25%)]" />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20">
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
+
+          <div className="space-y-6">
+            <Badge variant="popular" className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary shadow-lg shadow-primary/10 px-4 py-2 text-sm font-semibold">
+              <ShoppingBag className="w-3.5 h-3.5" />
               Street Food Delivered Fresh
             </Badge>
-            
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
-              Taste the Streets of <span className="text-primary">Dhaka</span>
+
+            <h1 className="text-4xl font-bold leading-tight text-foreground sm:text-5xl lg:text-6xl">
+              Discover bold street flavors <span className="text-primary">that excite</span>
             </h1>
-            
-            <p className="text-lg text-muted-foreground max-w-md">
-              Authentic chaat, spicy snacks, and traditional flavors delivered hot to your doorstep.
+
+            <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
+              Chaatwala brings vibrant Indian street food to your table with colorful flavors, crispy textures, and fast delivery.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button size="lg" className="group hover:scale-105 transition-transform">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <Button size="lg" className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:bg-primary/90">
                 Order Now
-                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4" />
               </Button>
-              <Button size="lg" variant="outline" className="hover:scale-105 transition-transform">
+              <Button size="lg" variant="secondary" className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white/90 text-foreground shadow-lg hover:bg-white">
                 Explore Menu
               </Button>
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-4 pt-8 max-w-sm">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-primary">50+</p>
+            <div className="grid grid-cols-3 gap-4 pt-8 max-w-2xl">
+              <div className="rounded-3xl border border-border/70 bg-white/80 p-4 text-center shadow-sm">
+                <p className="text-3xl font-semibold text-primary">50+</p>
                 <p className="text-sm text-muted-foreground">Chaat Varieties</p>
               </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-primary">15min</p>
+              <div className="rounded-3xl border border-border/70 bg-white/80 p-4 text-center shadow-sm">
+                <p className="text-3xl font-semibold text-secondary">15 min</p>
                 <p className="text-sm text-muted-foreground">Avg Delivery</p>
               </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-primary">4.8★</p>
-                <p className="text-sm text-muted-foreground">Rating</p>
+              <div className="rounded-3xl border border-border/70 bg-white/80 p-4 text-center shadow-sm">
+                <p className="text-3xl font-semibold text-accent">4.8★</p>
+                <p className="text-sm text-muted-foreground">Customer rating</p>
               </div>
             </div>
           </div>
 
-          {/* Hero Image */}
           <div className="relative">
-            <div className="aspect-square lg:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
-              <Image
-                src="https://images.unsplash.com/photo-1627308595229-7830a5c91f9f"
-                alt="Delicious street food spread"
-                width={600}
-                height={450}
-                className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
-              />
+            <div className="absolute -left-10 top-8 h-40 w-40 rounded-full bg-secondary/20 blur-3xl" />
+            <div className="absolute -right-8 bottom-0 h-56 w-56 rounded-full bg-accent/20 blur-3xl" />
+            <div className="isolate overflow-hidden rounded-[2rem] border border-border/60 bg-white/90 shadow-[0_32px_120px_-58px_rgba(251,140,0,0.55)]">
+              <div className="aspect-[4/3] w-full overflow-hidden">
+                <Image
+                  src="https://images.unsplash.com/photo-1627308595229-7830a5c91f9f"
+                  alt="Delicious street food spread"
+                  width={630}
+                  height={480}
+                  className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                />
+              </div>
+
+              <div className="space-y-4 p-5">
+                <div className="flex items-center justify-between rounded-3xl bg-primary/10 px-4 py-3 text-sm text-primary shadow-inner shadow-primary/10">
+                  <div>
+                    <p className="font-semibold">Chef's Special</p>
+                    <p className="text-xs text-muted-foreground">Spiced street sandwich</p>
+                  </div>
+                  <Sparkles className="h-5 w-5" />
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Badge variant="spicy" className="rounded-full px-4 py-2 text-sm shadow">Fiery Choice</Badge>
+                  <Badge variant="new" className="rounded-full px-4 py-2 text-sm shadow">Fresh Today</Badge>
+                </div>
+              </div>
             </div>
-            
-            {/* Floating badges */}
-            <Badge variant="popular" className="absolute top-4 right-4 shadow-lg">
-              Most Popular
-            </Badge>
-            <Badge variant="new" className="absolute bottom-4 left-4 shadow-lg">
-              Fresh Daily
-            </Badge>
           </div>
         </div>
       </div>

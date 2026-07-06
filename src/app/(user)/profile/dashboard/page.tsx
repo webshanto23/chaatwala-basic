@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import UserDashboard from "@/components/account/UserDashboard";
 
-export default async function ProfileIndexRedirect() {
+export default async function ProfileDashboardPage() {
   const cookiesStore = await cookies();
   const cookie = cookiesStore.get("chaatwala-auth")?.value;
   if (!cookie) {
@@ -18,6 +19,5 @@ export default async function ProfileIndexRedirect() {
     redirect("/");
   }
 
-  // Authenticated users should land on the profile dashboard
-  redirect("/profile/dashboard");
+  return <UserDashboard />;
 }
