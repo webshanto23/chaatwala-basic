@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 import { AddressList } from "@/components/account/AddressList";
 import { NotificationSettings } from "@/components/account/NotificationSettings";
@@ -14,6 +15,11 @@ export default function UserDashboard() {
   const [offers, setOffers] = useState(true);
   const [emailSms, setEmailSms] = useState(false);
 
+  const { data: session } = useSession();
+
+  const name = session?.user?.name ?? "Ava Carter";
+  const email = session?.user?.email ?? "ava.carter@example.com";
+
   return (
     <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8">
       <div className="mx-auto flex w-full max-w-[480px] flex-col gap-4">
@@ -26,7 +32,7 @@ export default function UserDashboard() {
           </h1>
         </div>
 
-        <ProfileHeader />
+        <ProfileHeader name={name} email={email} />
         <SettingsList
           themeEnabled={themeEnabled}
           onThemeToggle={() => setThemeEnabled((value) => !value)}

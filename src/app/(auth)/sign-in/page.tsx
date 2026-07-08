@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,24 +18,49 @@ import { GoogleIcon } from "@/components/icons/google-icon";
 import { Logo } from "@/components/shared/footer/logo";
 import { XIcon } from "@/components/icons/x-icon";
 import Link from "next/link";
-import { useAuth } from "@/contexts/auth-context";
 
 export default function SignIn() {
   const router = useRouter();
-  const { loginUser, loginAdmin } = useAuth();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<"user" | "admin">("user");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = () => {
-    if (mode === "admin") {
-      loginAdmin(email, password);
-      router.replace("/admin/dashboard");
+  const errorFromUrl = searchParams.get("error");
+  if (errorFromUrl && !error) {
+    setError(
+      errorFromUrl === "CredentialsSignin"
+        ? "Invalid email or password"
+        : "Login failed, please try again"
+    );
+  }
+
+  const callbackUrl = mode === "admin" ? "/admin/dashboard" : "/profile/dashboard";
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      setError(result.error === "CredentialsSignin" ? "Invalid email or password" : "Login failed, please try again");
+      setIsLoading(false);
       return;
     }
 
-    loginUser(email, password);
-    router.replace("/dashboard");
+    router.push(callbackUrl);
+  };
+
+  const handleOAuthSignIn = async (provider: string) => {
+    await signIn(provider, { callbackUrl: "/profile/dashboard" });
   };
 
   return (
@@ -63,7 +89,10 @@ export default function SignIn() {
             <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/70 p-1">
               <button
                 type="button"
-                onClick={() => setMode("user")}
+                onClick={() => {
+                  setMode("user");
+                  setError(null);
+                }}
                 className={cn(
                   "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   mode === "user" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
@@ -73,7 +102,10 @@ export default function SignIn() {
               </button>
               <button
                 type="button"
-                onClick={() => setMode("admin")}
+                onClick={() => {
+                  setMode("admin");
+                  setError(null);
+                }}
                 className={cn(
                   "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   mode === "admin" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
@@ -83,55 +115,52 @@ export default function SignIn() {
               </button>
             </div>
 
-            <form className="space-y-2" onSubmit={(event) => {
-              event.preventDefault();
-              handleSubmit();
-            }}>
+            {error && (
+              <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
 
-              {/* Input fields for email */}
+            <form className="space-y-2" onSubmit={handleSubmit}>
               <InputGroup>
                 <InputGroupInput
                   placeholder="email@example.com"
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
+                  required
                 />
                 <InputGroupAddon align="inline-start">
-                  <AtSignIcon
-                  />
+                  <AtSignIcon />
                 </InputGroupAddon>
               </InputGroup>
 
-              {/* Input fields for password */}
               <InputGroup>
                 <InputGroupInput
                   placeholder="Password"
                   type="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
+                  required
                 />
                 <InputGroupAddon align="inline-start">
                   <Lock />
                 </InputGroupAddon>
               </InputGroup>
 
-              <Button className="w-full" size="sm" type="submit">
-                Sign In
+              <Button className="w-full" size="sm" type="submit" disabled={isLoading}>
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
 
-            {/* Divider */}
             <AuthDivider>OR</AuthDivider>
 
-            {/* Social login buttons */}
             <div className="grid grid-cols-2 gap-2 space-y-2">
-              <Button className="w-full" type="button" variant="outline">
+              <Button className="w-full" type="button" variant="outline" onClick={() => handleOAuthSignIn("google")}>
                 <GoogleIcon data-icon="inline-start" />
-
               </Button>
-              <Button className="w-full" type="button" variant="outline">
+              <Button className="w-full" type="button" variant="outline" onClick={() => handleOAuthSignIn("facebook")}>
                 <XIcon data-icon="inline-start" />
-
               </Button>
             </div>
           </div>
@@ -142,7 +171,7 @@ export default function SignIn() {
               href="/sign-up"
             >
               Create an account
-            </Link>{" "}
+            </Link>
             .
           </p>
         </div>
@@ -150,8 +179,3 @@ export default function SignIn() {
     </div>
   );
 }
-
-
-
-
-

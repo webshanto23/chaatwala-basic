@@ -1,19 +1,16 @@
+
 import { Mail, PencilLine, Phone } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 type ProfileHeaderProps = {
-  name?: string;
-  email?: string;
+  name: string;
+  email: string;
   phone?: string;
 };
 
-export function ProfileHeader({
-  name = "Ava Carter",
-  email = "ava.carter@example.com",
-  phone = "+1 (555) 014-2211",
-}: ProfileHeaderProps) {
+export function ProfileHeader({ name, email, phone = "+1 (555) 014-2211" }: ProfileHeaderProps) {
   const initials = name
     .split(" ")
     .map((part) => part[0])

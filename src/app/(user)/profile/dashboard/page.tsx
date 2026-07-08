@@ -1,21 +1,18 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import UserDashboard from "@/components/account/UserDashboard";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function ProfileDashboardPage() {
-  const cookiesStore = await cookies();
-  const cookie = cookiesStore.get("chaatwala-auth")?.value;
-  if (!cookie) {
-    // Not authenticated => redirect to home
-    redirect("/");
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/signin");
   }
 
-  try {
-    const session = JSON.parse(decodeURIComponent(cookie!));
-    if (!session?.isAuthenticated || session?.role !== "user") {
-      redirect("/");
+  if (session.user.role !== "user") {
+    if (session.user.role === "admin" || session.user.role === "super_admin" || session.user.role === "store_manager") {
+      redirect("/admin/dashboard");
     }
-  } catch (e) {
     redirect("/");
   }
 

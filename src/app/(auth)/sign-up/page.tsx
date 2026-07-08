@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +15,9 @@ import { AuthDivider } from "@/components/ui/auth-divider";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { Logo } from "@/components/shared/footer/logo";
 import { XIcon } from "@/components/icons/x-icon";
+import Link from "next/link";
+import { signIn } from "next-auth/react";
+import { registerAndSignIn } from "@/app/actions/auth";
 
 export default function SignUp() {
   return (
@@ -38,77 +43,65 @@ export default function SignUp() {
             </p>
           </div>
           <div className="space-y-4">
-            <form className="space-y-2">
+            <form action={registerAndSignIn} className="space-y-2">
 
-              {/* Input fields for Name */}
               <InputGroup>
                 <InputGroupInput
                   placeholder="Enter your name"
                   type="name"
+                  name="name"
                 />
                 <InputGroupAddon align="inline-start">
                   <User />
                 </InputGroupAddon>
               </InputGroup>
 
-              {/* Input fields for email */}
               <InputGroup>
                 <InputGroupInput
                   placeholder="email@example.com"
                   type="email"
+                  name="email"
                 />
                 <InputGroupAddon align="inline-start">
-                  <AtSignIcon
-                  />
+                  <AtSignIcon />
                 </InputGroupAddon>
               </InputGroup>
 
-              {/* Input fields for password */}
               <InputGroup>
                 <InputGroupInput
                   placeholder="Password"
                   type="password"
+                  name="password"
                 />
                 <InputGroupAddon align="inline-start">
                   <Lock />
                 </InputGroupAddon>
               </InputGroup>
 
-              <Button className="w-full" size="sm" type="button">
+              <Button className="w-full" size="sm" type="submit">
                 Sign Up
               </Button>
             </form>
 
-            {/* Divider */}
             <AuthDivider>OR</AuthDivider>
 
-            {/* Social login buttons */}
             <div className="grid grid-cols-2 gap-2 space-y-2">
-              <Button className="w-full" type="button" variant="outline">
+              <Button className="w-full" type="button" variant="outline" onClick={() => signIn("google", { redirectTo: "/profile/dashboard" })}>
                 <GoogleIcon data-icon="inline-start" />
-
               </Button>
-              <Button className="w-full" type="button" variant="outline">
+              <Button className="w-full" type="button" variant="outline" onClick={() => signIn("facebook", { redirectTo: "/profile/dashboard" })}>
                 <XIcon data-icon="inline-start" />
-
               </Button>
             </div>
           </div>
           <p className="text-muted-foreground text-sm">
-            By clicking Sign Up, you agree to our{" "}
-            <a
+            Already have an account?{" "}
+            <Link
               className="underline underline-offset-4 hover:text-primary"
-              href="#"
+              href="/signin"
             >
-              Terms of Service
-            </a>{" "}
-            and{" "}
-            <a
-              className="underline underline-offset-4 hover:text-primary"
-              href="#"
-            >
-              Privacy Policy
-            </a>
+              Sign in
+            </Link>
             .
           </p>
         </div>
@@ -116,8 +109,3 @@ export default function SignUp() {
     </div>
   );
 }
-
-
-
-
-

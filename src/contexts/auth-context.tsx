@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useCallback, useMemo } from "react";
+import { SessionProvider, signOut, useSession } from "next-auth/react";
 
-import { clearAuthCookie, getAuthCookie, setAuthCookie, type AuthRole } from "@/lib/auth";
+type AuthRole = "super_admin" | "admin" | "store_manager" | "user";
 
 type AuthState = {
   isAuthenticated: boolean;
@@ -12,62 +13,47 @@ type AuthState = {
 
 type AuthContextValue = {
   auth: AuthState;
-  loginUser: (email?: string, password?: string) => void;
-  loginAdmin: (email?: string, password?: string) => void;
-  logout: () => void;
-};
-
-const defaultAuthState: AuthState = {
-  isAuthenticated: false,
-  role: null,
-  name: null,
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [auth, setAuth] = useState<AuthState>(defaultAuthState);
+  return (
+    <SessionProvider>
+      <InnerAuthProvider>{children}</InnerAuthProvider>
+    </SessionProvider>
+  );
+}
 
-  useEffect(() => {
-    Promise.resolve().then(() => {
-      const stored = getAuthCookie();
-      if (stored) {
-        setAuth(stored);
-      }
+function InnerAuthProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
+
+  const auth = useMemo(() => ({
+    isAuthenticated: status === "authenticated",
+    role: (session?.user?.role as AuthRole) ?? null,
+    name: session?.user?.name ?? null,
+  }), [status, session]);
+
+  const login = useCallback(async (email: string, password: string) => {
+    await fetch("/api/auth/callback/credentials", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        email,
+        password,
+        redirect: "false",
+        json: "true",
+      }),
     });
   }, []);
 
-  const loginUser = (email = "customer@example.com", password = "password") => {
-    if (!email.trim() || !password.trim()) return;
-    const nextState = {
-      isAuthenticated: true,
-      role: "user" as const,
-      name: email.split("@")[0] || "Customer",
-    };
-    setAuth(nextState);
-    setAuthCookie(nextState);
-  };
+  const logout = useCallback(async () => {
+    await signOut();
+  }, []);
 
-  const loginAdmin = (email = "admin@example.com", password = "password") => {
-    if (!email.trim() || !password.trim()) return;
-    const nextState = {
-      isAuthenticated: true,
-      role: "admin" as const,
-      name: email.split("@")[0] || "Admin",
-    };
-    setAuth(nextState);
-    setAuthCookie(nextState);
-  };
-
-  const logout = () => {
-    setAuth(defaultAuthState);
-    clearAuthCookie();
-  };
-
-  const value = useMemo(
-    () => ({ auth, loginUser, loginAdmin, logout }),
-    [auth]
-  );
+  const value = useMemo(() => ({ auth, login, logout }), [auth, login, logout]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -1,57 +1,94 @@
-"use client";
+import NextAuth from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import Facebook from "next-auth/providers/facebook";
+import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcrypt";
+import { signInSchema } from "@/lib/validations/auth";
 
-export type AuthRole = "super_admin" | "admin" | "user";
+type UserRole = "super_admin" | "admin" | "store_manager" | "user";
+export type { UserRole as AuthRole };
 
-export type AuthSession = {
-  isAuthenticated: boolean;
-  role: AuthRole | null;
-  name: string | null;
-};
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      role: UserRole;
+      name: string | null;
+      email: string | null;
+      image: string | null;
+    };
+  }
 
-const AUTH_COOKIE_NAME = "chaatwala-auth";
-
-export function setAuthCookie(session: AuthSession) {
-  if (typeof document === "undefined") return;
-  document.cookie = `${AUTH_COOKIE_NAME}=${encodeURIComponent(JSON.stringify(session))}; path=/; max-age=60*60*24*7; SameSite=Lax`;
-}
-
-export function getAuthCookie(): AuthSession | null {
-  if (typeof document === "undefined") return null;
-
-  const cookieValue = document.cookie
-    .split("; ")
-    .find((entry) => entry.startsWith(`${AUTH_COOKIE_NAME}=`));
-
-  if (!cookieValue) return null;
-
-  try {
-    return JSON.parse(decodeURIComponent(cookieValue.split("=")[1]));
-  } catch {
-    return null;
+  interface User {
+    role: UserRole;
   }
 }
 
-export function clearAuthCookie() {
-  if (typeof document === "undefined") return;
-  document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
+declare module "@auth/core/jwt" {
+  interface JWT {
+    id: string;
+    role: UserRole;
+  }
 }
 
-export function isRouteAllowed(role: AuthRole | null, pathname: string) {
-  if (pathname === "/" || pathname === "/about" || pathname === "/products") {
-    return true;
-  }
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  session: { strategy: "jwt" },
+  pages: {
+    signIn: "/signin",
+    error: "/signin",
+  },
+  providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+    Facebook({
+      clientId: process.env.FACEBOOK_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+    }),
+    Credentials({
+      id: "credentials",
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials) return null;
 
-  if (pathname === "/admin") {
-    return role === "admin" || role === "super_admin" || !role;
-  }
+        const validated = signInSchema.parse(credentials);
 
-  if (pathname.startsWith("/admin")) {
-    return role === "admin" || role === "super_admin";
-  }
+        const user = await prisma.user.findUnique({
+          where: { email: validated.email },
+        });
 
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/cart") || pathname.startsWith("/profile")) {
-    return role === "user";
-  }
+        if (!user || !user.password) return null;
 
-  return true;
-}
+        const passwordMatch = await bcrypt.compare(validated.password, user.password);
+
+        if (!passwordMatch) return null;
+
+        return user;
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id as string;
+        token.role = user.role as UserRole;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as UserRole;
+      }
+      return session;
+    },
+  },
+});
