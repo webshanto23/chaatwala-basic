@@ -1,36 +1,213 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍽️ Chaatwala — SaaS Food Ordering & Admin Platform
 
-## Getting Started
+## 🚀 Project Overview
 
-First, run the development server:
+**Chaatwala** is a modern SaaS-based food ordering platform built with **Next.js, Prisma, PostgreSQL, and NextAuth**, featuring a **production-grade RBAC (Role-Based Access Control) system**.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+The project is designed to support both **customer-facing features** and a powerful **admin dashboard** with granular permission control.
+
+---
+
+## 🧠 Current Architecture
+
+### 🔐 Authentication & Authorization
+
+* **NextAuth (JWT-based) authentication**
+* **Database-driven RBAC system**
+* Dynamic **roles & permissions**
+* Centralized **permission helpers (`can()`)**
+* Middleware-based route protection
+* Backend API-level authorization (secure)
+
+---
+
+### 🧩 RBAC System (Core Feature)
+
+#### Roles
+
+* `user`
+* `admin`
+* `store_manager`
+* `super_admin`
+
+#### Permissions
+
+Granular permissions like:
+
+* `users:view`
+* `users:delete`
+* `admins:assign`
+* `products:create`
+* `products:delete`
+* `dashboard:access`
+
+#### Special Rule
+
+* 👑 **Super Admin Override**
+
+  * Automatically has `"*"` (all permissions)
+  * Bypasses all checks
+
+---
+
+### 🧠 Permission Utilities
+
+Reusable helpers across frontend & backend:
+
+```ts
+can(permissions, perm)
+canAny(permissions, perms[])
+canAll(permissions, perms[])
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+✔ Used in:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+* Middleware
+* API routes
+* UI rendering
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🗄️ Database (Prisma + PostgreSQL)
 
-To learn more about Next.js, take a look at the following resources:
+### Core Models:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* `User`
+* `Role`
+* `Permission`
+* `RolePermission` (join table)
+* `AuditLog` (for tracking actions)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 📊 Audit Logging System
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Tracks all critical actions:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Examples:
+
+* User deletion
+* Admin assignment
+* Product removal
+
+### Stored Data:
+
+* `userId`
+* `action`
+* `entity`
+* `entityId`
+* `metadata (JSON)`
+* `createdAt`
+
+---
+
+## 🛠️ Admin Panel (In Progress)
+
+### Current Features:
+
+* User management UI
+* Role management UI
+* Audit logs viewer
+
+### Planned Features:
+
+* Assign/remove permissions from roles
+* Promote/demote users (admin, store_manager)
+* Product management system
+* Permission matrix UI (checkbox-based)
+
+---
+
+## 🧭 Routing & Middleware
+
+### Protected Routes:
+
+* `/admin/*` → requires `admin:access`
+* `/profile`, `/cart` → requires `user:access`
+
+### Smart Redirects:
+
+* Logged-in users redirected based on permissions
+* Unauthorized access blocked at middleware level
+
+---
+
+## 🎨 Frontend
+
+* Built with **Next.js App Router**
+* Role-aware UI rendering
+* Permission-based component visibility
+
+Example:
+
+```tsx
+{can("products:delete") && <DeleteButton />}
+```
+
+---
+
+## ⚠️ Current Issues / TODO
+
+### 🔴 Needs Fixing
+
+* `useEffect` data fetching pattern (setState warning)
+* Cleanup unused variables/imports
+
+### 🟡 In Progress
+
+* Admin permission assignment UI
+* Full CRUD APIs with permission checks
+* Audit log filters & UI improvements
+
+---
+
+## 🧱 Tech Stack
+
+* **Frontend:** Next.js (App Router), React
+* **Backend:** Next.js API routes
+* **Auth:** NextAuth (JWT)
+* **ORM:** Prisma
+* **Database:** PostgreSQL
+* **Linting:** ESLint
+
+---
+
+## 🔒 Security Practices
+
+* ✅ Backend permission validation (critical)
+* ✅ Middleware route protection
+* ✅ Frontend UI guards (non-trusted layer)
+* ✅ Audit logging for sensitive actions
+
+---
+
+## 🚀 Future Roadmap
+
+* Multi-tenant support (SaaS scaling)
+* Advanced permission editor UI
+* Real-time updates (WebSockets)
+* Analytics dashboard
+* Payment integration
+
+---
+
+## 🧠 Key Learnings / Highlights
+
+* Transitioned from **role-based → permission-based system**
+* Implemented **enterprise-level RBAC**
+* Designed **scalable and extensible auth architecture**
+* Introduced **audit logging for accountability**
+
+---
+
+## 🧑‍💻 Author
+
+Built with focus on **clean architecture, scalability, and real-world SaaS patterns**.
+
+---
+
+## 📌 Status
+
+> ⚙️ **Actively in development — core RBAC system implemented, admin features expanding**
+
+---
