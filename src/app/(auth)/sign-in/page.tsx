@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,31 +17,36 @@ import { GoogleIcon } from "@/components/icons/google-icon";
 import { Logo } from "@/components/shared/footer/logo";
 import { XIcon } from "@/components/icons/x-icon";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [mode, setMode] = useState<"user" | "admin">("user");
+  const { data: session, status } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const errorFromUrl = searchParams.get("error");
-  if (errorFromUrl && !error) {
-    setError(
-      errorFromUrl === "CredentialsSignin"
-        ? "Invalid email or password"
-        : "Login failed, please try again"
-    );
-  }
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      if (session.user.role === "super_admin" || session.user.role === "admin" || session.user.role === "store_manager") {
+        router.replace("/admin/dashboard");
+      } else {
+        router.replace("/profile/dashboard");
+      }
+    }
+  }, [status, session, router]);
 
-  const callbackUrl = mode === "admin" ? "/admin/dashboard" : "/profile/dashboard";
+  const errorFromUrl = searchParams.get("error");
+  const urlError = errorFromUrl ? (errorFromUrl === "CredentialsSignin" ? "Invalid email or password" : "Login failed, please try again") : null;
+  const displayError = error ?? urlError;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    router.replace("/signin");
 
     const result = await signIn("credentials", {
       email,
@@ -56,10 +60,11 @@ export default function SignIn() {
       return;
     }
 
-    router.push(callbackUrl);
+    router.push("/profile/dashboard");
   };
 
   const handleOAuthSignIn = async (provider: string) => {
+    router.replace("/signin");
     await signIn(provider, { callbackUrl: "/profile/dashboard" });
   };
 
@@ -86,38 +91,9 @@ export default function SignIn() {
             </p>
           </div>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/70 p-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("user");
-                  setError(null);
-                }}
-                className={cn(
-                  "rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  mode === "user" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-                )}
-              >
-                User
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("admin");
-                  setError(null);
-                }}
-                className={cn(
-                  "rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  mode === "admin" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-                )}
-              >
-                Admin
-              </button>
-            </div>
-
-            {error && (
+            {displayError && (
               <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {error}
+                {displayError}
               </p>
             )}
 

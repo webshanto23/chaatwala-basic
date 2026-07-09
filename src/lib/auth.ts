@@ -10,19 +10,18 @@ import { signInSchema } from "@/lib/validations/auth";
 type UserRole = "super_admin" | "admin" | "store_manager" | "user";
 export type { UserRole as AuthRole };
 
+type Permission = string;
+
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
       role: UserRole;
+      permissions: Permission[];
       name: string | null;
       email: string | null;
       image: string | null;
     };
-  }
-
-  interface User {
-    role: UserRole;
   }
 }
 
@@ -30,7 +29,39 @@ declare module "@auth/core/jwt" {
   interface JWT {
     id: string;
     role: UserRole;
+    permissions: Permission[];
   }
+}
+
+async function loadUserPermissions(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      role: {
+        include: {
+          permissions: {
+            include: {
+              permission: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!user || !user.role) {
+    return { role: "user" as UserRole, permissions: [] as Permission[] };
+  }
+
+  const roleName = user.role.name as UserRole;
+
+  if (roleName === "super_admin") {
+    return { role: roleName, permissions: ["*"] as Permission[] };
+  }
+
+  const permissions = user.role.permissions.map((rp) => rp.permission.name) as Permission[];
+
+  return { role: roleName, permissions };
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -76,10 +107,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id as string;
-        token.role = user.role as UserRole;
+    async jwt({ token }) {
+      if (token.id) {
+        const { role, permissions } = await loadUserPermissions(token.id as string);
+        token.role = role;
+        token.permissions = permissions;
       }
       return token;
     },
@@ -87,8 +119,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as UserRole;
+        session.user.permissions = (token.permissions as Permission[]) ?? [];
       }
       return session;
+    },
+  },
+  events: {
+    async signIn({ user }) {
+      if (!user.id) return;
+      const existing = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { roleId: true },
+      });
+      if (!existing?.roleId) {
+        const userRole = await prisma.role.findUnique({
+          where: { name: "user" },
+          select: { id: true },
+        });
+        if (userRole) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { roleId: userRole.id },
+          });
+        }
+      }
     },
   },
 });

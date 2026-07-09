@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useCallback, useMemo } from "react";
-import { SessionProvider, signOut, useSession } from "next-auth/react";
+import { SessionProvider, signIn, signOut, useSession } from "next-auth/react";
 
 type AuthRole = "super_admin" | "admin" | "store_manager" | "user";
 
@@ -37,15 +37,10 @@ function InnerAuthProvider({ children }: { children: React.ReactNode }) {
   }), [status, session]);
 
   const login = useCallback(async (email: string, password: string) => {
-    await fetch("/api/auth/callback/credentials", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        email,
-        password,
-        redirect: "false",
-        json: "true",
-      }),
+    await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
     });
   }, []);
 

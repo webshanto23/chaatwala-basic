@@ -9,6 +9,8 @@ import { useAuth } from "@/contexts/auth-context"
 const links = [
   { name: "Dashboard", href: "/admin" },
   { name: "Users", href: "/admin/users" },
+  { name: "Roles", href: "/admin/roles" },
+  { name: "Audit Logs", href: "/admin/audit-logs" },
   { name: "Dishes", href: "/admin/dishes" },
   { name: "Drinks", href: "/admin/drinks" },
   { name: "Combos", href: "/admin/combos" },

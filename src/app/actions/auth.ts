@@ -3,7 +3,6 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { signUpSchema } from "@/lib/validations/auth";
-import { signIn } from "@/lib/auth";
 
 export async function registerUser(formData: FormData) {
   const rawData = {
@@ -16,24 +15,19 @@ export async function registerUser(formData: FormData) {
 
   const hashedPassword = await bcrypt.hash(validated.password, 12);
 
+  const userRole = await prisma.role.findUnique({
+    where: { name: "user" },
+    select: { id: true },
+  });
+
   const user = await prisma.user.create({
     data: {
       name: validated.name,
       email: validated.email,
       password: hashedPassword,
+      roleId: userRole?.id,
     },
   });
 
   return { success: true, user: { id: user.id, email: user.email, name: user.name } };
-}
-
-export async function registerAndSignIn(formData: FormData): Promise<void> {
-  const result = await registerUser(formData);
-  if (!result.success) return;
-
-  await signIn("credentials", {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-    redirectTo: "/profile/dashboard",
-  });
 }
