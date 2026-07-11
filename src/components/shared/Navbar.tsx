@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Menu, LogOut } from "lucide-react";
 import { Logo } from "@/components/shared/footer/logo";
 import { useAuth } from "@/contexts/auth-context";
+import { usePermissions } from "@/hooks/use-can";
 
 import {
   NavigationMenu,
@@ -24,12 +25,11 @@ import {
 export default function Navbar() {
   const router = useRouter();
   const { auth, logout } = useAuth();
+  const { can } = usePermissions();
   const isLoggedIn = auth.isAuthenticated;
-  const isAdmin = auth.role === "admin" || auth.role === "super_admin";
-  const isUser = auth.role === "user";
+  const isAdmin = can("admin:access");
 
   const publicLinks = data.navigation.publicLinks;
-
   const userLinks = data.navigation.userLinks;
 
   return (
@@ -48,7 +48,7 @@ export default function Navbar() {
         <NavigationMenu className="hidden md:flex rounded-full bg-background/80 px-4 py-1 shadow-sm shadow-primary/5">
           <NavigationMenuList className="gap-2">
 
-            {(!isLoggedIn || isUser) && publicLinks.map((item) => (
+                  {(!isLoggedIn || !isAdmin) && publicLinks.map((item) => (
               <NavigationMenuItem key={item.href}>
                 <NavigationMenuLink asChild>
                   <Link href={item.href} className="hover:text-primary transition-colors">{item.label}</Link>
@@ -56,7 +56,7 @@ export default function Navbar() {
               </NavigationMenuItem>
             ))}
 
-            {isUser && (
+            {isLoggedIn && !isAdmin && (
               <>
                 {userLinks.filter((item) => item.href !== "/").map((item) => (
                   <NavigationMenuItem key={item.href}>
@@ -124,7 +124,7 @@ export default function Navbar() {
                 </div>
 
                 <nav className="flex flex-col gap-1">
-                  {(!isLoggedIn || isUser) && publicLinks.map((item) => (
+            {(!isLoggedIn || !isAdmin) && publicLinks.map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
@@ -134,7 +134,7 @@ export default function Navbar() {
                     </Link>
                   ))}
 
-                  {isUser && userLinks.filter((item) => item.href !== "/").map((item) => (
+                  {isLoggedIn && !isAdmin && userLinks.filter((item) => item.href !== "/").map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}

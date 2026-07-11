@@ -6,8 +6,9 @@ import Credentials from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { signInSchema } from "@/lib/validations/auth";
+import type { RoleName } from "@/lib/permissions";
 
-type UserRole = "super_admin" | "admin" | "store_manager" | "user";
+type UserRole = RoleName;
 export type { UserRole as AuthRole };
 
 type Permission = string;
@@ -54,11 +55,6 @@ async function loadUserPermissions(userId: string) {
   }
 
   const roleName = user.role.name as UserRole;
-
-  if (roleName === "super_admin") {
-    return { role: roleName, permissions: ["*"] as Permission[] };
-  }
-
   const permissions = user.role.permissions.map((rp) => rp.permission.name) as Permission[];
 
   return { role: roleName, permissions };
@@ -107,9 +103,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token }) {
-      if (token.id) {
-        const { role, permissions } = await loadUserPermissions(token.id as string);
+    async jwt({ token, user }) {
+      const userId = token.id ?? token.sub ?? (user?.id as string | undefined);
+      if (userId) {
+        token.id = userId;
+        const { role, permissions } = await loadUserPermissions(userId);
         token.role = role;
         token.permissions = permissions;
       }

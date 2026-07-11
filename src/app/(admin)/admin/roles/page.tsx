@@ -33,7 +33,7 @@ export default function RolesPage() {
     setLoading(false);
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   useEffect(() => {
     const fetchData = async () => {
       await loadData();

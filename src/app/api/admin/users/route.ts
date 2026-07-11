@@ -4,7 +4,7 @@ import { logAction } from "@/app/actions/audit";
 import prisma from "@/lib/prisma";
 
 export async function GET() {
-  const { authorized, session } = await authorize({ permissions: ["users:view"] });
+  const { authorized, session } = await authorize({ permissions: ["user:view"] });
 
   if (!authorized || !session?.user) {
     return unauthorizedResponse("You do not have permission to view users");
@@ -25,7 +25,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { authorized, session } = await authorize({ permissions: ["users:create"] });
+  const { authorized, session } = await authorize({ permissions: ["user:access"] });
 
   if (!authorized || !session?.user) {
     return unauthorizedResponse("You do not have permission to create users");

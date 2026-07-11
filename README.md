@@ -27,28 +27,45 @@ The project is designed to support both **customer-facing features** and a power
 
 * `user`
 * `admin`
-* `store_manager`
-* `super_admin`
+* `store_manager` (future-proof; manage food items)
+
+> There is **no `super_admin`**. Authorization is fully **permission-based** — every
+> check resolves to a permission, never a hardcoded role name.
 
 #### Permissions
 
-Granular permissions like:
+Defined in **one place**: `src/lib/permissions.ts` (`USER_PERMISSIONS`,
+`ADMIN_PERMISSIONS`, `ROLE_PERMISSIONS`). The seed script consumes the same
+source of truth so code and database can never drift.
 
-* `users:view`
-* `users:delete`
-* `admins:assign`
-* `products:create`
-* `products:delete`
-* `dashboard:access`
+**User (customer):**
+`order:create`, `payment:create`, `food:view`, `food:like`, `food:share`, `feedback:create`, `user:access`
 
-#### Special Rule
+**Admin:**
+`user:access`, `user:view`, `user:updateRole`, `user:delete`, `food:create`,
+`food:update`, `food:delete`, `admin:create`, `admin:delete`, `role:manage`,
+`audit:view`, `admin:access`
 
-* 👑 **Super Admin Override**
+**Store manager (future):** `user:access`, `food:view`, `food:create`, `food:update`, `food:delete`, `user:view`
 
-  * Automatically has `"*"` (all permissions)
-  * Bypasses all checks
+#### How it works
 
----
+1. On login the JWT is populated with the user's `role` **and** the resolved
+   `permissions` array (`src/lib/auth.ts` → `loadUserPermissions`).
+2. Route protection (`src/proxy.ts`) and server actions / API routes
+   (`src/lib/authorize.ts` → `authorize()` / `requirePermission()`) check
+   **permissions**, never the role string.
+3. Frontend uses `usePermissions().can(...)` (built on `createCan`) to hide UI.
+
+```ts
+// server
+const { authorized } = await authorize({ permissions: ["user:delete"] });
+if (!authorized) return unauthorizedResponse();
+
+// client
+const { can } = usePermissions();
+{can("user:delete") && <DeleteButton />}
+```
 
 ### 🧠 Permission Utilities
 
@@ -123,12 +140,29 @@ Tracks all critical actions:
 ### Protected Routes:
 
 * `/admin/*` → requires `admin:access`
-* `/profile`, `/cart` → requires `user:access`
+* `/profile`, `/cart`, `/dashboard` → requires `user:access` (any authenticated user)
+* Unauthenticated users are redirected to `/signin`
 
 ### Smart Redirects:
 
-* Logged-in users redirected based on permissions
+* Logged-in users are redirected based on `admin:access`
 * Unauthorized access blocked at middleware level
+* **Server actions and API routes re-check permissions** (middleware is UX only)
+
+---
+
+## 🔑 First Admin Bootstrap
+
+There is no UI to create the first admin (that would be a chicken-and-egg
+problem). Use the seed script with env vars instead:
+
+```bash
+ADMIN_EMAIL=admin@chaatwala.com ADMIN_PASSWORD=strongpassword npx prisma db seed
+```
+
+* If a user with `ADMIN_EMAIL` already exists, they are promoted to `admin`.
+* Otherwise a new credentials-based admin user is created.
+* All other users default to the `user` role (assigned on first sign-in / seed).
 
 ---
 
@@ -141,23 +175,17 @@ Tracks all critical actions:
 Example:
 
 ```tsx
-{can("products:delete") && <DeleteButton />}
+{can("food:delete") && <DeleteButton />}
 ```
 
 ---
 
 ## ⚠️ Current Issues / TODO
 
-### 🔴 Needs Fixing
-
-* `useEffect` data fetching pattern (setState warning)
-* Cleanup unused variables/imports
-
 ### 🟡 In Progress
-
-* Admin permission assignment UI
-* Full CRUD APIs with permission checks
+* Full CRUD APIs for food/orders with permission checks (`food:*`, `order:create`)
 * Audit log filters & UI improvements
+* Revoke-self / last-admin safeguards in UI
 
 ---
 

@@ -36,20 +36,6 @@ export default function AuditLogsPage() {
     setLoading(false);
   };
 
-  const loadLogs = async () => {
-    setLoading(true);
-    const result = await getAuditLogs({
-      action: actionFilter || undefined,
-      entity: entityFilter || undefined,
-      limit: 100,
-    });
-    if (!("error" in result) && result.logs) {
-      setLogs(result.logs);
-    }
-    setLoading(false);
-  };
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadLogs();
   }, []);

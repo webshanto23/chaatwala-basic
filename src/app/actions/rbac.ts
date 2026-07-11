@@ -1,12 +1,11 @@
 "use server";
 
-import { auth } from "@/lib/auth";
-import { authorize } from "@/lib/authorize";
+import { authorize, requirePermission } from "@/lib/authorize";
 import prisma from "@/lib/prisma";
 import { logAction } from "./audit";
 
 export async function getUsers() {
-  const { authorized } = await authorize({ permissions: ["users:view"] });
+  const { authorized } = await authorize({ permissions: ["user:view"] });
   if (!authorized) {
     return { error: "Forbidden" };
   }
@@ -22,14 +21,21 @@ export async function getUsers() {
 }
 
 export async function updateUserRole(formData: FormData) {
-  const session = await auth();
-  if (!session?.user) return { error: "Unauthorized" };
+  const { authorized, session } = await requirePermission("user:updateRole");
+  if (!authorized || !session?.user) return { error: "Forbidden" };
 
   const userId = formData.get("userId") as string;
   const roleId = formData.get("roleId") as string;
 
+  if (userId === session.user.id) {
+    return { error: "You cannot change your own role" };
+  }
+
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return { error: "User not found" };
+
+  const newRole = await prisma.role.findUnique({ where: { id: roleId } });
+  if (!newRole) return { error: "Role not found" };
 
   await prisma.user.update({
     where: { id: userId },
@@ -41,17 +47,24 @@ export async function updateUserRole(formData: FormData) {
     action: "USER_ROLE_UPDATE",
     entity: "User",
     entityId: userId,
-    metadata: { oldRoleId: user.roleId, newRoleId: roleId },
+    metadata: { oldRoleId: user.roleId, newRoleId: roleId, newRoleName: newRole.name },
   });
 
   return { success: true };
 }
 
 export async function deleteUser(formData: FormData) {
-  const session = await auth();
-  if (!session?.user) return { error: "Unauthorized" };
+  const { authorized, session } = await requirePermission("user:delete");
+  if (!authorized || !session?.user) return { error: "Forbidden" };
 
   const userId = formData.get("userId") as string;
+
+  if (userId === session.user.id) {
+    return { error: "You cannot delete your own account" };
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return { error: "User not found" };
 
   await prisma.user.delete({ where: { id: userId } });
 
@@ -60,13 +73,14 @@ export async function deleteUser(formData: FormData) {
     action: "USER_DELETE",
     entity: "User",
     entityId: userId,
+    metadata: { email: user.email },
   });
 
   return { success: true };
 }
 
 export async function getRoles() {
-  const { authorized } = await authorize({ permissions: ["admins:assign"] });
+  const { authorized } = await authorize({ permissions: ["role:manage"] });
   if (!authorized) {
     return { error: "Forbidden" };
   }
@@ -81,7 +95,7 @@ export async function getRoles() {
 }
 
 export async function getPermissions() {
-  const { authorized } = await authorize({ permissions: ["admins:assign"] });
+  const { authorized } = await authorize({ permissions: ["role:manage"] });
   if (!authorized) {
     return { error: "Forbidden" };
   }
@@ -91,8 +105,8 @@ export async function getPermissions() {
 }
 
 export async function assignPermissionToRole(formData: FormData) {
-  const session = await auth();
-  if (!session?.user) return { error: "Unauthorized" };
+  const { authorized, session } = await requirePermission("role:manage");
+  if (!authorized || !session?.user) return { error: "Forbidden" };
 
   const roleId = formData.get("roleId") as string;
   const permissionId = formData.get("permissionId") as string;
@@ -113,8 +127,8 @@ export async function assignPermissionToRole(formData: FormData) {
 }
 
 export async function removePermissionFromRole(formData: FormData) {
-  const session = await auth();
-  if (!session?.user) return { error: "Unauthorized" };
+  const { authorized, session } = await requirePermission("role:manage");
+  if (!authorized || !session?.user) return { error: "Forbidden" };
 
   const roleId = formData.get("roleId") as string;
   const permissionId = formData.get("permissionId") as string;

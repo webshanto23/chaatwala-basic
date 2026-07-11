@@ -2,8 +2,9 @@
 
 import { createContext, useContext, useCallback, useMemo } from "react";
 import { SessionProvider, signIn, signOut, useSession } from "next-auth/react";
+import type { RoleName } from "@/lib/permissions";
 
-type AuthRole = "super_admin" | "admin" | "store_manager" | "user";
+type AuthRole = RoleName | null;
 
 type AuthState = {
   isAuthenticated: boolean;

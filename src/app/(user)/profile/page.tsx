@@ -8,12 +8,11 @@ export default async function ProfileIndexRedirect() {
     redirect("/signin");
   }
 
-  if (session.user.role !== "user") {
-    if (session.user.role === "admin" || session.user.role === "super_admin" || session.user.role === "store_manager") {
-      redirect("/admin/dashboard");
-    }
-    redirect("/");
+  const isAdmin = (session.user.permissions as string[] | undefined)?.includes("admin:access");
+
+  if (!isAdmin) {
+    redirect("/profile/dashboard");
   }
 
-  redirect("/profile/dashboard");
+  redirect("/admin/dashboard");
 }

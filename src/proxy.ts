@@ -8,17 +8,6 @@ type PermissionRule = {
   unauthorizedRedirect?: string;
 };
 
-const routeRules: Record<string, PermissionRule> = {
-  "/dashboard": { require: "user:access", unauthorizedRedirect: "/signin" },
-  "/cart": { require: "user:access", unauthorizedRedirect: "/signin" },
-  "/profile": { require: "user:access", unauthorizedRedirect: "/signin" },
-  "/admin/dashboard": { require: "admin:access", unauthorizedRedirect: "/" },
-  "/admin/users": { require: "users:view", unauthorizedRedirect: "/" },
-  "/admin/dishes": { require: "products:view", unauthorizedRedirect: "/" },
-  "/admin/drinks": { require: "products:view", unauthorizedRedirect: "/" },
-  "/admin/combos": { require: "products:view", unauthorizedRedirect: "/" },
-};
-
 const publicPaths = new Set([
   "/",
   "/about",
@@ -26,22 +15,26 @@ const publicPaths = new Set([
   "/signin",
   "/sign-in",
   "/sign-up",
-  "/admin",
 ]);
 
 function getPermissionRule(pathname: string): PermissionRule | null {
-  if (routeRules[pathname]) return routeRules[pathname];
-  if (pathname.startsWith("/admin")) return { require: "admin:access", unauthorizedRedirect: "/" };
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/cart") || pathname.startsWith("/profile")) {
+  if (pathname.startsWith("/admin")) {
+    return { require: "admin:access", unauthorizedRedirect: "/" };
+  }
+  if (
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/cart") ||
+    pathname.startsWith("/profile")
+  ) {
     return { require: "user:access", unauthorizedRedirect: "/signin" };
   }
   return null;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/api/auth")) {
+  if (pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 
@@ -52,13 +45,13 @@ export async function middleware(request: NextRequest) {
 
   const isAuthenticated = Boolean(token);
   const permissions = (token?.permissions as Permission[]) ?? [];
+  const isAdmin = can(permissions, "admin:access");
 
   if (pathname === "/signin" || pathname === "/sign-in") {
     if (isAuthenticated) {
-      if (can(permissions, "admin:access")) {
-        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-      }
-      return NextResponse.redirect(new URL("/profile/dashboard", request.url));
+      return NextResponse.redirect(
+        new URL(isAdmin ? "/admin/dashboard" : "/profile/dashboard", request.url)
+      );
     }
     return NextResponse.next();
   }
@@ -67,10 +60,9 @@ export async function middleware(request: NextRequest) {
     if (!isAuthenticated) {
       return NextResponse.redirect(new URL("/signin", request.url));
     }
-    if (can(permissions, "admin:access")) {
-      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-    }
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(
+      new URL(isAdmin ? "/admin/dashboard" : "/", request.url)
+    );
   }
 
   const rule = getPermissionRule(pathname);
@@ -87,11 +79,14 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(rule.unauthorizedRedirect ?? "/", request.url));
     }
 
-    if (pathname.startsWith("/admin") && can(permissions, "user:access")) {
+    if (pathname.startsWith("/admin") && !isAdmin) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    if ((pathname.startsWith("/dashboard") || pathname.startsWith("/cart") || pathname.startsWith("/profile")) && can(permissions, "admin:access")) {
+    if (
+      (pathname.startsWith("/dashboard") || pathname.startsWith("/cart") || pathname.startsWith("/profile")) &&
+      isAdmin
+    ) {
       return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     }
   }

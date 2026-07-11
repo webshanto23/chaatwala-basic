@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getUsers, getRoles, updateUserRole } from "@/app/actions/rbac";
+import { getUsers, getRoles, updateUserRole, deleteUser } from "@/app/actions/rbac";
+import { usePermissions } from "@/hooks/use-can";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,8 @@ export default function UsersPage() {
   const [roles, setRoles] = useState<RoleOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
+  const { can } = usePermissions();
+  const canDeleteUser = can("user:delete");
 
   const loadData = async () => {
     setLoading(true);
@@ -52,6 +55,18 @@ export default function UsersPage() {
         ?.name.toLowerCase().includes(q)
     );
   });
+
+  const handleDelete = async (userId: string) => {
+    if (!confirm("Delete this user? This cannot be undone.")) return;
+    const formData = new FormData();
+    formData.append("userId", userId);
+    const res = await deleteUser(formData);
+    if ("error" in res) {
+      alert(res.error);
+      return;
+    }
+    await loadData();
+  };
 
   const handleRoleChange = async (userId: string, roleId: string) => {
     setSavingUserId(userId);
@@ -86,6 +101,9 @@ export default function UsersPage() {
                 <th className="px-4 py-3 text-left font-medium">Name</th>
                 <th className="px-4 py-3 text-left font-medium">Email</th>
                 <th className="px-4 py-3 text-left font-medium">Role</th>
+                {canDeleteUser && (
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -120,8 +138,20 @@ export default function UsersPage() {
                               {role.name}
                             </option>
                           ))}
-                        </select>
-                      </td>
+                          </select>
+                        </td>
+                        {canDeleteUser && (
+                          <td className="px-4 py-3 whitespace-nowrap text-right">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              disabled={savingUserId === user.id}
+                              onClick={() => handleDelete(user.id)}
+                            >
+                              Delete
+                            </Button>
+                          </td>
+                        )}
                     </tr>
                   );
                 })
