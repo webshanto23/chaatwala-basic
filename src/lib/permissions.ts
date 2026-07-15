@@ -17,6 +17,7 @@ export const ADMIN_PERMISSIONS = [
   "user:view",
   "user:updateRole",
   "user:delete",
+  "food:view",
   "food:create",
   "food:update",
   "food:delete",

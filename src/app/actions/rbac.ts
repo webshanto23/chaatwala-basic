@@ -20,6 +20,19 @@ export async function getUsers() {
   return { users, roles };
 }
 
+export async function getDishes() {
+  const { authorized } = await authorize({ permissions: ["food:view"] });
+  if (!authorized) {
+    return { error: "Forbidden" };
+  }
+
+  const dishes = await prisma.dish.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
+  return { dishes };
+}
+
 export async function updateUserRole(formData: FormData) {
   const { authorized, session } = await requirePermission("user:updateRole");
   if (!authorized || !session?.user) return { error: "Forbidden" };

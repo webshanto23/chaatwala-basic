@@ -1,9 +1,19 @@
-import data from "../../../../sitedata.json"
+import prisma from "@/lib/prisma"
 import { DishGrid } from "./DishGrid"
 
-const dishes = data.products.popularDishes
+export async function PopularDishes() {
+  const dishesFromDb = await prisma.dish.findMany({
+    where: { tag: "popular" },
+    orderBy: { createdAt: "desc" },
+  })
 
-export function PopularDishes() {
+  const dishes = dishesFromDb.map((dish) => ({
+    id: dish.id,
+    name: dish.name,
+    price: Number(dish.price),
+    image: dish.imageUrl ?? "",
+  }))
+
   return (
     <section className="px-4 py-6 md:px-6 lg:px-8 max-w-7xl mx-auto bg-gradient-to-br from-white via-secondary/10 to-white rounded-[2rem] border border-border/70 shadow-lg shadow-secondary/10">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-6">
