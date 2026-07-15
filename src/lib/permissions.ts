@@ -20,6 +20,7 @@ export const ADMIN_PERMISSIONS = [
   "food:create",
   "food:update",
   "food:delete",
+  "food:view",
   "admin:create",
   "admin:delete",
   "role:manage",
