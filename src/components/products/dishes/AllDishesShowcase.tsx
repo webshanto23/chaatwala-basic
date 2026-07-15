@@ -1,11 +1,18 @@
-"use client"
-
-import data from "../../../../sitedata.json"
+import prisma from "@/lib/prisma"
 import { DishGrid } from "./DishGrid"
 
-const alldishes = data.products.allDishes
+export async function AllDishesShowcase() {
+  const alldishes = await prisma.dish.findMany({
+    orderBy: { createdAt: "desc" },
+  })
 
-export function AllDishesShowcase() {
+  const dishes = alldishes.map((dish) => ({
+    id: dish.id,
+    name: dish.name,
+    price: Number(dish.price),
+    image: dish.imageUrl ?? "",
+  }))
+
   return (
     <section className="px-4 py-10 md:px-6 lg:px-8 bg-gradient-to-br from-secondary/5 via-background to-primary/10">
       <div className="mx-auto max-w-7xl">
@@ -13,7 +20,7 @@ export function AllDishesShowcase() {
           <h2 className="text-2xl md:text-3xl font-bold text-foreground">All Dishes</h2>
           <p className="mt-2 text-sm text-muted-foreground">Explore our full menu</p>
         </div>
-        <DishGrid dishes={alldishes} />
+        <DishGrid dishes={dishes} />
       </div>
     </section>
   )

@@ -1,16 +1,47 @@
 "use client"
 
-import { useState } from "react"
-import data from "../../../../../sitedata.json"
+import { useEffect, useState } from "react"
+import { getDishes } from "@/app/actions/rbac"
 import DataTable from "@/components/admin/data-table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, Plus } from "lucide-react"
+import { Plus } from "lucide-react"
+
+type DishRow = {
+  id: string
+  name: string
+  price: string
+  category: string
+  [key: string]: unknown
+}
 
 export default function DishesPage() {
   const columns = ["Name", "Price", "Category"]
-  const rows = data.admin.tables.dishes
+  const [rows, setRows] = useState<DishRow[]>([])
+  const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState("")
+
+  useEffect(() => {
+    let active = true
+    ;(async () => {
+      const result = await getDishes()
+      if (!active) return
+      if (!("error" in result) && result.dishes) {
+        setRows(
+          result.dishes.map((dish) => ({
+            id: dish.id,
+            name: dish.name,
+            price: String(dish.price),
+            category: dish.tag ?? "-",
+          }))
+        )
+      }
+      setLoading(false)
+    })()
+    return () => {
+      active = false
+    }
+  }, [])
 
   const handleEdit = (row: Record<string, unknown>) => {
     alert(`Edit ${row.name}`)
@@ -43,7 +74,20 @@ export default function DishesPage() {
         </div>
       </div>
 
-      <DataTable columns={columns} data={rows} showActions onEdit={handleEdit} onDelete={handleDelete} filter={query} />
+      {loading ? (
+        <div className="rounded-lg border border-border bg-card p-6 text-center text-muted-foreground">
+          Loading dishes...
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={rows}
+          showActions
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          filter={query}
+        />
+      )}
     </div>
   )
 }

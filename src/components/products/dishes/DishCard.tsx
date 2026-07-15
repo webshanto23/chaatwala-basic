@@ -7,9 +7,9 @@ import { useState } from "react"
 import Image from "next/image"
 
 type Dish = {
-  id: number
+  id: string
   name: string
-  price: number
+  price: number | string
   image: string
 }
 
