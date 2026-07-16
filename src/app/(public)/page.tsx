@@ -1,4 +1,4 @@
-import data from "../../../sitedata.json"
+// import data from "../../../sitedata.json"
 import { ComboSection } from "@/components/products/combos/ComboSection"
 import { FloatingCart } from "@/components/shared/FloatingCart"
 import { HeroSection } from "@/components/home/HeroSection"

@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 const categories = [
-  { href: "/products/combos", label: "Combos" },
   { href: "/products/dishes", label: "Dishes" },
   { href: "/products/drinks", label: "Drinks" },
 ];
