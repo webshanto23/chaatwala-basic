@@ -19,7 +19,7 @@ export default function ProductsLayout({ children }: { children: ReactNode }) {
               Pick your favorite category
             </h1>
             <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-              Browse public combo deals, signature dishes, and refreshing drinks.
+              Browse signature dishes and refreshing drinks.
             </p>
           </div>
 

@@ -31,6 +31,7 @@ export default function Navbar() {
 
   const publicLinks = data.navigation.publicLinks;
   const userLinks = data.navigation.userLinks;
+  const adminLinks = data.navigation.adminLinks;
 
   return (
     <header className="w-full border-b border-border/50 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 backdrop-blur-xl transition-colors duration-200">
@@ -75,6 +76,14 @@ export default function Navbar() {
                 </NavigationMenuLink>
               </NavigationMenuItem>
             )}
+
+            {isAdmin && adminLinks.map((item) => (
+              <NavigationMenuItem key={item.href}>
+                <NavigationMenuLink asChild>
+                  <Link href={item.href} className="hover:text-primary transition-colors">{item.label}</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            ))}
 
           </NavigationMenuList>
         </NavigationMenu>
@@ -152,6 +161,16 @@ export default function Navbar() {
                       Admin Dashboard
                     </Link>
                   )}
+
+                  {isAdmin && adminLinks.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
                 </nav>
 
                 <div className="mt-auto flex flex-col gap-2 border-t border-border pt-6">
