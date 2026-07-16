@@ -338,6 +338,11 @@
       { "name": "Dishes", "href": "/admin/dishes" },
       { "name": "Drinks", "href": "/admin/drinks" },
       { "name": "Combos", "href": "/admin/combos" }
+    ],
+    "adminLinks": [
+      { "href": "/admin/users", "label": "Users" },
+      { "href": "/admin/dishes", "label": "Dishes" },
+      { "href": "/admin/drinks", "label": "Drinks" }
     ]
   },
   "account": {

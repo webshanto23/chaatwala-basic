@@ -6,8 +6,8 @@ import { Plus, Minus } from "lucide-react"
 import { useState } from "react"
 import Image from "next/image"
 
-type FoodItem = {
-  id: number
+export type FoodItem = {
+  id: string
   name: string
   price: number
   image: string
