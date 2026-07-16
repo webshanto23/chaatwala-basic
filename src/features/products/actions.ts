@@ -8,6 +8,7 @@ import { authorize, requirePermission } from "@/lib/authorize";
 import { logAction } from "@/app/actions/audit";
 import prisma from "@/lib/prisma";
 import { createDishSchema } from "@/lib/validations/dish";
+import { createDrinkSchema } from "@/lib/validations/drink";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -127,6 +128,126 @@ export async function getDishes() {
   const dishes = await prisma.dish.findMany({ orderBy: { createdAt: "desc" } });
   return {
     dishes: dishes.map((d) => ({
+      id: d.id,
+      name: d.name,
+      slug: d.slug,
+      price: Number(d.price),
+      discountPrice: d.discountPrice ? Number(d.discountPrice) : null,
+      description: d.description,
+      isAvailable: d.isAvailable,
+      tag: d.tag,
+      imageUrl: d.imageUrl,
+    })),
+  };
+}
+
+type DrinkResult = {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  discountPrice: number | null;
+  description: string | null;
+  isAvailable: boolean;
+  tag: string | null;
+  imageUrl: string | null;
+};
+
+type CreateDrinkResult = { success: true; drink: DrinkResult } | { error: string };
+
+export async function createDrink(formData: FormData): Promise<CreateDrinkResult> {
+  const { authorized, session } = await requirePermission("food:create");
+  if (!authorized || !session?.user) {
+    return { error: "You do not have permission to create drinks" };
+  }
+
+  const file = formData.get("image");
+  if (!file || !(file instanceof File) || file.size === 0) {
+    return { error: "Image is required" };
+  }
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return { error: "Only JPG, PNG, WEBP, or GIF images are allowed" };
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    return { error: "Image must be 5MB or less" };
+  }
+
+  const parsed = createDrinkSchema.safeParse({
+    name: formData.get("name"),
+    slug: formData.get("slug") || undefined,
+    price: formData.get("price"),
+    discountPrice: formData.get("discountPrice") ? formData.get("discountPrice") : undefined,
+    description: formData.get("description") || undefined,
+    isAvailable: formData.get("isAvailable") === "true" || formData.get("isAvailable") === "on",
+    tag: formData.get("tag") || undefined,
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const data = parsed.data;
+
+  const ext = file.type.split("/")[1];
+  const filename = `${randomUUID()}.${ext}`;
+  const uploadDir = path.join(process.cwd(), "public/uploads");
+  await mkdir(uploadDir, { recursive: true });
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await writeFile(path.join(uploadDir, filename), buffer);
+  const imageUrl = `/uploads/${filename}`;
+
+  let slug = data.slug?.trim() || slugify(data.name);
+  const existing = await prisma.drink.findUnique({ where: { slug } });
+  if (existing) {
+    slug = `${slug}-${randomUUID().slice(0, 6)}`;
+  }
+
+  const drink = await prisma.drink.create({
+    data: {
+      name: data.name,
+      slug,
+      price: data.price,
+      discountPrice: data.discountPrice,
+      description: data.description,
+      isAvailable: data.isAvailable,
+      tag: data.tag,
+      imageUrl,
+    },
+  });
+
+  await logAction({
+    userId: session.user.id,
+    action: "CREATE_DRINK",
+    entity: "Drink",
+    entityId: drink.id,
+    metadata: { name: drink.name, id: drink.id },
+  });
+
+  return {
+    success: true,
+    drink: {
+      id: drink.id,
+      name: drink.name,
+      slug: drink.slug,
+      price: Number(drink.price),
+      discountPrice: drink.discountPrice ? Number(drink.discountPrice) : null,
+      description: drink.description,
+      isAvailable: drink.isAvailable,
+      tag: drink.tag,
+      imageUrl: drink.imageUrl,
+    },
+  };
+}
+
+export async function getDrinks() {
+  const { authorized } = await authorize({ permissions: ["food:view"] });
+  if (!authorized) {
+    return { error: "Forbidden" };
+  }
+
+  const drinks = await prisma.drink.findMany({ orderBy: { createdAt: "desc" } });
+  return {
+    drinks: drinks.map((d) => ({
       id: d.id,
       name: d.name,
       slug: d.slug,
