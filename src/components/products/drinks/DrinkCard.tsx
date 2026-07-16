@@ -7,10 +7,10 @@ import { useState } from "react"
 import Image from "next/image"
 
 type Drink = {
-  id: number
+  id: string
   name: string
   detail: string
-  price: number
+  price: number | string
   image: string
 }
 
