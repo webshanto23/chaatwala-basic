@@ -1,4 +1,3 @@
-
 "use client";
 
 import data from "../../../sitedata.json";
@@ -16,11 +15,7 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export default function Navbar() {
   const router = useRouter();
@@ -36,10 +31,12 @@ export default function Navbar() {
   return (
     <header className="w-full border-b border-border/50 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 backdrop-blur-xl transition-colors duration-200">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
-
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <Link href="/" className="font-heading inline-flex items-center gap-3 text-lg font-semibold text-foreground hover:text-primary transition-colors duration-200">
+          <Link
+            href="/"
+            className="font-heading inline-flex items-center gap-3 text-lg font-semibold text-foreground hover:text-primary transition-colors duration-200"
+          >
             <Logo className="h-10 w-auto" />
             <span className="hidden md:inline-block">Chaatwala</span>
           </Link>
@@ -48,43 +45,64 @@ export default function Navbar() {
         {/* Desktop Menu */}
         <NavigationMenu className="hidden md:flex rounded-full bg-background/80 px-4 py-1 shadow-sm shadow-primary/5">
           <NavigationMenuList className="gap-2">
-
-                  {(!isLoggedIn || !isAdmin) && publicLinks.map((item) => (
-              <NavigationMenuItem key={item.href}>
-                <NavigationMenuLink asChild>
-                  <Link href={item.href} className="hover:text-primary transition-colors">{item.label}</Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            ))}
+            {(!isLoggedIn || !isAdmin) &&
+              publicLinks.map((item) => (
+                <NavigationMenuItem key={item.href}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href={item.href}
+                      className="hover:text-primary transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              ))}
 
             {isLoggedIn && !isAdmin && (
               <>
-                {userLinks.filter((item) => item.href !== "/").map((item) => (
-                  <NavigationMenuItem key={item.href}>
-                    <NavigationMenuLink asChild>
-                      <Link href={item.href} className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary">{item.label}</Link>
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                ))}
+                {userLinks
+                  .filter((item) => item.href !== "/")
+                  .map((item) => (
+                    <NavigationMenuItem key={item.href}>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href={item.href}
+                          className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                        >
+                          {item.label}
+                        </Link>
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                  ))}
               </>
             )}
 
+            {isAdmin &&
+              adminLinks.map((item) => (
+                <NavigationMenuItem key={item.href}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href={item.href}
+                      className="hover:text-primary transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              ))}
             {isAdmin && (
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
-                  <Link href="/admin/dashboard" className="hover:text-primary transition-colors">Admin Dashboard</Link>
+                  <Link
+                    href="/admin/dashboard"
+                    className="hover:text-primary transition-colors"
+                  >
+                    Admin Dashboard
+                  </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
             )}
-
-            {isAdmin && adminLinks.map((item) => (
-              <NavigationMenuItem key={item.href}>
-                <NavigationMenuLink asChild>
-                  <Link href={item.href} className="hover:text-primary transition-colors">{item.label}</Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            ))}
-
           </NavigationMenuList>
         </NavigationMenu>
 
@@ -92,10 +110,16 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-4">
           {!isLoggedIn ? (
             <>
-              <Link href="/signin" className="rounded-full px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-primary">
+              <Link
+                href="/signin"
+                className="rounded-full px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-primary"
+              >
                 Sign In
               </Link>
-              <Link href="/sign-up" className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">
+              <Link
+                href="/sign-up"
+                className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+              >
                 Sign Up
               </Link>
             </>
@@ -118,40 +142,54 @@ export default function Navbar() {
         <div className="md:hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <button className="rounded-lg p-2 transition-colors hover:bg-muted" aria-label="Open menu">
+              <button
+                className="rounded-lg p-2 transition-colors hover:bg-muted"
+                aria-label="Open menu"
+              >
                 <Menu className="h-6 w-6" />
               </button>
             </SheetTrigger>
 
-            <SheetContent side="right" className="w-[85vw] max-w-sm border-l bg-card p-0">
+            <SheetContent
+              side="right"
+              className="w-[85vw] max-w-sm border-l bg-card p-0"
+            >
               <div className="flex h-full flex-col px-5 py-6">
                 <div className="mb-6 flex items-center justify-between">
-                  <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Link
+                    href="/"
+                    className="flex items-center gap-2 text-sm font-semibold text-foreground"
+                  >
                     <Logo className="h-8 w-auto" />
                     <span>Chaatwala</span>
                   </Link>
                 </div>
 
                 <nav className="flex flex-col gap-1">
-            {(!isLoggedIn || !isAdmin) && publicLinks.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
+                  {(!isLoggedIn || !isAdmin) &&
+                    publicLinks.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
 
-                  {isLoggedIn && !isAdmin && userLinks.filter((item) => item.href !== "/").map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
+                  {isLoggedIn &&
+                    !isAdmin &&
+                    userLinks
+                      .filter((item) => item.href !== "/")
+                      .map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className="rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
 
                   {isAdmin && (
                     <Link
@@ -162,24 +200,31 @@ export default function Navbar() {
                     </Link>
                   )}
 
-                  {isAdmin && adminLinks.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
+                  {isAdmin &&
+                    adminLinks.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
                 </nav>
 
                 <div className="mt-auto flex flex-col gap-2 border-t border-border pt-6">
                   {!isLoggedIn ? (
                     <>
-                      <Link href="/signin" className="rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary">
+                      <Link
+                        href="/signin"
+                        className="rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                      >
                         Sign In
                       </Link>
-                      <Link href="/sign-up" className="rounded-md px-2 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-muted">
+                      <Link
+                        href="/sign-up"
+                        className="rounded-md px-2 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-muted"
+                      >
                         Sign Up
                       </Link>
                     </>
@@ -201,11 +246,7 @@ export default function Navbar() {
             </SheetContent>
           </Sheet>
         </div>
-
       </div>
     </header>
   );
 }
-
-
-

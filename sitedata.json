@@ -340,9 +340,9 @@
       { "name": "Combos", "href": "/admin/combos" }
     ],
     "adminLinks": [
-      { "href": "/admin/users", "label": "Users" },
-      { "href": "/admin/dishes", "label": "Dishes" },
-      { "href": "/admin/drinks", "label": "Drinks" }
+      { "href": "/", "label": "Home" },
+      { "href": "/about", "label": "About" },
+      { "href": "/products", "label": "Products" }
     ]
   },
   "account": {

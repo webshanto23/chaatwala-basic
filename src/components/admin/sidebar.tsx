@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { LogOut } from "lucide-react"
-import { usePathname, useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { useAuth } from "@/contexts/auth-context"
+import Link from "next/link";
+import { LogOut } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/auth-context";
 
 const links = [
   { name: "Dashboard", href: "/admin" },
@@ -14,17 +14,17 @@ const links = [
   { name: "Dishes", href: "/admin/dishes" },
   { name: "Drinks", href: "/admin/drinks" },
   { name: "Combos", href: "/admin/combos" },
-]
+];
 
 export default function Sidebar() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const { logout } = useAuth()
+  const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    logout()
-    router.push("/admin")
-  }
+    logout();
+    router.push("/admin");
+  };
 
   return (
     <aside className="flex h-full w-64 flex-col border-r bg-card p-4">
@@ -39,12 +39,36 @@ export default function Sidebar() {
               "block rounded-md px-3 py-2 text-sm transition-colors",
               pathname === link.href
                 ? "bg-primary font-medium text-primary-foreground"
-                : "text-foreground hover:bg-muted"
+                : "text-foreground hover:bg-muted",
             )}
           >
             {link.name}
           </Link>
         ))}
+
+        <h2 className="mb-6 text-xl font-bold text-primary">Public View</h2>
+        <Link
+          href="/"
+          className={cn(
+            "block rounded-md px-3 py-2 text-sm transition-colors",
+            pathname === "/"
+              ? "bg-primary font-medium text-primary-foreground"
+              : "text-foreground hover:bg-muted",
+          )}
+        >
+          Home
+        </Link>
+        <Link
+          href="/products"
+          className={cn(
+            "block rounded-md px-3 py-2 text-sm transition-colors",
+            pathname === "/"
+              ? "bg-primary font-medium text-primary-foreground"
+              : "text-foreground hover:bg-muted",
+          )}
+        >
+          Products
+        </Link>
       </nav>
 
       <button
@@ -56,5 +80,5 @@ export default function Sidebar() {
         Logout
       </button>
     </aside>
-  )
+  );
 }
