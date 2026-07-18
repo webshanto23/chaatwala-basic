@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import data from "../../../../sitedata.json"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,6 +11,7 @@ import Image from "next/image"
 const initialCart = data.cart.initialItems
 
 export default function CartPage() {
+  const router = useRouter()
   const [cart, setCart] = useState(initialCart)
 
   const updateQuantity = (id: number, type: "inc" | "dec") => {
@@ -133,7 +135,10 @@ export default function CartPage() {
                 <span>৳ {total + 50}</span>
               </div>
 
-              <Button className="w-full mt-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button
+                className="w-full mt-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => router.push("/checkout")}
+              >
                 Proceed to Checkout
               </Button>
             </CardContent>
