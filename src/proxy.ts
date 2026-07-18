@@ -12,6 +12,7 @@ const publicPaths = new Set([
   "/",
   "/about",
   "/products",
+  "/cart",
   "/signin",
   "/sign-in",
   "/sign-up",
@@ -23,9 +24,11 @@ function getPermissionRule(pathname: string): PermissionRule | null {
   }
   if (
     pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/cart") ||
     pathname.startsWith("/profile")
   ) {
+    return { require: "user:access", unauthorizedRedirect: "/signin" };
+  }
+  if (pathname.startsWith("/checkout")) {
     return { require: "user:access", unauthorizedRedirect: "/signin" };
   }
   return null;
@@ -84,14 +87,14 @@ export async function proxy(request: NextRequest) {
     }
 
     if (
-      (pathname.startsWith("/dashboard") || pathname.startsWith("/cart") || pathname.startsWith("/profile")) &&
+      (pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/profile")) &&
       isAdmin
     ) {
       return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     }
   }
 
-  if (!publicPaths.has(pathname) && !pathname.startsWith("/products/")) {
+  if (!publicPaths.has(pathname) && !pathname.startsWith("/products/") && !pathname.startsWith("/cart")) {
     if (!isAuthenticated) {
       return NextResponse.redirect(new URL("/", request.url));
     }
