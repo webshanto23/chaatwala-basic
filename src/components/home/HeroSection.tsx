@@ -1,9 +1,10 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ArrowRight, ShoppingBag, Sparkles } from "lucide-react"
-import Image from "next/image"
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export function HeroSection() {
   return (
@@ -12,28 +13,39 @@ export function HeroSection() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20">
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
-
           <div className="space-y-6">
-            <Badge variant="popular" className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary shadow-lg shadow-primary/10 px-4 py-2 text-sm font-semibold">
+            <Badge
+              variant="popular"
+              className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary shadow-lg shadow-primary/10 px-4 py-2 text-sm font-semibold"
+            >
               <ShoppingBag className="w-3.5 h-3.5" />
               Street Food Delivered Fresh
             </Badge>
 
             <h1 className="text-4xl font-bold leading-tight text-foreground sm:text-5xl lg:text-6xl">
-              Discover bold street flavors <span className="text-primary">that excite</span>
+              Discover bold street flavors{" "}
+              <span className="text-primary">that excite</span>
             </h1>
 
             <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-              Chaatwala brings vibrant Indian street food to your table with colorful flavors, crispy textures, and fast delivery.
+              Chaatwala brings vibrant Indian street food to your table with
+              colorful flavors, crispy textures, and fast delivery.
             </p>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <Button size="lg" className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:bg-primary/90">
-                Order Now
+              <Button
+                size="lg"
+                className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:bg-primary/90"
+              >
+                <Link href="/cart">Order Now</Link>
                 <ArrowRight className="w-4 h-4" />
               </Button>
-              <Button size="lg" variant="secondary" className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white/90 text-foreground shadow-lg hover:bg-white">
-                Explore Menu
+              <Button
+                size="lg"
+                variant="secondary"
+                className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white/90 text-foreground shadow-lg hover:bg-white"
+              >
+                <Link href="/products/dishes">Explore Menu</Link>
               </Button>
             </div>
 
@@ -70,15 +82,27 @@ export function HeroSection() {
               <div className="space-y-4 p-5">
                 <div className="flex items-center justify-between rounded-3xl bg-primary/10 px-4 py-3 text-sm text-primary shadow-inner shadow-primary/10">
                   <div>
-                    <p className="font-semibold">Chef's Special</p>
-                    <p className="text-xs text-muted-foreground">Spiced street sandwich</p>
+                    <p className="font-semibold">Chefs Special</p>
+                    <p className="text-xs text-muted-foreground">
+                      Spiced street sandwich
+                    </p>
                   </div>
                   <Sparkles className="h-5 w-5" />
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Badge variant="spicy" className="rounded-full px-4 py-2 text-sm shadow">Fiery Choice</Badge>
-                  <Badge variant="new" className="rounded-full px-4 py-2 text-sm shadow">Fresh Today</Badge>
+                  <Badge
+                    variant="spicy"
+                    className="rounded-full px-4 py-2 text-sm shadow"
+                  >
+                    Fiery Choice
+                  </Badge>
+                  <Badge
+                    variant="new"
+                    className="rounded-full px-4 py-2 text-sm shadow"
+                  >
+                    Fresh Today
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -86,5 +110,5 @@ export function HeroSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

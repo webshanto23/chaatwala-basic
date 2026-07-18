@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, Minus } from "lucide-react"
 import { useState } from "react"
 import Image from "next/image"
+import { useCart } from "@/features/cart/context"
 
 type Dish = {
   id: string
@@ -15,7 +16,8 @@ type Dish = {
 
 export function DishCard({ dish }: { dish: Dish }) {
   const [quantity, setQuantity] = useState(0)
-  
+  const { addItem } = useCart();
+
   return (
     <Card className="group rounded-[2rem] overflow-hidden border-0 bg-gradient-to-br from-white via-primary/10 to-white shadow-lg shadow-primary/10 transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl">
       
@@ -45,7 +47,10 @@ export function DishCard({ dish }: { dish: Dish }) {
             <Button 
               size="sm" 
               className="h-9 rounded-full bg-primary px-4 text-primary-foreground hover:bg-primary/90"
-              onClick={() => setQuantity(1)}
+              onClick={() => {
+                setQuantity(1);
+                addItem({ productId: dish.id, productType: "dish", quantity: 1 });
+              }}
             >
               <Plus className="w-3.5 h-3.5 mr-1" />
               Add
@@ -56,7 +61,13 @@ export function DishCard({ dish }: { dish: Dish }) {
                 size="sm" 
                 variant="outline" 
                 className="h-9 w-9 rounded-full p-0"
-                onClick={() => setQuantity(prev => Math.max(0, prev - 1))}
+                onClick={() => {
+                  const next = Math.max(0, quantity - 1);
+                  setQuantity(next);
+                  if (next === 0) {
+                    // quantity becomes 0, user can re-add; cart keeps existing
+                  }
+                }}
               >
                 <Minus className="w-3 h-3" />
               </Button>
@@ -64,7 +75,10 @@ export function DishCard({ dish }: { dish: Dish }) {
               <Button 
                 size="sm" 
                 className="h-9 w-9 rounded-full p-0 bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={() => setQuantity(prev => prev + 1)}
+                onClick={() => {
+                  setQuantity(prev => prev + 1);
+                  addItem({ productId: dish.id, productType: "dish", quantity: 1 });
+                }}
               >
                 <Plus className="w-3 h-3" />
               </Button>

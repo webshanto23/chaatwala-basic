@@ -4,22 +4,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart, Plus, Minus } from "lucide-react"
 import Image from "next/image"
-
-interface CartItem {
-  id: number
-  name: string
-  price: number
-  quantity: number
-}
-
-const initialCart: CartItem[] = [
-  { id: 1, name: "Pani Puri", price: 120, quantity: 2 },
-  { id: 2, name: "Lassi", price: 80, quantity: 1 },
-]
+import { useCart } from "@/features/cart/context"
 
 export function FloatingCart() {
-  const totalItems = initialCart.reduce((sum, item) => sum + item.quantity, 0)
-  const total = initialCart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const { cart, totalItems, total, updateQuantity } = useCart();
 
   return (
     <Sheet>
@@ -47,8 +35,15 @@ export function FloatingCart() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {initialCart.map((item) => (
-              <CartItem key={item.id} item={item} />
+            {cart.items.length === 0 && (
+              <p className="text-muted-foreground text-center py-8">Your cart is empty.</p>
+            )}
+            {cart.items.map((item) => (
+              <CartItemRow
+                key={item.id}
+                item={item}
+                onUpdateQuantity={updateQuantity}
+              />
             ))}
           </div>
 
@@ -57,8 +52,8 @@ export function FloatingCart() {
               <span className="text-lg font-semibold text-foreground">Total</span>
               <span className="text-xl font-bold text-primary">৳{total}</span>
             </div>
-            <Button className="w-full h-12 text-base font-medium" size="lg">
-              Checkout
+            <Button className="w-full h-12 text-base font-medium" size="lg" asChild>
+              <a href="/cart">Checkout</a>
             </Button>
           </div>
         </div>
@@ -67,12 +62,28 @@ export function FloatingCart() {
   )
 }
 
-function CartItem({ item }: { item: CartItem }) {
+function CartItemRow({
+  item,
+  onUpdateQuantity,
+}: {
+  item: {
+    id: string;
+    productId: string;
+    productType: string;
+    name: string;
+    price: number;
+    quantity: number;
+    imageUrl: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  onUpdateQuantity: (itemId: string, quantity: number) => Promise<void>;
+}) {
   return (
     <div className="flex gap-3 p-3 rounded-xl bg-background border border-border">
       <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
         <Image 
-          src="https://images.unsplash.com/photo-1603133872878-684f208fb84b" 
+          src={item.imageUrl || "https://images.unsplash.com/photo-1603133872878-684f208fb84b"} 
           alt={item.name}
           width={64}
           height={64}
@@ -89,6 +100,7 @@ function CartItem({ item }: { item: CartItem }) {
             variant="outline" 
             size="sm" 
             className="h-7 w-7 rounded-full p-0"
+            onClick={() => onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
           >
             <Minus className="w-3 h-3" />
           </Button>
@@ -96,6 +108,7 @@ function CartItem({ item }: { item: CartItem }) {
           <Button 
             size="sm" 
             className="h-7 w-7 rounded-full p-0"
+            onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
           >
             <Plus className="w-3 h-3" />
           </Button>

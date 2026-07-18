@@ -1,43 +1,19 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
-import data from "../../../../sitedata.json"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
-
-const initialCart = data.cart.initialItems
+import { useCart } from "@/features/cart/context"
 
 export default function CartPage() {
   const router = useRouter()
-  const [cart, setCart] = useState(initialCart)
+  const { cart, total, updateQuantity, removeItem, isLoading } = useCart()
 
-  const updateQuantity = (id: number, type: "inc" | "dec") => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity:
-                type === "inc"
-                  ? item.quantity + 1
-                  : Math.max(1, item.quantity - 1),
-            }
-          : item
-      )
-    )
+  if (isLoading) {
+    return <div className="mx-auto px-4 py-10 max-w-7xl">Loading cart...</div>
   }
-
-  const removeItem = (id: number) => {
-    setCart((prev) => prev.filter((item) => item.id !== id))
-  }
-
-  const total = cart.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  )
 
   return (
     <div className="mx-auto px-4 py-10 max-w-7xl">
@@ -47,16 +23,16 @@ export default function CartPage() {
         
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
-          {cart.length === 0 && (
+          {cart.items.length === 0 && (
             <p className="text-muted-foreground">Your cart is empty.</p>
           )}
 
-          {cart.map((item) => (
+          {cart.items.map((item) => (
             <Card key={item.id} className="group rounded-[1.5rem] overflow-hidden border-0 bg-gradient-to-br from-white via-secondary/10 to-white shadow-lg transition-all duration-200 hover:-translate-y-1">
               <CardContent className="flex items-center gap-4 p-4 md:p-5">
                 {/* Image */}
                 <Image
-                  src={item.image}
+                  src={item.imageUrl || "https://images.unsplash.com/photo-1603133872878-684f208fb84b"}
                   alt={item.name}
                   width={80}
                   height={80}
@@ -76,7 +52,7 @@ export default function CartPage() {
                       variant="outline"
                       size="sm"
                       className="h-8 w-8 rounded-full"
-                      onClick={() => updateQuantity(item.id, "dec")}
+                      onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
                     >
                       -
                     </Button>
@@ -87,7 +63,7 @@ export default function CartPage() {
                       variant="outline"
                       size="sm"
                       className="h-8 w-8 rounded-full"
-                      onClick={() => updateQuantity(item.id, "inc")}
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     >
                       +
                     </Button>

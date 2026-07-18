@@ -116,7 +116,7 @@ async function main() {
   await upsertRoles();
   await assignDefaultRoleToUsersWithoutOne();
   await bootstrapAdmin();
-  console.log("Seed completed");
+  console.log(" completed");
 }
 
 main()

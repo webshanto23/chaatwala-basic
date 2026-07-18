@@ -19,6 +19,9 @@ model User {
   accounts      Account[]
   sessions      Session[]
   auditLogs     AuditLog[]
+  carts         Cart[]
+  addresses     Address[]
+  orders        Order[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -135,4 +138,102 @@ model Drink {
   @@index([slug])
   @@index([tag])
   @@index([createdAt])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestId   String?    @unique
+  items     CartItem[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([guestId])
+}
+
+model CartItem {
+  id          String   @id @default(cuid())
+  cartId      String
+  cart        Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId   String
+  productType String
+  name        String
+  price       Decimal
+  quantity    Int      @default(1)
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([cartId])
+  @@index([productId, productType])
+}
+
+model Combo {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  items         String[]
+  price         Decimal
+  originalPrice Decimal
+  imageUrl      String?
+  isAvailable   Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([slug])
+}
+
+model Address {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName    String
+  phone       String
+  line1       String
+  line2       String?
+  city        String
+  postalCode  String
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders      Order[]
+  @@index([userId])
+}
+
+model Order {
+  id              String     @id @default(cuid())
+  userId          String?
+  user            User?      @relation(fields: [userId], references: [id])
+  addressId       String?
+  address         Address?   @relation(fields: [addressId], references: [id])
+  status          String     @default("pending")
+  subtotal        Decimal
+  deliveryFee     Decimal     @default(50)
+  total           Decimal
+  items           OrderItem[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  productType String
+  name        String
+  price       Decimal
+  quantity    Int
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId, productType])
 }

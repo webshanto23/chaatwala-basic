@@ -1,21 +1,52 @@
 "use client"
 
 import { useState } from "react"
-import data from "../../../../sitedata.json"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
-
-const initialCart = data.cart.initialItems
+import { useCart } from "@/features/cart/context"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function CheckoutPage() {
-  const [cart] = useState(initialCart)
+  const { cart, total, isLoading } = useCart()
+  const { auth } = useAuth()
+  const [isPlacing, setIsPlacing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const total = cart.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  )
+  if (!auth.isAuthenticated) {
+    return (
+      <div className="mx-auto px-4 py-10 max-w-7xl">
+        <h1 className="text-3xl font-bold mb-8 text-foreground">Checkout</h1>
+        <p className="text-muted-foreground">Please sign in to checkout.</p>
+      </div>
+    )
+  }
+
+  const handlePlaceOrder = async () => {
+    setIsPlacing(true)
+    setError(null)
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ addressId: "default" }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || "Failed to place order")
+      }
+      window.location.href = "/checkout/success"
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error")
+    } finally {
+      setIsPlacing(false)
+    }
+  }
+
+  if (isLoading) {
+    return <div className="mx-auto px-4 py-10 max-w-7xl">Loading cart...</div>
+  }
 
   return (
     <div className="mx-auto px-4 py-10 max-w-7xl">
@@ -24,15 +55,15 @@ export default function CheckoutPage() {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Items */}
         <div className="lg:col-span-2 space-y-4">
-          {cart.length === 0 && (
+          {cart.items.length === 0 && (
             <p className="text-muted-foreground">Your cart is empty.</p>
           )}
 
-          {cart.map((item) => (
+          {cart.items.map((item) => (
             <Card key={item.id} className="group rounded-[1.5rem] overflow-hidden border-0 bg-gradient-to-br from-white via-secondary/10 to-white shadow-lg transition-all duration-200 hover:-translate-y-1">
               <CardContent className="flex items-center gap-4 p-4 md:p-5">
                 <Image
-                  src={item.image}
+                  src={item.imageUrl || "https://images.unsplash.com/photo-1603133872878-684f208fb84b"}
                   alt={item.name}
                   width={80}
                   height={80}
@@ -74,8 +105,16 @@ export default function CheckoutPage() {
                 <span>৳ {total + 50}</span>
               </div>
 
-              <Button className="w-full mt-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-                Place Order
+              {error && (
+                <p className="text-sm text-red-500">{error}</p>
+              )}
+
+              <Button
+                className="w-full mt-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={handlePlaceOrder}
+                disabled={isPlacing || cart.items.length === 0}
+              >
+                {isPlacing ? "Placing Order..." : "Place Order"}
               </Button>
             </CardContent>
           </Card>

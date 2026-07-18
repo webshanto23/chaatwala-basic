@@ -77,36 +77,84 @@
         "title": "Explore our favorites",
         "description": "Browse chaat, drinks, and combo deals in one place.",
         "items": [
-          { "name": "Pani Puri", "detail": "Crispy shells with tangy water", "price": "120" },
-          { "name": "Mango Lassi", "detail": "Sweet and refreshing", "price": "90" },
-          { "name": "Chaat Lover Combo", "detail": "A complete snack bundle", "price": "299" }
+          {
+            "name": "Pani Puri",
+            "detail": "Crispy shells with tangy water",
+            "price": "120"
+          },
+          {
+            "name": "Mango Lassi",
+            "detail": "Sweet and refreshing",
+            "price": "90"
+          },
+          {
+            "name": "Chaat Lover Combo",
+            "detail": "A complete snack bundle",
+            "price": "299"
+          }
         ]
       },
       "chaat": {
         "title": "Chaat favorites",
         "description": "Crispy, spicy, and tangy bites made for sharing.",
         "items": [
-          { "name": "Pani Puri", "detail": "Crispy shells filled with spiced potato and tamarind water", "price": "120" },
-          { "name": "Bhel Puri", "detail": "Crunchy puffed rice with fresh chutneys", "price": "100" },
-          { "name": "Dahi Puri", "detail": "Soft puris topped with yogurt and sev", "price": "150" }
+          {
+            "name": "Pani Puri",
+            "detail": "Crispy shells filled with spiced potato and tamarind water",
+            "price": "120"
+          },
+          {
+            "name": "Bhel Puri",
+            "detail": "Crunchy puffed rice with fresh chutneys",
+            "price": "100"
+          },
+          {
+            "name": "Dahi Puri",
+            "detail": "Soft puris topped with yogurt and sev",
+            "price": "150"
+          }
         ]
       },
       "drinks": {
         "title": "Refreshing drinks",
         "description": "Cool beverages to pair with your favorite bites.",
         "items": [
-          { "name": "Mango Lassi", "detail": "Creamy yogurt drink with mango", "price": "90" },
-          { "name": "Masala Soda", "detail": "Sparkling soda with spices", "price": "70" },
-          { "name": "Lemon Mint Cooler", "detail": "Fresh citrus with mint", "price": "80" }
+          {
+            "name": "Mango Lassi",
+            "detail": "Creamy yogurt drink with mango",
+            "price": "90"
+          },
+          {
+            "name": "Masala Soda",
+            "detail": "Sparkling soda with spices",
+            "price": "70"
+          },
+          {
+            "name": "Lemon Mint Cooler",
+            "detail": "Fresh citrus with mint",
+            "price": "80"
+          }
         ]
       },
       "combos": {
         "title": "Best value combos",
         "description": "Bundle your favorite snacks and drinks for a better deal.",
         "items": [
-          { "name": "Chaat Lover Combo", "detail": "Pani puri, bhel puri, and dahi puri", "price": "299" },
-          { "name": "Meal Deal", "detail": "Biryani, raita, and salad", "price": "349" },
-          { "name": "Snack Pack", "detail": "A lighter option for quick cravings", "price": "199" }
+          {
+            "name": "Chaat Lover Combo",
+            "detail": "Pani puri, bhel puri, and dahi puri",
+            "price": "299"
+          },
+          {
+            "name": "Meal Deal",
+            "detail": "Biryani, raita, and salad",
+            "price": "349"
+          },
+          {
+            "name": "Snack Pack",
+            "detail": "A lighter option for quick cravings",
+            "price": "199"
+          }
         ]
       },
       "desserts": {
@@ -121,8 +169,16 @@
       "heading": "Get in touch",
       "description": "Have a question, feedback, or want to collaborate? We would love to hear from you.",
       "contactItems": [
-        { "title": "Call Us Today!", "value": "+1 (555) 123-4567", "icon": "Phone" },
-        { "title": "Send an Email", "value": "mail@chaatwala.com", "icon": "Mail" }
+        {
+          "title": "Call Us Today!",
+          "value": "+1 (555) 123-4567",
+          "icon": "Phone"
+        },
+        {
+          "title": "Send an Email",
+          "value": "mail@chaatwala.com",
+          "icon": "Mail"
+        }
       ],
       "formHeading": "Send a message",
       "formDescription": "Fill out the form below and our team will get back to you shortly."
@@ -172,12 +228,36 @@
       "heading": "Our Achievements so Far",
       "description": "A glimpse of our journey and the milestones we have reached. From humble beginnings to becoming a beloved name in the community, our gallery showcases the moments that define us.",
       "images": [
-        { "id": 1, "src": "https://images.unsplash.com/photo-1523580494863-6f3031224c94", "alt": "Pani Puri" },
-        { "id": 2, "src": "https://images.unsplash.com/photo-1531058020387-3be344556be6", "alt": "Burger" },
-        { "id": 3, "src": "https://images.unsplash.com/photo-1492724441997-5dc865305da7", "alt": "Chicken" },
-        { "id": 4, "src": "https://images.unsplash.com/photo-1464375117522-1311d6a5b81f", "alt": "Fried Rice" },
-        { "id": 5, "src": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678", "alt": "Kachori" },
-        { "id": 6, "src": "https://images.unsplash.com/photo-1531058020387-3be344556be6", "alt": "Chaat" }
+        {
+          "id": 1,
+          "src": "https://images.unsplash.com/photo-1523580494863-6f3031224c94",
+          "alt": "Pani Puri"
+        },
+        {
+          "id": 2,
+          "src": "https://images.unsplash.com/photo-1531058020387-3be344556be6",
+          "alt": "Burger"
+        },
+        {
+          "id": 3,
+          "src": "https://images.unsplash.com/photo-1492724441997-5dc865305da7",
+          "alt": "Chicken"
+        },
+        {
+          "id": 4,
+          "src": "https://images.unsplash.com/photo-1464375117522-1311d6a5b81f",
+          "alt": "Fried Rice"
+        },
+        {
+          "id": 5,
+          "src": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678",
+          "alt": "Kachori"
+        },
+        {
+          "id": 6,
+          "src": "https://images.unsplash.com/photo-1531058020387-3be344556be6",
+          "alt": "Chaat"
+        }
       ]
     }
   },
@@ -190,9 +270,21 @@
       { "id": "desserts", "label": "Desserts" }
     ],
     "productMenu": [
-      { "title": "Dishes", "href": "/products/dishes", "description": "Delicious street snacks and chaats." },
-      { "title": "Drinks", "href": "/products/drinks", "description": "Refreshing beverages and juices." },
-      { "title": "Combos", "href": "/products/combos", "description": "Best value combo meals." }
+      {
+        "title": "Dishes",
+        "href": "/products/dishes",
+        "description": "Delicious street snacks and chaats."
+      },
+      {
+        "title": "Drinks",
+        "href": "/products/drinks",
+        "description": "Refreshing beverages and juices."
+      },
+      {
+        "title": "Combos",
+        "href": "/products/combos",
+        "description": "Best value combo meals."
+      }
     ],
     "productPageCategories": [
       { "href": "/products/combos", "label": "Combos" },
@@ -307,18 +399,29 @@
   "navigation": {
     "publicLinks": [
       { "href": "/", "label": "Home" },
-      { "href": "/about", "label": "About" },
-      { "href": "/products", "label": "Products" }
+      { "href": "/products", "label": "Products" },
+      { "href": "/about", "label": "About" }
     ],
     "userLinks": [
       { "href": "/", "label": "Home" },
-      { "href": "/cart", "label": "Cart" },
       { "href": "/profile/dashboard", "label": "Profile" }
     ],
     "productMenu": [
-      { "title": "Dishes", "href": "/products/dishes", "description": "Delicious street snacks and chaats." },
-      { "title": "Drinks", "href": "/products/drinks", "description": "Refreshing beverages and juices." },
-      { "title": "Combos", "href": "/products/combos", "description": "Best value combo meals." }
+      {
+        "title": "Dishes",
+        "href": "/products/dishes",
+        "description": "Delicious street snacks and chaats."
+      },
+      {
+        "title": "Drinks",
+        "href": "/products/drinks",
+        "description": "Refreshing beverages and juices."
+      },
+      {
+        "title": "Combos",
+        "href": "/products/combos",
+        "description": "Best value combo meals."
+      }
     ],
     "footerNavLinks": [
       { "href": "#", "label": "Features" },
@@ -342,7 +445,8 @@
     "adminLinks": [
       { "href": "/", "label": "Home" },
       { "href": "/about", "label": "About" },
-      { "href": "/products", "label": "Products" }
+      { "href": "/products", "label": "Products" },
+      { "href": "/cart", "label": "Cart" }
     ]
   },
   "account": {
@@ -392,38 +496,6 @@
       ]
     }
   },
-  "cart": {
-    "initialItems": [
-      {
-        "id": 1,
-        "name": "Pani Puri",
-        "price": 120,
-        "quantity": 2,
-        "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd"
-      },
-      {
-        "id": 2,
-        "name": "Dahi Chaat",
-        "price": 150,
-        "quantity": 1,
-        "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd"
-      },
-      {
-        "id": 3,
-        "name": "Chicken Tikka",
-        "price": 150,
-        "quantity": 1,
-        "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd"
-      },
-      {
-        "id": 4,
-        "name": "Veggie Sandwich",
-        "price": 150,
-        "quantity": 4,
-        "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd"
-      }
-    ]
-  },
   "homeSections": {
     "metrics": [
       { "value": "10K+", "label": "Happy Customers", "color": "text-primary" },
@@ -465,14 +537,38 @@
   },
   "shared": {
     "brandLogos": [
-      { "src": "https://storage.efferd.com/logo/nvidia-wordmark.svg", "alt": "Nvidia Logo" },
-      { "src": "https://storage.efferd.com/logo/supabase-wordmark.svg", "alt": "Supabase Logo" },
-      { "src": "https://storage.efferd.com/logo/openai-wordmark.svg", "alt": "OpenAI Logo" },
-      { "src": "https://storage.efferd.com/logo/turso-wordmark.svg", "alt": "Turso Logo" },
-      { "src": "https://storage.efferd.com/logo/vercel-wordmark.svg", "alt": "Vercel Logo" },
-      { "src": "https://storage.efferd.com/logo/github-wordmark.svg", "alt": "GitHub Logo" },
-      { "src": "https://storage.efferd.com/logo/claude-wordmark.svg", "alt": "Claude AI Logo" },
-      { "src": "https://storage.efferd.com/logo/clerk-wordmark.svg", "alt": "Clerk Logo" }
+      {
+        "src": "https://storage.efferd.com/logo/nvidia-wordmark.svg",
+        "alt": "Nvidia Logo"
+      },
+      {
+        "src": "https://storage.efferd.com/logo/supabase-wordmark.svg",
+        "alt": "Supabase Logo"
+      },
+      {
+        "src": "https://storage.efferd.com/logo/openai-wordmark.svg",
+        "alt": "OpenAI Logo"
+      },
+      {
+        "src": "https://storage.efferd.com/logo/turso-wordmark.svg",
+        "alt": "Turso Logo"
+      },
+      {
+        "src": "https://storage.efferd.com/logo/vercel-wordmark.svg",
+        "alt": "Vercel Logo"
+      },
+      {
+        "src": "https://storage.efferd.com/logo/github-wordmark.svg",
+        "alt": "GitHub Logo"
+      },
+      {
+        "src": "https://storage.efferd.com/logo/claude-wordmark.svg",
+        "alt": "Claude AI Logo"
+      },
+      {
+        "src": "https://storage.efferd.com/logo/clerk-wordmark.svg",
+        "alt": "Clerk Logo"
+      }
     ]
   },
   "search": {
