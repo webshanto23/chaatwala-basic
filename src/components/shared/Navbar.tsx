@@ -3,11 +3,12 @@
 import data from "../../../sitedata.json";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, LogOut, ShoppingCart } from "lucide-react";
+import { Menu, LogOut, ShoppingCart, Sun, Moon } from "lucide-react";
 import { Logo } from "@/components/shared/footer/logo";
 import { useAuth } from "@/contexts/auth-context";
 import { usePermissions } from "@/hooks/use-can";
 import { useCart } from "@/features/cart/context";
+import { useTheme } from "@/contexts/theme-context";
 
 import {
   NavigationMenu,
@@ -29,9 +30,10 @@ export default function Navbar() {
   const publicLinks = data.navigation.publicLinks;
   const userLinks = data.navigation.userLinks;
   const adminLinks = data.navigation.adminLinks;
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="w-full border-b border-border/50 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 backdrop-blur-xl transition-colors duration-200">
+    <header className="w-full sticky top-0 z-50 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 backdrop-blur-xl transition-colors duration-200">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
         {/* Logo */}
         <div className="flex items-center gap-3">
@@ -40,12 +42,12 @@ export default function Navbar() {
             className="font-heading inline-flex items-center gap-3 text-lg font-semibold text-foreground hover:text-primary transition-colors duration-200"
           >
             <Logo className="h-10 w-auto" />
-            <span className="hidden md:inline-block">Chaatwala</span>
+            <span className="hidden">Chaatwalaa!</span>
           </Link>
         </div>
 
         {/* Desktop Menu */}
-        <NavigationMenu className="hidden md:flex rounded-full bg-background/80 px-4 py-1 shadow-sm shadow-primary/5">
+        <NavigationMenu className="hidden md:flex rounded-full  px-4 py-1">
           <NavigationMenuList className="gap-2">
             {(!isLoggedIn || !isAdmin) &&
               publicLinks.map((item) => (
@@ -110,6 +112,19 @@ export default function Navbar() {
 
         {/* Desktop Auth + Cart */}
         <div className="hidden md:flex items-center gap-4">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="rounded-full p-2 text-foreground transition-colors hover:bg-muted hover:text-primary"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </button>
+
           <Link
             href="/cart"
             className="relative rounded-full p-2 text-foreground transition-colors hover:bg-muted hover:text-primary"
@@ -126,16 +141,10 @@ export default function Navbar() {
           {!isLoggedIn ? (
             <>
               <Link
-                href="/signin"
-                className="rounded-full px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-primary"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/sign-up"
+                href="/sign-in"
                 className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
               >
-                Sign Up
+                Sign In
               </Link>
             </>
           ) : (
@@ -228,6 +237,18 @@ export default function Navbar() {
                 </nav>
 
                 <div className="mt-auto flex flex-col gap-2 border-t border-border pt-6">
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="flex items-center gap-2 rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                  >
+                    {theme === "dark" ? (
+                      <Sun className="h-4 w-4" />
+                    ) : (
+                      <Moon className="h-4 w-4" />
+                    )}
+                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                  </button>
                   <Link
                     href="/cart"
                     className="flex items-center gap-2 rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"

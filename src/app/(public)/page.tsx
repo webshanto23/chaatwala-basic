@@ -6,7 +6,7 @@ import { FeaturedPicks } from "@/components/home/featured-picks";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 bg-background font-sans">
+    <div className="flex flex-col flex-1 bg-linear-to-r from-primary/10 via-secondary/10 to-accent/10 font-sans">
       <HeroSection />
       {/* <FeaturedPicks /> */}
       <MostLoved />

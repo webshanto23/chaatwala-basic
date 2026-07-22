@@ -399,7 +399,7 @@
   "navigation": {
     "publicLinks": [
       { "href": "/", "label": "Home" },
-      { "href": "/products", "label": "Products" },
+      { "href": "/products", "label": "Menu" },
       { "href": "/about", "label": "About" }
     ],
     "userLinks": [
@@ -424,12 +424,10 @@
       }
     ],
     "footerNavLinks": [
-      { "href": "#", "label": "Features" },
-      { "href": "#", "label": "Blog" },
-      { "href": "#", "label": "About" },
-      { "href": "#", "label": "Contact" },
-      { "href": "#", "label": "Licence" },
-      { "href": "#", "label": "Privacy" }
+      { "href": "/about", "label": "About" },
+      { "href": "/terms-and-conditions", "label": "Terms & Conditions" },
+      { "href": "/license", "label": "License" },
+      { "href": "/privacy-policy", "label": "Privacy Policy" }
     ],
     "footerSocialLinks": [
       { "href": "#", "label": "X", "icon": "X" },
@@ -445,8 +443,7 @@
     "adminLinks": [
       { "href": "/", "label": "Home" },
       { "href": "/about", "label": "About" },
-      { "href": "/products", "label": "Products" },
-      { "href": "/cart", "label": "Cart" }
+      { "href": "/products", "label": "Products" }
     ]
   },
   "account": {

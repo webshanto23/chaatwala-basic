@@ -11,10 +11,10 @@ export function MetricsStrip() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           {metrics.map((metric) => (
             <div key={metric.label} className="space-y-1">
-              <p className={`text-2xl md:text-3xl font-bold ${metric.color}`}>
+              <p className={`text-2xl md:text-3xl font-bold text-foreground`}>
                 {metric.value}
               </p>
-              <p className="text-sm text-white/90">{metric.label}</p>
+              <p className="text-sm text-foreground/80">{metric.label}</p>
             </div>
           ))}
         </div>

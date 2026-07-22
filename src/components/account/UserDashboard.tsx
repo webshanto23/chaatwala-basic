@@ -10,7 +10,6 @@ import { SecuritySection } from "@/components/account/SecuritySection";
 import { SettingsList } from "@/components/account/SettingsList";
 
 export default function UserDashboard() {
-  const [themeEnabled, setThemeEnabled] = useState(false);
   const [orderUpdates, setOrderUpdates] = useState(true);
   const [offers, setOffers] = useState(true);
   const [emailSms, setEmailSms] = useState(false);
@@ -33,10 +32,7 @@ export default function UserDashboard() {
         </div>
 
         <ProfileHeader name={name} email={email} />
-        <SettingsList
-          themeEnabled={themeEnabled}
-          onThemeToggle={() => setThemeEnabled((value) => !value)}
-        />
+        <SettingsList />
         <AddressList />
         <NotificationSettings
           orderUpdates={orderUpdates}

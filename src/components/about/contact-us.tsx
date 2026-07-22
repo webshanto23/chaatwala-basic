@@ -11,7 +11,7 @@ const contactItems = data.about.contact.contactItems.map((item) => ({
 
 export function ContactSection() {
     return (
-        <div className="rounded-[2rem] border border-border/70 bg-white/95 p-8 shadow-xl shadow-primary/10">
+        <div className="rounded-[2rem] border border-border/70 bg-card/95 p-8 shadow-xl shadow-primary/10">
             <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
                 <div className="space-y-6">
                     <div className="space-y-3">
@@ -47,7 +47,3 @@ export function ContactSection() {
         </div>
     );
 }
-
-
-
-

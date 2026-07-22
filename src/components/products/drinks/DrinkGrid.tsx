@@ -1,20 +1,28 @@
-import { DrinkCard } from "./DrinkCard"
+import { ProductCard } from "@/components/shared/ProductCard";
 
 type Drink = {
-  id: string
-  name: string
-  detail: string
-  price: number | string
-  image: string
-}
+  id: string;
+  name: string;
+  detail: string;
+  price: number | string;
+  image: string;
+};
 
 export function DrinkGrid({ drinks }: { drinks: Drink[] }) {
   return (
-    <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
-    >
+    <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
       {drinks.map((drink) => (
-        <DrinkCard key={drink.id} drink={drink} />
+        <ProductCard
+          key={drink.id}
+          id={drink.id}
+          image={drink.image}
+          name={drink.name}
+          price={drink.price}
+          detail={drink.detail}
+          customBadge=""
+          productType="drink"
+        />
       ))}
     </div>
-  )
+  );
 }

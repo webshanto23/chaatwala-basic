@@ -3,7 +3,7 @@ import ReadMoreText from "../shared/read-more-text";
 import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
 export function HistorySection() {
     return (
-        <Card className="group relative mx-auto w-full overflow-hidden rounded-[2rem] border border-border/60 bg-gradient-to-br from-white via-primary/10 to-white shadow-xl shadow-primary/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+        <Card className="group relative mx-auto w-full overflow-hidden rounded-[2rem] border border-border/60 bg-gradient-to-br from-card via-primary/10 to-card shadow-xl shadow-primary/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
             <div className="relative overflow-hidden">
                 <Image
                     src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd"

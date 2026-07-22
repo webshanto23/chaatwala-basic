@@ -3,7 +3,7 @@ import { PopularDishes } from "@/components/products/dishes/PopularDishes";
 
 export default function DishesPage() {
   return (
-    <div className="flex flex-col flex-1 bg-background font-sans">
+    <div className="flex flex-col flex-1 font-sans">
       <PopularDishes />
       <AllDishesShowcase />
     </div>

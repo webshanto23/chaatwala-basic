@@ -10,7 +10,7 @@ const galleryImages = data.about.gallery.images
 export function GallerySection() {
   return (
     <section className="px-4 sm:px-6 lg:px-8 py-12 bg-gradient-to-br from-secondary/5 via-background to-primary/10">
-      <div className="mx-auto max-w-7xl rounded-[2rem] border border-border/70 bg-white/95 p-8 shadow-xl shadow-secondary/10">
+      <div className="mx-auto max-w-7xl rounded-[2rem] border border-border/70 bg-card/95 p-8 shadow-xl shadow-secondary/10">
         <div className="text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
             {data.about.gallery.heading}

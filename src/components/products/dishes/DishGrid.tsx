@@ -1,19 +1,27 @@
-import { DishCard } from "./DishCard"
+import { ProductCard } from "@/components/shared/ProductCard";
 
 type Dish = {
-  id: string
-  name: string
-  price: number | string
-  image: string
-}
+  id: string;
+  name: string;
+  price: number | string;
+  image: string;
+  detail?: string;
+};
 
 export function DishGrid({ dishes }: { dishes: Dish[] }) {
   return (
-    <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
-    >
+    <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
       {dishes.map((dish) => (
-        <DishCard key={dish.id} dish={dish} />
+        <ProductCard
+          key={dish.id}
+          id={dish.id}
+          image={dish.image}
+          name={dish.name}
+          price={dish.price}
+          detail={dish.detail}
+          productType="dish"
+        />
       ))}
     </div>
-  )
+  );
 }

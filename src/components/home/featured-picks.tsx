@@ -14,7 +14,7 @@ export function FeaturedPicks() {
   return (
     <section className="px-4 py-10 sm:px-6 lg:px-8 bg-gradient-to-br from-secondary/5 via-background to-primary/10">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-10 rounded-[2rem] border border-border/60 bg-white/90 p-8 shadow-[0_32px_120px_-70px_rgba(59,130,246,0.25)] backdrop-blur-xl">
+        <div className="mb-10 rounded-[2rem] border border-border/60 bg-card/90 p-8 shadow-[0_32px_120px_-70px_rgba(59,130,246,0.25)] backdrop-blur-xl">
           <div className="space-y-4 text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.35em] text-secondary">Featured picks</p>
             <h2 className="text-3xl font-bold text-foreground sm:text-4xl">{selectedContent.title}</h2>
@@ -31,7 +31,7 @@ export function FeaturedPicks() {
         {selectedContent.items.length > 0 ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {selectedContent.items.map((item) => (
-              <Card key={item.name} className="h-full overflow-hidden rounded-[1.75rem] border-0 bg-gradient-to-br from-white via-secondary/10 to-white shadow-lg shadow-secondary/10">
+              <Card key={item.name} className="h-full overflow-hidden rounded-[1.75rem] border-0 bg-gradient-to-br from-card via-secondary/10 to-card shadow-lg shadow-secondary/10">
                 <CardHeader className="px-6 pt-6 pb-4">
                   <CardTitle>{item.name}</CardTitle>
                   <CardDescription>{item.detail}</CardDescription>

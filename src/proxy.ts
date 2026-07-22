@@ -16,6 +16,9 @@ const publicPaths = new Set([
   "/signin",
   "/sign-in",
   "/sign-up",
+  "/terms-and-conditions",
+  "/license",
+  "/privacy-policy",
 ]);
 
 function getPermissionRule(pathname: string): PermissionRule | null {

@@ -8,8 +8,8 @@ const categories = [
 
 export default function ProductsLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-1 flex-col bg-background font-sans">
-      <section className="border-b border-border/60 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10">
+    <div className="flex flex-1 flex-col bg-linear-to-r from-primary/10 via-secondary/10 to-accent/10 font-sans">
+      <section className="">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-3">
             <p className="text-sm font-medium uppercase tracking-[0.3em] text-secondary">
@@ -28,7 +28,7 @@ export default function ProductsLayout({ children }: { children: ReactNode }) {
               <Link
                 key={category.href}
                 href={category.href}
-                className="rounded-full border border-border/70 bg-white/80 px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary/10 hover:text-primary"
+                className="rounded-full border border-border/70 bg-card/80 px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary/10 hover:text-primary"
               >
                 {category.label}
               </Link>
@@ -37,7 +37,7 @@ export default function ProductsLayout({ children }: { children: ReactNode }) {
         </div>
       </section>
 
-      {children}
+      <section className="pt-10">{children}</section>
     </div>
   );
 }
