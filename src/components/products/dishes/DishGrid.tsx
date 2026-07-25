@@ -20,6 +20,7 @@ export function DishGrid({ dishes }: { dishes: Dish[] }) {
           price={dish.price}
           detail={dish.detail}
           productType="dish"
+          href={`/products/dishes/${dish.id}`}
         />
       ))}
     </div>

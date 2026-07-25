@@ -1,15 +1,23 @@
-"use client"
-
-import  { AboutHeader } from "@/components/about/about-header"
+import { AboutHeader } from "@/components/about/about-header"
 import { ContactSection } from "@/components/about/contact-us"
 import { FaqSection } from "@/components/about/faq-section"
 import { HistorySection } from "@/components/about/history"
 import MapSection from "@/components/about/map-section"
 import { OwnersTakeSection } from "@/components/about/owners-take"
 import { VisionSection } from "@/components/about/vision"
-import { GallerySection } from "@/components/about/GallerySection"
 import { MetricsStrip } from "@/components/home/MetricsStrip"
 import { WhyChaatwala } from "@/components/home/WhyChaatwala"
+import dynamic from "next/dynamic"
+
+const GallerySection = dynamic(() => import("@/components/about/GallerySection").then(m => m.GallerySection), {
+  loading: () => (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="aspect-square rounded-[1.75rem] bg-muted animate-pulse" />
+      ))}
+    </div>
+  ),
+})
 
 export default function AboutPage() {
   return (
@@ -19,7 +27,7 @@ export default function AboutPage() {
       </section>
       <section>
         <WhyChaatwala />
-              <GallerySection />
+        <GallerySection />
       </section>
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <HistorySection />
@@ -31,8 +39,7 @@ export default function AboutPage() {
         <FaqSection />
       </section>
       <section>
-              <MetricsStrip />
-        
+        <MetricsStrip />
       </section>
       <section>
         <MapSection />

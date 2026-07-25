@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/shared/ProductCard";
 import Link from "next/link";
@@ -11,6 +9,7 @@ export type FoodItem = {
   rating: number;
   image: string;
   detail: string;
+  type: "dish" | "drink";
   tag?: "spicy" | "popular" | "new";
 };
 
@@ -56,7 +55,8 @@ export function SignatureSection({ title, items }: SignatureSectionProps) {
               detail={item.detail}
               rating={item.rating}
               tag={item.tag}
-              productType="dish"
+              productType={item.type}
+              href={`/products/${item.type === "dish" ? "dishes" : "drinks"}/${item.id}`}
             />
           ))}
         </div>

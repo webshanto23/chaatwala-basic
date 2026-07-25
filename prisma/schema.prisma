@@ -213,6 +213,7 @@ model Order {
   subtotal        Decimal
   deliveryFee     Decimal     @default(50)
   total           Decimal
+  idempotencyKey  String?     @unique
   items           OrderItem[]
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt

@@ -40,11 +40,11 @@ export function HeroSection() {
                 <Link href="/cart">Order Now</Link>
                 <ArrowRight className="w-4 h-4" />
               </Button>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card text-foreground shadow-lg hover:bg-card/80"
-            >
+              <Button
+                size="lg"
+                variant="secondary"
+                className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card text-foreground shadow-lg hover:bg-card/80"
+              >
                 <Link href="/products/dishes">Explore Menu</Link>
               </Button>
             </div>
@@ -71,11 +71,11 @@ export function HeroSection() {
             <div className="isolate overflow-hidden rounded-[2rem] border border-border/60 bg-card/90 shadow-[0_32px_120px_-58px_rgba(251,140,0,0.55)]">
               <div className="aspect-[4/3] w-full overflow-hidden">
                 <Image
-                  src="https://images.unsplash.com/photo-1627308595229-7830a5c91f9f"
+                  src="/og-image.svg"
                   alt="Delicious street food spread"
                   width={630}
                   height={480}
-                  className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                  className="h-full w-full object-fit transition-transform duration-700 hover:scale-105"
                 />
               </div>
 

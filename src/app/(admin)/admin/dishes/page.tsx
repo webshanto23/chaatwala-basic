@@ -6,9 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { usePermissions } from "@/hooks/use-can";
+import dynamic from "next/dynamic";
 
-import CreateDishModal from "@/components/admin/create-dish-modal";
-import { getDishes } from "@/features/products/actions";
+const CreateDishModal = dynamic(() => import("@/components/admin/create-dish-modal").then(m => m.default), {
+  ssr: false,
+});
+
+const EditDishModal = dynamic(() => import("@/components/admin/edit-dish-modal").then(m => m.default), {
+  ssr: false,
+});
+
+import { getDishes, deleteDish } from "@/features/products/actions";
 
 type DishRow = {
   id: string;
@@ -18,19 +26,38 @@ type DishRow = {
   available: string;
 };
 
+type DishRowFull = {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  discountPrice: number | null;
+  description: string | null;
+  isAvailable: boolean;
+  tag: string | null;
+  imageUrl: string | null;
+};
+
 export default function DishesPage() {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedDish, setSelectedDish] = useState<DishRowFull | null>(null);
   const [dishes, setDishes] = useState<DishRow[]>([]);
+  const [fullDishes, setFullDishes] = useState<DishRowFull[]>([]);
   const { can } = usePermissions();
   const canCreateDish = can("food:create");
+  const canUpdateDish = can("food:update");
+  const canDeleteDish = can("food:delete");
 
   useEffect(() => {
     let active = true;
     getDishes().then((result) => {
       if (active && !("error" in result) && result.dishes) {
+        const full = result.dishes as DishRowFull[];
+        setFullDishes(full);
         setDishes(
-          result.dishes.map((d) => ({
+          full.map((d) => ({
             id: d.id,
             name: d.name,
             price: `$${Number(d.price).toFixed(2)}`,
@@ -64,6 +91,45 @@ export default function DishesPage() {
     ]);
   };
 
+  const handleUpdated = (dish: DishRowFull) => {
+    setDishes((prev) =>
+      prev.map((d) =>
+        d.id === dish.id
+          ? {
+              id: dish.id,
+              name: dish.name,
+              price: `$${Number(dish.price).toFixed(2)}`,
+              tag: dish.tag ?? "-",
+              available: dish.isAvailable ? "Yes" : "No",
+            }
+          : d
+      )
+    );
+    setFullDishes((prev) => prev.map((d) => (d.id === dish.id ? dish : d)));
+  };
+
+  const handleEdit = (row: Record<string, unknown>) => {
+    const full = fullDishes.find((d) => d.id === row.id);
+    if (full) {
+      setSelectedDish(full);
+      setEditOpen(true);
+    }
+  };
+
+  const handleDelete = async (row: Record<string, unknown>) => {
+    const id = row.id as string;
+    if (!confirm("Delete this dish? This cannot be undone.")) return;
+    const res = await deleteDish(id);
+    if ("error" in res) {
+      alert(res.error);
+      return;
+    }
+    setDishes((prev) => prev.filter((d) => d.id !== id));
+    setFullDishes((prev) => prev.filter((d) => d.id !== id));
+  };
+
+  const showActions = canUpdateDish || canDeleteDish;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -85,9 +151,18 @@ export default function DishesPage() {
         </div>
       </div>
 
-      <DataTable columns={["Name", "Price", "Tag", "Available"]} data={filtered} />
+      <DataTable
+        columns={["Name", "Price", "Tag", "Available"]}
+        data={filtered}
+        showActions={showActions}
+        onEdit={canUpdateDish ? handleEdit : undefined}
+        onDelete={canDeleteDish ? handleDelete : undefined}
+      />
 
       {open && <CreateDishModal onClose={() => setOpen(false)} onCreated={handleCreated} />}
+      {editOpen && selectedDish && (
+        <EditDishModal dish={selectedDish} onClose={() => setEditOpen(false)} onUpdated={handleUpdated} />
+      )}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+export const revalidate = 300;
+
 import prisma from "@/lib/prisma";
 import { SignatureSection, type FoodItem } from "./SignatureSection";
 
@@ -29,21 +31,23 @@ async function getMostLoved(): Promise<FoodItem[]> {
 
   const items: FoodItem[] = [
     ...dishes.map((d) => ({
-      id: `dish-${d.id}`,
+      id: d.id,
       name: d.name,
       price: Number(d.price),
       image: d.imageUrl ?? "",
       detail: d.description ?? "",
       rating: 4.8,
+      type: "dish" as const,
       tag: normalizeTag(d.tag),
     })),
     ...drinks.map((d) => ({
-      id: `drink-${d.id}`,
+      id: d.id,
       name: d.name,
       price: Number(d.price),
       detail: d.description ?? "",
       image: d.imageUrl ?? "",
       rating: 4.8,
+      type: "drink" as const,
       tag: normalizeTag(d.tag),
     })),
   ];
@@ -58,13 +62,14 @@ async function getSpicyPicks(): Promise<FoodItem[]> {
   });
 
   const items: FoodItem[] = dishes.map((d) => ({
-    id: `dish-${d.id}`,
+    id: d.id,
     name: d.name,
     price: Number(d.price),
     image: d.imageUrl ?? "",
     detail: d.description ?? "",
-    rating: 4.8,
-    tag: "spicy" as const,
+      rating: 4.8,
+      type: "dish" as const,
+      tag: "spicy" as const,
   }));
 
   return shuffle(items);

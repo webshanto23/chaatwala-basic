@@ -28,7 +28,7 @@ export default function CartPage() {
           )}
 
           {cart.items.map((item) => (
-            <Card key={item.id} className="group rounded-[1.5rem] overflow-hidden border-0 bg-gradient-to-br from-white via-secondary/10 to-white shadow-lg transition-all duration-200 hover:-translate-y-1">
+            <Card key={item.id} className="group rounded-[1.5rem] overflow-hidden border border-border/70 bg-card shadow-lg transition-all duration-200 hover:-translate-y-1">
               <CardContent className="flex items-center gap-4 p-4 md:p-5">
                 {/* Image */}
                 <Image
@@ -52,7 +52,13 @@ export default function CartPage() {
                       variant="outline"
                       size="sm"
                       className="h-8 w-8 rounded-full"
-                      onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                      onClick={async () => {
+                        if (item.quantity <= 1) {
+                          await removeItem(item.id);
+                        } else {
+                          await updateQuantity(item.id, item.quantity - 1);
+                        }
+                      }}
                     >
                       -
                     </Button>
@@ -88,7 +94,7 @@ export default function CartPage() {
 
         {/* Summary */}
         <div className="w-full md:w-[360px]">
-          <Card className="rounded-[1.5rem] border border-border/70 bg-white/95 shadow-xl">
+          <Card className="rounded-[1.5rem] border border-border/70 bg-card shadow-xl">
             <CardContent className="p-6 space-y-4">
               <h2 className="text-xl font-semibold text-foreground">Order Summary</h2>
 

@@ -18,5 +18,10 @@ export async function GET() {
     ...popularDrinks.map((d) => d.name),
   ];
 
-  return NextResponse.json({ tags });
+  return new NextResponse(JSON.stringify({ tags }), {
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "s-maxage=300, stale-while-revalidate=600",
+    },
+  });
 }

@@ -1,14 +1,15 @@
 "use server";
 
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
-import { randomUUID } from "crypto";
-
 import { authorize, requirePermission } from "@/lib/authorize";
 import { logAction } from "@/app/actions/audit";
 import prisma from "@/lib/prisma";
 import { createDishSchema } from "@/lib/validations/dish";
 import { createDrinkSchema } from "@/lib/validations/drink";
+import { revalidatePath } from "next/cache";
+
+import { mkdir, writeFile } from "fs/promises";
+import path from "path";
+import { randomUUID } from "crypto";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -33,6 +34,16 @@ function slugify(name: string): string {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+async function saveUploadedFile(file: File): Promise<string> {
+  const ext = file.type.split("/")[1];
+  const filename = `${randomUUID()}.${ext}`;
+  const uploadDir = path.join(process.cwd(), "public/uploads");
+  await mkdir(uploadDir, { recursive: true });
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await writeFile(path.join(uploadDir, filename), buffer);
+  return `/uploads/${filename}`;
 }
 
 export async function createDish(formData: FormData): Promise<CreateDishResult> {
@@ -67,14 +78,7 @@ export async function createDish(formData: FormData): Promise<CreateDishResult> 
   }
 
   const data = parsed.data;
-
-  const ext = file.type.split("/")[1];
-  const filename = `${randomUUID()}.${ext}`;
-  const uploadDir = path.join(process.cwd(), "public/uploads");
-  await mkdir(uploadDir, { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadDir, filename), buffer);
-  const imageUrl = `/uploads/${filename}`;
+  const imageUrl = await saveUploadedFile(file);
 
   let slug = data.slug?.trim() || slugify(data.name);
   const existing = await prisma.dish.findUnique({ where: { slug } });
@@ -103,6 +107,10 @@ export async function createDish(formData: FormData): Promise<CreateDishResult> 
     metadata: { name: dish.name, id: dish.id },
   });
 
+  revalidatePath("/");
+  revalidatePath("/products/dishes");
+  revalidatePath(`/products/dishes/${dish.id}`);
+
   return {
     success: true,
     dish: {
@@ -117,6 +125,121 @@ export async function createDish(formData: FormData): Promise<CreateDishResult> 
       imageUrl: dish.imageUrl,
     },
   };
+}
+
+export async function updateDish(id: string, formData: FormData): Promise<{ success: true; dish: DishResult } | { error: string }> {
+  const { authorized, session } = await requirePermission("food:update");
+  if (!authorized || !session?.user) {
+    return { error: "You do not have permission to update dishes" };
+  }
+
+  const existing = await prisma.dish.findUnique({ where: { id } });
+  if (!existing) {
+    return { error: "Dish not found" };
+  }
+
+  const parsed = createDishSchema.safeParse({
+    name: formData.get("name"),
+    slug: formData.get("slug") || undefined,
+    price: formData.get("price"),
+    discountPrice: formData.get("discountPrice") ? formData.get("discountPrice") : undefined,
+    description: formData.get("description") || undefined,
+    isAvailable: formData.get("isAvailable") === "true" || formData.get("isAvailable") === "on",
+    tag: formData.get("tag") || undefined,
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const data = parsed.data;
+  const file = formData.get("image");
+  let imageUrl = existing.imageUrl;
+
+  if (file && file instanceof File && file.size > 0) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return { error: "Only JPG, PNG, WEBP, or GIF images are allowed" };
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return { error: "Image must be 5MB or less" };
+    }
+    imageUrl = await saveUploadedFile(file);
+  }
+
+  let slug = data.slug?.trim() || slugify(data.name);
+  const slugConflict = await prisma.dish.findUnique({ where: { slug } });
+  if (slugConflict && slugConflict.id !== id) {
+    slug = `${slug}-${randomUUID().slice(0, 6)}`;
+  }
+
+  const dish = await prisma.dish.update({
+    where: { id },
+    data: {
+      name: data.name,
+      slug,
+      price: data.price,
+      discountPrice: data.discountPrice,
+      description: data.description,
+      isAvailable: data.isAvailable,
+      tag: data.tag,
+      imageUrl,
+    },
+  });
+
+  await logAction({
+    userId: session.user.id,
+    action: "UPDATE_DISH",
+    entity: "Dish",
+    entityId: dish.id,
+    metadata: { name: dish.name, id: dish.id },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/products/dishes");
+  revalidatePath(`/products/dishes/${dish.id}`);
+
+  return {
+    success: true,
+    dish: {
+      id: dish.id,
+      name: dish.name,
+      slug: dish.slug,
+      price: Number(dish.price),
+      discountPrice: dish.discountPrice ? Number(dish.discountPrice) : null,
+      description: dish.description,
+      isAvailable: dish.isAvailable,
+      tag: dish.tag,
+      imageUrl: dish.imageUrl,
+    },
+  };
+}
+
+export async function deleteDish(id: string): Promise<{ success: true } | { error: string }> {
+  const { authorized, session } = await requirePermission("food:delete");
+  if (!authorized || !session?.user) {
+    return { error: "You do not have permission to delete dishes" };
+  }
+
+  const dish = await prisma.dish.findUnique({ where: { id } });
+  if (!dish) {
+    return { error: "Dish not found" };
+  }
+
+  await prisma.dish.delete({ where: { id } });
+
+  await logAction({
+    userId: session.user.id,
+    action: "DELETE_DISH",
+    entity: "Dish",
+    entityId: id,
+    metadata: { name: dish.name, id },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/products/dishes");
+  revalidatePath(`/products/dishes/${id}`);
+
+  return { success: true };
 }
 
 export async function getDishes() {
@@ -187,14 +310,7 @@ export async function createDrink(formData: FormData): Promise<CreateDrinkResult
   }
 
   const data = parsed.data;
-
-  const ext = file.type.split("/")[1];
-  const filename = `${randomUUID()}.${ext}`;
-  const uploadDir = path.join(process.cwd(), "public/uploads");
-  await mkdir(uploadDir, { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadDir, filename), buffer);
-  const imageUrl = `/uploads/${filename}`;
+  const imageUrl = await saveUploadedFile(file);
 
   let slug = data.slug?.trim() || slugify(data.name);
   const existing = await prisma.drink.findUnique({ where: { slug } });
@@ -223,6 +339,10 @@ export async function createDrink(formData: FormData): Promise<CreateDrinkResult
     metadata: { name: drink.name, id: drink.id },
   });
 
+  revalidatePath("/");
+  revalidatePath("/products/drinks");
+  revalidatePath(`/products/drinks/${drink.id}`);
+
   return {
     success: true,
     drink: {
@@ -237,6 +357,121 @@ export async function createDrink(formData: FormData): Promise<CreateDrinkResult
       imageUrl: drink.imageUrl,
     },
   };
+}
+
+export async function updateDrink(id: string, formData: FormData): Promise<{ success: true; drink: DrinkResult } | { error: string }> {
+  const { authorized, session } = await requirePermission("food:update");
+  if (!authorized || !session?.user) {
+    return { error: "You do not have permission to update drinks" };
+  }
+
+  const existing = await prisma.drink.findUnique({ where: { id } });
+  if (!existing) {
+    return { error: "Drink not found" };
+  }
+
+  const parsed = createDrinkSchema.safeParse({
+    name: formData.get("name"),
+    slug: formData.get("slug") || undefined,
+    price: formData.get("price"),
+    discountPrice: formData.get("discountPrice") ? formData.get("discountPrice") : undefined,
+    description: formData.get("description") || undefined,
+    isAvailable: formData.get("isAvailable") === "true" || formData.get("isAvailable") === "on",
+    tag: formData.get("tag") || undefined,
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const data = parsed.data;
+  const file = formData.get("image");
+  let imageUrl = existing.imageUrl;
+
+  if (file && file instanceof File && file.size > 0) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return { error: "Only JPG, PNG, WEBP, or GIF images are allowed" };
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return { error: "Image must be 5MB or less" };
+    }
+    imageUrl = await saveUploadedFile(file);
+  }
+
+  let slug = data.slug?.trim() || slugify(data.name);
+  const slugConflict = await prisma.drink.findUnique({ where: { slug } });
+  if (slugConflict && slugConflict.id !== id) {
+    slug = `${slug}-${randomUUID().slice(0, 6)}`;
+  }
+
+  const drink = await prisma.drink.update({
+    where: { id },
+    data: {
+      name: data.name,
+      slug,
+      price: data.price,
+      discountPrice: data.discountPrice,
+      description: data.description,
+      isAvailable: data.isAvailable,
+      tag: data.tag,
+      imageUrl,
+    },
+  });
+
+  await logAction({
+    userId: session.user.id,
+    action: "UPDATE_DRINK",
+    entity: "Drink",
+    entityId: drink.id,
+    metadata: { name: drink.name, id: drink.id },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/products/drinks");
+  revalidatePath(`/products/drinks/${drink.id}`);
+
+  return {
+    success: true,
+    drink: {
+      id: drink.id,
+      name: drink.name,
+      slug: drink.slug,
+      price: Number(drink.price),
+      discountPrice: drink.discountPrice ? Number(drink.discountPrice) : null,
+      description: drink.description,
+      isAvailable: drink.isAvailable,
+      tag: drink.tag,
+      imageUrl: drink.imageUrl,
+    },
+  };
+}
+
+export async function deleteDrink(id: string): Promise<{ success: true } | { error: string }> {
+  const { authorized, session } = await requirePermission("food:delete");
+  if (!authorized || !session?.user) {
+    return { error: "You do not have permission to delete drinks" };
+  }
+
+  const drink = await prisma.drink.findUnique({ where: { id } });
+  if (!drink) {
+    return { error: "Drink not found" };
+  }
+
+  await prisma.drink.delete({ where: { id } });
+
+  await logAction({
+    userId: session.user.id,
+    action: "DELETE_DRINK",
+    entity: "Drink",
+    entityId: id,
+    metadata: { name: drink.name, id },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/products/drinks");
+  revalidatePath(`/products/drinks/${id}`);
+
+  return { success: true };
 }
 
 export async function getDrinks() {

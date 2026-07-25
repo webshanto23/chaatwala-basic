@@ -1,0 +1,214 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <radialGradient id="bgGradient" cx="30%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#1c131d"/>
+      <stop offset="50%" stop-color="#120c13"/>
+      <stop offset="100%" stop-color="#080509"/>
+    </radialGradient>
+
+    <radialGradient id="foodSpotlight" cx="28%" cy="55%" r="40%">
+      <stop offset="0%" stop-color="#FF6B00" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#FF3D00" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF8C00"/>
+      <stop offset="50%" stop-color="#FF4500"/>
+      <stop offset="100%" stop-color="#E6003A"/>
+    </linearGradient>
+
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#FF8C00"/>
+    </linearGradient>
+
+    <radialGradient id="plateGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="70%" stop-color="#2A242B"/>
+      <stop offset="95%" stop-color="#1A141C"/>
+      <stop offset="100%" stop-color="#3D3340"/>
+    </radialGradient>
+
+    <radialGradient id="puriGrad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFE0B2"/>
+      <stop offset="50%" stop-color="#E6A15C"/>
+      <stop offset="85%" stop-color="#B86D29"/>
+      <stop offset="100%" stop-color="#8A4B16"/>
+    </radialGradient>
+
+    <radialGradient id="mintGrad" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#7CB342"/>
+      <stop offset="70%" stop-color="#388E3C"/>
+      <stop offset="100%" stop-color="#1B5E20"/>
+    </radialGradient>
+
+    <radialGradient id="tamarindGrad" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#8D6E63"/>
+      <stop offset="70%" stop-color="#5D4037"/>
+      <stop offset="100%" stop-color="#3E2723"/>
+    </radialGradient>
+
+    <filter id="blurFilter" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+
+    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#FF6B00" flood-opacity="0.5"/>
+    </filter>
+
+    <pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="1" fill="#ffffff" opacity="0.03"/>
+      <circle cx="35" cy="55" r="1.2" fill="#ffffff" opacity="0.02"/>
+      <circle cx="70" cy="25" r="0.8" fill="#ffffff" opacity="0.04"/>
+      <circle cx="85" cy="80" r="1" fill="#ffffff" opacity="0.02"/>
+      <circle cx="45" cy="90" r="0.9" fill="#ffffff" opacity="0.03"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  <rect width="1200" height="630" fill="url(#grain)"/>
+
+  <circle cx="340" cy="340" r="380" fill="url(#foodSpotlight)"/>
+
+  <path d="M0,150 Q600,120 1200,180 M0,480 Q600,450 1200,500" stroke="#FF6B00" stroke-opacity="0.05" stroke-width="1.5" fill="none"/>
+  <circle cx="950" cy="180" r="250" stroke="#FF3D00" stroke-opacity="0.04" stroke-width="1" fill="none"/>
+
+  <g id="foodPlatter" filter="url(#dropShadow)">
+    
+    <ellipse cx="340" cy="360" rx="240" ry="200" fill="#140F15" stroke="#2A202C" stroke-width="4"/>
+    <ellipse cx="340" cy="360" rx="225" ry="185" fill="url(#plateGrad)"/>
+
+    <ellipse cx="340" cy="358" rx="223" ry="183" fill="none" stroke="#FF8C00" stroke-opacity="0.15" stroke-width="2"/>
+
+    <g transform="translate(200, 250)">
+      <ellipse cx="30" cy="25" rx="45" ry="32" fill="#121212" stroke="#333" stroke-width="2"/>
+      <ellipse cx="30" cy="23" rx="40" ry="27" fill="url(#mintGrad)"/>
+      <path d="M25,20 C20,10 35,10 30,23 C35,23 40,15 30,23" fill="#8BC34A"/>
+    </g>
+
+    <g transform="translate(410, 260)">
+      <ellipse cx="30" cy="25" rx="42" ry="30" fill="#121212" stroke="#333" stroke-width="2"/>
+      <ellipse cx="30" cy="23" rx="37" ry="25" fill="url(#tamarindGrad)"/>
+      <ellipse cx="28" cy="20" rx="15" ry="8" fill="#D7CCC8" opacity="0.2"/>
+    </g>
+
+    <g transform="translate(240, 310)">
+      <ellipse cx="35" cy="30" rx="38" ry="32" fill="url(#puriGrad)"/>
+      <ellipse cx="35" cy="24" rx="20" ry="14" fill="#3E2723"/>
+      <ellipse cx="35" cy="23" rx="17" ry="11" fill="url(#mintGrad)"/>
+      <path d="M25,20 Q35,15 45,22 M28,25 Q35,20 42,26" stroke="#FFD54F" stroke-width="2" fill="none"/>
+      <circle cx="34" cy="21" r="2" fill="#E53935"/> </g>
+
+    <g transform="translate(310, 330)">
+      <ellipse cx="42" cy="35" rx="46" ry="38" fill="url(#puriGrad)"/>
+      <ellipse cx="25" cy="20" rx="12" ry="6" fill="#FFF" opacity="0.25"/>
+      <ellipse cx="42" cy="28" rx="24" ry="16" fill="#4E342E"/>
+      <ellipse cx="40" cy="28" rx="20" ry="13" fill="url(#tamarindGrad)"/>
+      <ellipse cx="45" cy="29" rx="12" ry="8" fill="url(#mintGrad)"/>
+      <path d="M28,24 Q42,16 54,26 M30,30 Q40,22 52,30 M33,19 Q42,25 48,18" stroke="#FFC107" stroke-width="2.5" fill="none"/>
+      <circle cx="38" cy="25" r="2.5" fill="#D32F2F"/>
+      <circle cx="46" cy="23" r="2" fill="#D32F2F"/>
+      <path d="M42,21 Q45,17 48,22" stroke="#4CAF50" stroke-width="1.5" fill="none"/> </g>
+
+    <g transform="translate(390, 320)">
+      <ellipse cx="35" cy="30" rx="38" ry="32" fill="url(#puriGrad)"/>
+      <ellipse cx="35" cy="24" rx="18" ry="12" fill="#3E2723"/>
+      <ellipse cx="35" cy="24" rx="15" ry="10" fill="url(#mintGrad)"/>
+      <path d="M26,22 Q35,16 44,24" stroke="#FFD54F" stroke-width="2" fill="none"/>
+      <circle cx="36" cy="22" r="2" fill="#E53935"/>
+    </g>
+
+    <g transform="translate(260, 370)">
+      <ellipse cx="35" cy="28" rx="40" ry="30" fill="url(#puriGrad)"/>
+      <ellipse cx="35" cy="22" rx="28" ry="16" fill="#FFC107"/>
+      <path d="M15,20 Q35,8 55,20 M20,24 Q35,14 50,22 M18,16 Q35,10 52,18" stroke="#FFE082" stroke-width="2" fill="none"/>
+      <path d="M22,20 Q32,25 45,18" stroke="#D32F2F" stroke-width="2.5" fill="none"/>
+      <path d="M25,16 Q35,12 42,22" stroke="#388E3C" stroke-width="2" fill="none"/>
+    </g>
+
+    <g transform="translate(350, 380)">
+      <ellipse cx="35" cy="28" rx="38" ry="30" fill="url(#puriGrad)"/>
+      <ellipse cx="35" cy="22" rx="20" ry="12" fill="#FFC107"/>
+      <path d="M22,20 Q35,12 48,22" stroke="#FFE082" stroke-width="2" fill="none"/>
+      <circle cx="32" cy="19" r="2" fill="#E53935"/>
+      <circle cx="38" cy="21" r="2" fill="#E53935"/>
+    </g>
+
+    <g id="garnishes">
+      <path d="M210,340 C220,345 215,355 225,350" stroke="#FFC107" stroke-width="1.5" fill="none"/>
+      <path d="M460,350 C470,352 465,360 475,358" stroke="#FFC107" stroke-width="1.5" fill="none"/>
+      <path d="M330,430 C340,432 335,440 345,438" stroke="#FFD54F" stroke-width="1.5" fill="none"/>
+      <circle cx="230" cy="360" r="1.5" fill="#E53935"/>
+      <circle cx="234" cy="363" r="1" fill="#D32F2F"/>
+      <circle cx="450" cy="370" r="1.5" fill="#E53935"/>
+      <circle cx="320" cy="425" r="1.2" fill="#D32F2F"/>
+      <path d="M220,330 C215,325 225,320 222,332" stroke="#4CAF50" stroke-width="2" fill="none"/>
+      <path d="M470,335 C465,330 475,325 472,337" stroke="#4CAF50" stroke-width="2" fill="none"/>
+    </g>
+  </g> <g opacity="0.25" filter="url(#blurFilter)">
+    <path d="M300,280 Q280,200 320,140 T290,60" stroke="#FFF" stroke-width="12" fill="none"/>
+    <path d="M360,290 Q390,210 350,150 T380,70" stroke="#FFF" stroke-width="16" fill="none"/>
+    <path d="M410,300 Q380,230 420,160 T390,90" stroke="#FFF" stroke-width="10" fill="none"/>
+  </g>
+
+
+  <g transform="translate(620, 145)" filter="url(#dropShadow)">
+    <rect x="0" y="0" width="210" height="36" rx="18" fill="#251927" stroke="#FF6B00" stroke-width="1.5" stroke-opacity="0.5"/>
+    <circle cx="20" cy="18" r="5" fill="#FF4500" filter="url(#glow)"/>
+    <circle cx="20" cy="18" r="5" fill="#FFD700"/>
+    <text x="36" y="23" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-weight="700" font-size="13" fill="#FFC107" letter-spacing="1.5">HYGIENIC &amp; FAST</text>
+  </g>
+
+  <g transform="translate(615, 275)" filter="url(#dropShadow)">
+    <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', 'Inter', sans-serif" font-weight="900" font-size="88" fill="url(#brandGradient)" letter-spacing="-1.5">Chaatwala</text>
+    
+    <path d="M435,-60 L441,-42 L459,-36 L441,-30 L435,-12 L429,-30 L411,-36 L429,-42 Z" fill="url(#goldGradient)"/>
+  </g>
+
+  <g transform="translate(620, 335)">
+    <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif" font-weight="500" font-size="28" fill="#F3E5F5" letter-spacing="0.2">
+      Fresh Street Flavors, <tspan font-weight="700" fill="#FF9800">Delivered.</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(620, 385)">
+    <g transform="translate(0, 0)">
+      <rect x="0" y="0" width="138" height="32" rx="8" fill="#2A1B2D" stroke="#FF8C00" stroke-opacity="0.3" stroke-width="1"/>
+      <text x="14" y="20" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="13" fill="#E0E0E0">100% Purified Water</text>
+    </g>
+
+    <g transform="translate(150, 0)">
+      <rect x="0" y="0" width="125" height="32" rx="8" fill="#2A1B2D" stroke="#FF8C00" stroke-opacity="0.3" stroke-width="1"/>
+      <text x="14" y="20" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="13" fill="#E0E0E0">Authentic Recipes</text>
+    </g>
+
+    <g transform="translate(287, 0)">
+      <rect x="0" y="0" width="115" height="32" rx="8" fill="#2A1B2D" stroke="#FF8C00" stroke-opacity="0.3" stroke-width="1"/>
+      <text x="14" y="20" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="13" fill="#E0E0E0">⚡ Express Delivery</text>
+    </g>
+  </g>
+
+  <g transform="translate(620, 465)" filter="url(#dropShadow)">
+    <rect x="0" y="0" width="480" height="72" rx="16" fill="#18101A" stroke="#38263B" stroke-width="1.5"/>
+    
+    <circle cx="44" cy="36" r="22" fill="url(#brandGradient)"/>
+    <path d="M36,38 L38,28 L50,28 L52,38 Z M34,38 L54,38 L52,45 C52,46.5 50.5,47 49,47 L39,47 C37.5,47 36,46.5 36,45 Z" fill="#FFF"/>
+    <circle cx="41" cy="33" r="1.5" fill="#FF4500"/>
+
+    <text x="80" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="16" fill="#FFFFFF">Order Online on Chaatwala App</text>
+    <text x="80" y="51" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="500" font-size="13" fill="#B3A2B8">Zero contact packaging • Instant tracking</text>
+
+    <g transform="translate(345, 18)">
+      <rect x="0" y="0" width="115" height="36" rx="18" fill="url(#brandGradient)"/>
+      <text x="22" y="23" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="13" fill="#FFF" letter-spacing="0.5">ORDER NOW</text>
+    </g>
+  </g>
+
+  <rect width="1200" height="630" fill="none" stroke="#120C13" stroke-width="10" opacity="0.8"/>
+</svg>

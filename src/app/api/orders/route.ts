@@ -6,6 +6,7 @@ export async function POST(request: Request) {
   const session = await auth();
   const body = await request.json().catch(() => ({}));
   const { addressId } = body as { addressId?: string };
+  const idempotencyKey = request.headers.get("idempotency-key");
 
   if (!addressId) {
     return NextResponse.json({ error: "addressId is required" }, { status: 400 });
@@ -35,6 +36,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Address not found" }, { status: 404 });
   }
 
+  if (idempotencyKey) {
+    const existing = await prisma.order.findFirst({
+      where: { idempotencyKey },
+      include: { items: true, address: true },
+    });
+    if (existing) {
+      return NextResponse.json({
+        order: {
+          id: existing.id,
+          status: existing.status,
+          subtotal: Number(existing.subtotal),
+          deliveryFee: Number(existing.deliveryFee),
+          total: Number(existing.total),
+          items: existing.items.map((item) => ({
+            id: item.id,
+            productId: item.productId,
+            productType: item.productType,
+            name: item.name,
+            price: Number(item.price),
+            quantity: item.quantity,
+            imageUrl: item.imageUrl,
+            createdAt: item.createdAt,
+          })),
+          createdAt: existing.createdAt,
+        },
+      });
+    }
+  }
+
   const subtotal = cart.items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
   const deliveryFee = 50;
   const total = subtotal + deliveryFee;
@@ -46,6 +76,7 @@ export async function POST(request: Request) {
       subtotal,
       deliveryFee,
       total,
+      idempotencyKey: idempotencyKey ?? undefined,
       items: {
         create: cart.items.map((item) => ({
           productId: item.productId,

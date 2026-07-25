@@ -1,5 +1,3 @@
-"use client"
-
 import { Card, CardContent } from "@/components/ui/card"
 import { Leaf, Flame, Clock, Shield } from "lucide-react"
 import data from "../../../sitedata.json"

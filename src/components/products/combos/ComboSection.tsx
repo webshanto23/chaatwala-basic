@@ -2,7 +2,6 @@
 
 import data from "../../../../sitedata.json"
 import { ComboCard } from "./ComboCard"
-import { Button } from "@/components/ui/button"
 
 const combos = data.products.combos
 

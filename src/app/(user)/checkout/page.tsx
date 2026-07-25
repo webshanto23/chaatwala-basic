@@ -27,9 +27,13 @@ export default function CheckoutPage() {
     setIsPlacing(true)
     setError(null)
     try {
+      const idempotencyKey = crypto.randomUUID();
       const res = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey,
+        },
         body: JSON.stringify({ addressId: "default" }),
       })
       if (!res.ok) {

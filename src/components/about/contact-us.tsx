@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import { Mail, Phone } from "lucide-react";
 import data from "../../../sitedata.json";
 import { ContactForm } from "./contact-form";

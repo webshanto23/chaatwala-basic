@@ -21,6 +21,7 @@ export function DrinkGrid({ drinks }: { drinks: Drink[] }) {
           detail={drink.detail}
           customBadge=""
           productType="drink"
+          href={`/products/drinks/${drink.id}`}
         />
       ))}
     </div>

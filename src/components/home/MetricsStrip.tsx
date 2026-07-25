@@ -1,5 +1,3 @@
-"use client"
-
 import data from "../../../sitedata.json"
 
 const metrics = data.homeSections.metrics

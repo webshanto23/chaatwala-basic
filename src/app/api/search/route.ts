@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-const CACHE_TTL = 60 * 1000;
-const MAX_CACHE_SIZE = 200;
-
 type SearchResult = {
   id: string;
   label: string;
@@ -12,36 +9,8 @@ type SearchResult = {
   category: string;
 };
 
-const searchCache = new Map<
-  string,
-  { data: SearchResult[]; timestamp: number }
->();
-
 function normalizeTerm(term: string) {
   return term.trim().toLowerCase();
-}
-
-async function getCachedResults(term: string): Promise<SearchResult[] | null> {
-  const key = term;
-  const entry = searchCache.get(key);
-  if (!entry) return null;
-  if (Date.now() - entry.timestamp > CACHE_TTL) {
-    searchCache.delete(key);
-    return null;
-  }
-  return entry.data;
-}
-
-function setCachedResults(term: string, data: SearchResult[]) {
-  searchCache.set(term, { data, timestamp: Date.now() });
-  if (searchCache.size > MAX_CACHE_SIZE) {
-    const now = Date.now();
-    for (const [key, value] of searchCache.entries()) {
-      if (now - value.timestamp > CACHE_TTL) {
-        searchCache.delete(key);
-      }
-    }
-  }
 }
 
 export async function GET(request: Request) {
@@ -49,15 +18,12 @@ export async function GET(request: Request) {
   const rawQuery = searchParams.get("q")?.trim() ?? "";
 
   if (!rawQuery) {
-    return NextResponse.json({ results: [] as SearchResult[] });
+    return new NextResponse(JSON.stringify({ results: [] as SearchResult[] }), {
+      headers: { "Content-Type": "application/json", "Cache-Control": "s-maxage=60, stale-while-revalidate=120" },
+    });
   }
 
   const term = normalizeTerm(rawQuery);
-
-  const cached = await getCachedResults(term);
-  if (cached) {
-    return NextResponse.json({ results: cached });
-  }
 
   const [dishes, drinks, combos] = await Promise.all([
     prisma.dish.findMany({
@@ -119,7 +85,7 @@ export async function GET(request: Request) {
     })),
   ];
 
-  setCachedResults(term, results);
-
-  return NextResponse.json({ results });
+  return new NextResponse(JSON.stringify({ results }), {
+    headers: { "Content-Type": "application/json", "Cache-Control": "s-maxage=60, stale-while-revalidate=120" },
+  });
 }

@@ -7,7 +7,7 @@ import Image from "next/image"
 import { useCart } from "@/features/cart/context"
 
 export function FloatingCart() {
-  const { cart, totalItems, total, updateQuantity } = useCart();
+  const { cart, totalItems, total, updateQuantity, removeItem } = useCart();
 
   return (
     <Sheet>
@@ -43,6 +43,7 @@ export function FloatingCart() {
                 key={item.id}
                 item={item}
                 onUpdateQuantity={updateQuantity}
+                onRemove={removeItem}
               />
             ))}
           </div>
@@ -65,6 +66,7 @@ export function FloatingCart() {
 function CartItemRow({
   item,
   onUpdateQuantity,
+  onRemove,
 }: {
   item: {
     id: string;
@@ -78,6 +80,7 @@ function CartItemRow({
     updatedAt: Date;
   };
   onUpdateQuantity: (itemId: string, quantity: number) => Promise<void>;
+  onRemove: (itemId: string) => Promise<void>;
 }) {
   return (
     <div className="flex gap-3 p-3 rounded-xl bg-background border border-border">
@@ -100,7 +103,13 @@ function CartItemRow({
             variant="outline" 
             size="sm" 
             className="h-7 w-7 rounded-full p-0"
-            onClick={() => onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
+            onClick={async () => {
+              if (item.quantity <= 1) {
+                await onRemove(item.id);
+              } else {
+                await onUpdateQuantity(item.id, item.quantity - 1);
+              }
+            }}
           >
             <Minus className="w-3 h-3" />
           </Button>
