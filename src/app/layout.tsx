@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout/app-shell";
 
@@ -12,6 +12,17 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["600", "900"],
+  variable: "--font-fraunces",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://chaatwala-basic.vercel.app"),
@@ -19,7 +30,12 @@ export const metadata: Metadata = {
     default: "Chaatwala | Authentic Indian Street Food Delivered",
     template: "%s | Chaatwala",
   },
-  description: "Authentic Indian street food and beverages delivered fresh to your doorstep.",
+  icons: {
+    icon: "/images/chatwala_logo.png",
+  },
+
+  description:
+    "Authentic Indian street food and beverages delivered fresh to your doorstep.",
   robots: {
     index: true,
     follow: true,
@@ -30,7 +46,8 @@ export const metadata: Metadata = {
     url: "https://chaatwala-basic.vercel.app",
     siteName: "Chaatwala",
     title: "Chaatwala | Authentic Indian Street Food Delivered",
-    description: "Authentic Indian street food and beverages delivered fresh to your doorstep.",
+    description:
+      "Authentic Indian street food and beverages delivered fresh to your doorstep.",
     images: [
       {
         url: "https://chaatwala-basic.vercel.app/og-image.svg",
@@ -43,7 +60,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Chaatwala | Authentic Indian Street Food Delivered",
-    description: "Authentic Indian street food and beverages delivered fresh to your doorstep.",
+    description:
+      "Authentic Indian street food and beverages delivered fresh to your doorstep.",
     images: ["https://chaatwala-basic.vercel.app/og-image.svg"],
   },
 };
@@ -56,7 +74,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable}${fraunces.variable} ${inter.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col">
         <AppShell>{children}</AppShell>

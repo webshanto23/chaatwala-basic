@@ -82,9 +82,9 @@ export function HeroSection() {
               <div className="space-y-4 p-5">
                 <div className="flex items-center justify-between rounded-3xl bg-primary/10 px-4 py-3 text-sm text-primary shadow-inner shadow-primary/10">
                   <div>
-                    <p className="font-semibold">Chefs Special</p>
+                    <p className="font-semibold">Authentic Foods</p>
                     <p className="text-xs text-muted-foreground">
-                      Spiced street sandwich
+                      Industry-leading chefs and recipes curated for you!
                     </p>
                   </div>
                   <Sparkles className="h-5 w-5" />
@@ -95,7 +95,7 @@ export function HeroSection() {
                     variant="spicy"
                     className="rounded-full px-4 py-2 text-sm shadow"
                   >
-                    Fiery Choice
+                    Spicy & Flavorful
                   </Badge>
                   <Badge
                     variant="new"

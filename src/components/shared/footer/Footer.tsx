@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { XIcon } from "../../icons/x-icon";
 import { GithubIcon } from "../../icons/github-icon";
 import { Logo } from "./logo";
-import Image from "next/image";
 import Link from "next/link";
 
 const navLinks = data.navigation.footerNavLinks;
@@ -85,13 +84,6 @@ export function Footer() {
               rel="noreferrer"
               className="inline-flex items-center gap-1 text-foreground/80 hover:text-primary hover:underline transition-colors"
             >
-              <Image
-                src="https://images.unsplash.com/photo-1603133872878-684f208fb84b"
-                alt="shaban"
-                width={16}
-                height={16}
-                className="rounded-full"
-              />
               Fu Info Tech Ltd.
             </Link>
           </p>

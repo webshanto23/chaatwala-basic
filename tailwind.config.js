@@ -8,7 +8,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        heading: ["var(--font-sans)", "system-ui", "sans-serif"],
+        heading: ["var(--font-fraunces)", "system-ui", "sans-serif"],
+        body: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
       fontSize: {
         "display-lg": ["2.5rem", { lineHeight: "1.2", fontWeight: "800" }],
