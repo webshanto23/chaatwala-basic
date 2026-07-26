@@ -2,6 +2,8 @@ import { PopularDishes } from "@/components/products/dishes/PopularDishes";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 
+export const revalidate = 300;
+
 const AllDishesShowcase = dynamic(() => import("@/components/products/dishes/AllDishesShowcase").then(m => m.AllDishesShowcase), {
   loading: () => (
     <section className="px-4 py-10 md:px-6 lg:px-8">

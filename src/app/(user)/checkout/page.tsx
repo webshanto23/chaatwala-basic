@@ -16,10 +16,13 @@ export default function CheckoutPage() {
 
   if (!auth.isAuthenticated) {
     return (
-      <div className="mx-auto px-4 py-10 max-w-7xl">
-        <h1 className="text-3xl font-bold mb-8 text-foreground">Checkout</h1>
-        <p className="text-muted-foreground">Please sign in to checkout.</p>
-      </div>
+      <>
+        <meta name="robots" content="noindex, nofollow" />
+        <div className="mx-auto px-4 py-10 max-w-7xl">
+          <h1 className="text-3xl font-bold mb-8 text-foreground">Checkout</h1>
+          <p className="text-muted-foreground">Please sign in to checkout.</p>
+        </div>
+      </>
     )
   }
 
@@ -49,11 +52,18 @@ export default function CheckoutPage() {
   }
 
   if (isLoading) {
-    return <div className="mx-auto px-4 py-10 max-w-7xl">Loading cart...</div>
+    return (
+      <>
+        <meta name="robots" content="noindex, nofollow" />
+        <div className="mx-auto px-4 py-10 max-w-7xl">Loading cart...</div>
+      </>
+    )
   }
 
   return (
-    <div className="mx-auto px-4 py-10 max-w-7xl">
+    <>
+      <meta name="robots" content="noindex, nofollow" />
+      <div className="mx-auto px-4 py-10 max-w-7xl">
       <h1 className="text-3xl font-bold mb-8 text-foreground">Checkout</h1>
 
       <div className="flex flex-col lg:flex-row gap-6">
@@ -125,5 +135,6 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

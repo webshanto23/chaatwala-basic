@@ -1,6 +1,8 @@
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 
+export const revalidate = 300;
+
 const ComboSection = dynamic(() => import("@/components/products/combos/ComboSection").then(m => m.ComboSection), {
   loading: () => (
     <section className="px-4 py-10 sm:px-6 lg:px-8 bg-gradient-to-br from-secondary/5 via-background to-primary/10">

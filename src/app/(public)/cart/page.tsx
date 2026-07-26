@@ -16,7 +16,9 @@ export default function CartPage() {
   }
 
   return (
-    <div className="mx-auto px-4 py-10 max-w-7xl">
+    <>
+      <meta name="robots" content="noindex, nofollow" />
+      <div className="mx-auto px-4 py-10 max-w-7xl">
       <h1 className="text-3xl font-bold mb-8 text-foreground">Your Cart</h1>
 
       <div className="flex flex-col lg:flex-row gap-6">
@@ -132,5 +134,6 @@ export default function CartPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

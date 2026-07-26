@@ -2,6 +2,8 @@ import { PopularDrinks } from "@/components/products/drinks/PopularDrinks";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 
+export const revalidate = 300;
+
 const AllDrinks = dynamic(() => import("@/components/products/drinks/AllDrinks").then(m => m.AllDrinks), {
   loading: () => (
     <section className="px-4 py-10 md:px-6 lg:px-8 bg-gradient-to-br from-secondary/5 via-background to-primary/10">
