@@ -114,6 +114,7 @@ model Dish {
   isAvailable   Boolean  @default(true)
   tag           String?
   imageUrl      String?
+  imageDeleteUrl String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -132,6 +133,7 @@ model Drink {
   isAvailable   Boolean  @default(true)
   tag           String?
   imageUrl      String?
+  imageDeleteUrl String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -178,6 +180,7 @@ model Combo {
   price         Decimal
   originalPrice Decimal
   imageUrl      String?
+  imageDeleteUrl String?
   isAvailable   Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

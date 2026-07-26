@@ -71,6 +71,22 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    name: "Chaatwala",
+    url: "https://chaatwala-basic.vercel.app",
+    logo: "https://chaatwala-basic.vercel.app/images/chatwala_logo.png",
+    servesCuisine: ["Indian Street Food", "Fast Food"],
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Dhaka, Bangladesh",
+      addressLocality: "Dhaka",
+      addressCountry: "Bangladesh",
+    },
+    telephone: "+8801335100511",
+  };
+
   return (
     <html
       lang="en"
@@ -78,6 +94,12 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <AppShell>{children}</AppShell>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
+        />
       </body>
     </html>
   );

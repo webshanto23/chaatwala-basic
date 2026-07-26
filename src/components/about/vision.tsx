@@ -7,7 +7,7 @@ export function VisionSection() {
             <div className="relative overflow-hidden">
                 <Image
                     src="https://images.unsplash.com/photo-1627308595229-7830a5c91f9f"
-                    alt="Event cover"
+                    alt="Close-up of freshly prepared biryani with aromatic spices"
                     width={600}
                     height={340}
                     className="h-72 w-full object-cover transition-transform duration-500 group-hover:scale-105"

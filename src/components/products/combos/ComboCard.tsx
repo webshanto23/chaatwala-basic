@@ -1,10 +1,10 @@
 "use client"
 
+import { ProductImage } from "@/components/shared/ProductImage";
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus } from "lucide-react"
-import Image from "next/image"
 import { useCart } from "@/features/cart/context"
 
 type Combo = {
@@ -24,7 +24,7 @@ export function ComboCard({ combo }: { combo: Combo }) {
     <Card className="group rounded-[2rem] overflow-hidden border-0 bg-gradient-to-br from-white via-secondary/10 to-white shadow-lg shadow-secondary/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
       <div className="relative overflow-hidden">
         <div className="aspect-video w-full overflow-hidden">
-          <Image
+          <ProductImage
             src={combo.image}
             alt={combo.name}
             width={400}

@@ -26,6 +26,7 @@ function serialize(product: any) {
       price: Number(product.data.price),
       discountPrice: product.data.discountPrice ? Number(product.data.discountPrice) : null,
       description: product.data.description,
+      isAvailable: product.data.isAvailable,
       imageUrl: product.data.imageUrl,
     },
   };
@@ -43,5 +44,39 @@ export default async function ProductDetailPage({
     notFound();
   }
 
-  return <ProductDetailClient product={serialize(product)} />;
+  const serialized = serialize(product);
+  const { data, type } = serialized;
+  const imageUrl = data.imageUrl || "/images/chatwala_logo.png";
+  const price = data.discountPrice ?? data.price;
+  const categoryPath =
+    type === "dish"
+      ? "dishes"
+      : type === "drink"
+        ? "drinks"
+        : "combos";
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: data.name,
+    image: imageUrl.startsWith("http") ? imageUrl : `https://chaatwala-basic.vercel.app${imageUrl}`,
+    offers: {
+      "@type": "Offer",
+      price: price,
+      priceCurrency: "BDT",
+      availability: data.isAvailable
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProductDetailClient product={serialized} />
+    </>
+  );
 }

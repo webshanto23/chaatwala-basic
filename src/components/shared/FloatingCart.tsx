@@ -1,9 +1,9 @@
 "use client"
 
+import { ProductImage } from "@/components/shared/ProductImage";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart, Plus, Minus } from "lucide-react"
-import Image from "next/image"
 import { useCart } from "@/features/cart/context"
 
 export function FloatingCart() {
@@ -85,7 +85,7 @@ function CartItemRow({
   return (
     <div className="flex gap-3 p-3 rounded-xl bg-background border border-border">
       <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-        <Image 
+        <ProductImage 
           src={item.imageUrl || "https://images.unsplash.com/photo-1603133872878-684f208fb84b"} 
           alt={item.name}
           width={64}

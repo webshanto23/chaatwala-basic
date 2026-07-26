@@ -7,7 +7,7 @@ export function HistorySection() {
             <div className="relative overflow-hidden">
                 <Image
                     src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd"
-                    alt="Event cover"
+                    alt="Indian street food chaat prepared at a market stall"
                     width={600}
                     height={340}
                     className="h-72 w-full object-cover transition-transform duration-500 group-hover:scale-105"

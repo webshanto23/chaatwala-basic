@@ -1,10 +1,10 @@
 "use client"
 
+import { ProductImage } from "@/components/shared/ProductImage";
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import Image from "next/image"
 import { useCart } from "@/features/cart/context"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -66,7 +66,7 @@ export default function CheckoutPage() {
           {cart.items.map((item) => (
             <Card key={item.id} className="group rounded-[1.5rem] overflow-hidden border-0 bg-gradient-to-br from-white via-secondary/10 to-white shadow-lg transition-all duration-200 hover:-translate-y-1">
               <CardContent className="flex items-center gap-4 p-4 md:p-5">
-                <Image
+                <ProductImage
                   src={item.imageUrl || "https://images.unsplash.com/photo-1603133872878-684f208fb84b"}
                   alt={item.name}
                   width={80}

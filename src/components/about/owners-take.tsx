@@ -7,7 +7,7 @@ export function OwnersTakeSection() {
             <div className="relative overflow-hidden">
                 <Image
                     src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092"
-                    alt="Event cover"
+                    alt="Restaurant kitchen where Chaatwala dishes are freshly prepared"
                     width={600}
                     height={340}
                     className="h-72 w-full object-cover transition-transform duration-500 group-hover:scale-105"

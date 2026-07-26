@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ProductImage } from "@/components/shared/ProductImage";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
@@ -28,7 +28,7 @@ export function ProductCardContent({
   const imageBlock = (
     <div className="relative overflow-hidden rounded-[2rem] bg-muted/30">
       <div className="aspect-square w-full overflow-hidden">
-        <Image
+        <ProductImage
           src={image}
           alt={name}
           width={224}

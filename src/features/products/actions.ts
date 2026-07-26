@@ -6,10 +6,8 @@ import prisma from "@/lib/prisma";
 import { createDishSchema } from "@/lib/validations/dish";
 import { createDrinkSchema } from "@/lib/validations/drink";
 import { revalidatePath } from "next/cache";
-
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { randomUUID } from "crypto";
+import { uploadImage } from "@/lib/image-upload";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -24,6 +22,7 @@ type DishResult = {
   isAvailable: boolean;
   tag: string | null;
   imageUrl: string | null;
+  imageDeleteUrl: string | null;
 };
 
 type CreateDishResult = { success: true; dish: DishResult } | { error: string };
@@ -36,14 +35,13 @@ function slugify(name: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-async function saveUploadedFile(file: File): Promise<string> {
-  const ext = file.type.split("/")[1];
-  const filename = `${randomUUID()}.${ext}`;
-  const uploadDir = path.join(process.cwd(), "public/uploads");
-  await mkdir(uploadDir, { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadDir, filename), buffer);
-  return `/uploads/${filename}`;
+async function deleteImage(url: string | null, deleteUrl: string | null) {
+  if (!deleteUrl) return;
+  try {
+    await fetch(deleteUrl, { method: "DELETE" });
+  } catch {
+    // ignore cleanup errors
+  }
 }
 
 export async function createDish(formData: FormData): Promise<CreateDishResult> {
@@ -78,7 +76,9 @@ export async function createDish(formData: FormData): Promise<CreateDishResult> 
   }
 
   const data = parsed.data;
-  const imageUrl = await saveUploadedFile(file);
+  const { url: imageUrl, deleteUrl: imageDeleteUrl } = await uploadImage(file, {
+    alt: data.name,
+  });
 
   let slug = data.slug?.trim() || slugify(data.name);
   const existing = await prisma.dish.findUnique({ where: { slug } });
@@ -96,6 +96,7 @@ export async function createDish(formData: FormData): Promise<CreateDishResult> 
       isAvailable: data.isAvailable,
       tag: data.tag,
       imageUrl,
+      imageDeleteUrl,
     },
   });
 
@@ -123,6 +124,7 @@ export async function createDish(formData: FormData): Promise<CreateDishResult> 
       isAvailable: dish.isAvailable,
       tag: dish.tag,
       imageUrl: dish.imageUrl,
+      imageDeleteUrl: dish.imageDeleteUrl,
     },
   };
 }
@@ -155,6 +157,7 @@ export async function updateDish(id: string, formData: FormData): Promise<{ succ
   const data = parsed.data;
   const file = formData.get("image");
   let imageUrl = existing.imageUrl;
+  let imageDeleteUrl = existing.imageDeleteUrl;
 
   if (file && file instanceof File && file.size > 0) {
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -163,7 +166,16 @@ export async function updateDish(id: string, formData: FormData): Promise<{ succ
     if (file.size > MAX_FILE_SIZE) {
       return { error: "Image must be 5MB or less" };
     }
-    imageUrl = await saveUploadedFile(file);
+
+    const { url: newImageUrl, deleteUrl: newDeleteUrl } = await uploadImage(file, {
+      alt: data.name,
+    });
+    imageUrl = newImageUrl;
+    imageDeleteUrl = newDeleteUrl ?? null;
+
+    if (existing.imageDeleteUrl) {
+      await deleteImage(existing.imageUrl, existing.imageDeleteUrl);
+    }
   }
 
   let slug = data.slug?.trim() || slugify(data.name);
@@ -183,6 +195,7 @@ export async function updateDish(id: string, formData: FormData): Promise<{ succ
       isAvailable: data.isAvailable,
       tag: data.tag,
       imageUrl,
+      imageDeleteUrl,
     },
   });
 
@@ -210,6 +223,7 @@ export async function updateDish(id: string, formData: FormData): Promise<{ succ
       isAvailable: dish.isAvailable,
       tag: dish.tag,
       imageUrl: dish.imageUrl,
+      imageDeleteUrl: dish.imageDeleteUrl,
     },
   };
 }
@@ -226,6 +240,8 @@ export async function deleteDish(id: string): Promise<{ success: true } | { erro
   }
 
   await prisma.dish.delete({ where: { id } });
+
+  await deleteImage(dish.imageUrl, dish.imageDeleteUrl);
 
   await logAction({
     userId: session.user.id,
@@ -260,6 +276,7 @@ export async function getDishes() {
       isAvailable: d.isAvailable,
       tag: d.tag,
       imageUrl: d.imageUrl,
+      imageDeleteUrl: d.imageDeleteUrl,
     })),
   };
 }
@@ -274,6 +291,7 @@ type DrinkResult = {
   isAvailable: boolean;
   tag: string | null;
   imageUrl: string | null;
+  imageDeleteUrl: string | null;
 };
 
 type CreateDrinkResult = { success: true; drink: DrinkResult } | { error: string };
@@ -310,7 +328,9 @@ export async function createDrink(formData: FormData): Promise<CreateDrinkResult
   }
 
   const data = parsed.data;
-  const imageUrl = await saveUploadedFile(file);
+  const { url: imageUrl, deleteUrl: imageDeleteUrl } = await uploadImage(file, {
+    alt: data.name,
+  });
 
   let slug = data.slug?.trim() || slugify(data.name);
   const existing = await prisma.drink.findUnique({ where: { slug } });
@@ -328,6 +348,7 @@ export async function createDrink(formData: FormData): Promise<CreateDrinkResult
       isAvailable: data.isAvailable,
       tag: data.tag,
       imageUrl,
+      imageDeleteUrl,
     },
   });
 
@@ -355,6 +376,7 @@ export async function createDrink(formData: FormData): Promise<CreateDrinkResult
       isAvailable: drink.isAvailable,
       tag: drink.tag,
       imageUrl: drink.imageUrl,
+      imageDeleteUrl: drink.imageDeleteUrl,
     },
   };
 }
@@ -387,6 +409,7 @@ export async function updateDrink(id: string, formData: FormData): Promise<{ suc
   const data = parsed.data;
   const file = formData.get("image");
   let imageUrl = existing.imageUrl;
+  let imageDeleteUrl = existing.imageDeleteUrl;
 
   if (file && file instanceof File && file.size > 0) {
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -395,7 +418,16 @@ export async function updateDrink(id: string, formData: FormData): Promise<{ suc
     if (file.size > MAX_FILE_SIZE) {
       return { error: "Image must be 5MB or less" };
     }
-    imageUrl = await saveUploadedFile(file);
+
+    const { url: newImageUrl, deleteUrl: newDeleteUrl } = await uploadImage(file, {
+      alt: data.name,
+    });
+    imageUrl = newImageUrl;
+    imageDeleteUrl = newDeleteUrl ?? null;
+
+    if (existing.imageDeleteUrl) {
+      await deleteImage(existing.imageUrl, existing.imageDeleteUrl);
+    }
   }
 
   let slug = data.slug?.trim() || slugify(data.name);
@@ -415,6 +447,7 @@ export async function updateDrink(id: string, formData: FormData): Promise<{ suc
       isAvailable: data.isAvailable,
       tag: data.tag,
       imageUrl,
+      imageDeleteUrl,
     },
   });
 
@@ -442,6 +475,7 @@ export async function updateDrink(id: string, formData: FormData): Promise<{ suc
       isAvailable: drink.isAvailable,
       tag: drink.tag,
       imageUrl: drink.imageUrl,
+      imageDeleteUrl: drink.imageDeleteUrl,
     },
   };
 }
@@ -458,6 +492,8 @@ export async function deleteDrink(id: string): Promise<{ success: true } | { err
   }
 
   await prisma.drink.delete({ where: { id } });
+
+  await deleteImage(drink.imageUrl, drink.imageDeleteUrl);
 
   await logAction({
     userId: session.user.id,
@@ -492,6 +528,7 @@ export async function getDrinks() {
       isAvailable: d.isAvailable,
       tag: d.tag,
       imageUrl: d.imageUrl,
+      imageDeleteUrl: d.imageDeleteUrl,
     })),
   };
 }

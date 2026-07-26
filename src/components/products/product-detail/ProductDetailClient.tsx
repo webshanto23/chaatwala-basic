@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { ProductImage } from "@/components/shared/ProductImage";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/features/cart/context";
 import Link from "next/link";
@@ -40,7 +40,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
 
       <div className="grid gap-8 md:grid-cols-2">
         <div className="aspect-square overflow-hidden rounded-[2rem] bg-muted/30">
-          <Image
+          <ProductImage
             src={imageUrl}
             alt={data.name}
             width={600}
