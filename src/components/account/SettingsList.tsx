@@ -10,7 +10,7 @@ export function SettingsList() {
   }));
 
   return (
-    <Card className="border-border/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+    <Card className="border-border/70 bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <CardHeader className="px-4 pb-2 pt-4">
         <CardTitle className="text-base">Account Settings</CardTitle>
       </CardHeader>

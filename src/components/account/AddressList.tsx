@@ -27,7 +27,7 @@ const addresses: Address[] = [
 
 export function AddressList() {
   return (
-    <Card className="group rounded-[2rem] border border-border/70 bg-white/95 shadow-xl">
+    <Card className="group rounded-[2rem] border border-border/70 bg-card shadow-xl">
       <CardHeader className="flex flex-row items-center justify-between px-6 pb-2 pt-6">
         <CardTitle className="text-base">Addresses</CardTitle>
         <Button variant="outline" size="sm" className="rounded-full">

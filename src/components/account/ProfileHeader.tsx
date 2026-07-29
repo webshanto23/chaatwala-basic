@@ -19,7 +19,7 @@ export function ProfileHeader({ name, email, phone = "+1 (555) 014-2211" }: Prof
     .toUpperCase();
 
   return (
-    <Card className="group rounded-[2rem] border border-border/70 bg-white/95 shadow-xl transition-all">
+    <Card className="group rounded-[2rem] border border-border/70 bg-card shadow-xl transition-all">
       <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
           {initials}

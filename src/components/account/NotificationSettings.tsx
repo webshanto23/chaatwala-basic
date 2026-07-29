@@ -20,7 +20,7 @@ type ToggleRowProps = {
 
 function ToggleRow({ label, description, enabled, onToggle }: ToggleRowProps) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-background/70 px-3 py-3">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/70 px-3 py-3">
       <div>
         <p className="text-sm font-medium text-foreground">{label}</p>
         <p className="text-sm text-muted-foreground">{description}</p>
@@ -54,7 +54,7 @@ export function NotificationSettings({
   onEmailSmsChange,
 }: NotificationSettingsProps) {
   return (
-    <Card className="group rounded-[2rem] border border-border/70 bg-white/95 shadow-xl">
+    <Card className="group rounded-[2rem] border border-border/70 bg-card shadow-xl">
       <CardHeader className="px-6 pb-2 pt-6">
         <CardTitle className="text-base">Notifications</CardTitle>
       </CardHeader>
