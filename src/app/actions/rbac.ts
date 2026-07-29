@@ -160,3 +160,31 @@ export async function removePermissionFromRole(formData: FormData) {
 
   return { success: true };
 }
+
+export async function getOrders() {
+  const { authorized } = await authorize({ permissions: ["admin:access"] });
+  if (!authorized) {
+    return { error: "Forbidden" };
+  }
+
+  const orders = await prisma.order.findMany({
+    select: {
+      id: true,
+      userId: true,
+      status: true,
+      total: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return {
+    orders: orders.map((order) => ({
+      userId: order.userId ?? "-",
+      orderId: order.id,
+      status: order.status,
+      total: Number(order.total).toFixed(2),
+      createdAt: order.createdAt,
+    })),
+  };
+}

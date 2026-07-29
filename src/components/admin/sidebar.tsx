@@ -14,6 +14,7 @@ const links = [
   { name: "Dishes", href: "/admin/dishes" },
   { name: "Drinks", href: "/admin/drinks" },
   { name: "Combos", href: "/admin/combos" },
+  { name: "Orders", href: "/admin/orders" },
 ];
 
 export default function Sidebar() {

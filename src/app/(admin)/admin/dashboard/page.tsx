@@ -2,19 +2,23 @@ import prisma from "@/lib/prisma";
 import { MetricCard } from "@/components/shared/metric-card";
 
 export default async function AdminDashboardPage() {
-  const [userCount, orderCount, dishCount, drinkCount, comboCount] = await Promise.all([
-    prisma.user.count(),
-    prisma.order.count(),
-    prisma.dish.count(),
-    prisma.drink.count(),
-    prisma.combo.count(),
-  ]);
+  const [userCount, orderCount, dishCount, drinkCount, comboCount] =
+    await Promise.all([
+      prisma.user.count(),
+      prisma.order.count(),
+      prisma.dish.count(),
+      prisma.drink.count(),
+      prisma.combo.count(),
+    ]);
 
   const orders = await prisma.order.findMany({
     select: { total: true, createdAt: true },
   });
 
-  const totalEarnings = orders.reduce((sum, order) => sum + Number(order.total), 0);
+  const totalEarnings = orders.reduce(
+    (sum, order) => sum + Number(order.total),
+    0,
+  );
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -38,9 +42,18 @@ export default async function AdminDashboardPage() {
         <MetricCard title="Dishes" value={dishCount} />
         <MetricCard title="Drinks" value={drinkCount} />
         <MetricCard title="Combos" value={comboCount} />
-        <MetricCard title="Total Earnings" value={`$${totalEarnings.toFixed(2)}`} />
-        <MetricCard title="Today&apos;s Revenue" value={`$${todayRevenue.toFixed(2)}`} />
-        <MetricCard title="Avg Order Value" value={`$${avgOrderValue.toFixed(2)}`} />
+        <MetricCard
+          title="Total Earnings"
+          value={`৳${totalEarnings.toFixed(2)}`}
+        />
+        <MetricCard
+          title="Today's Revenue"
+          value={`৳${todayRevenue.toFixed(2)}`}
+        />
+        <MetricCard
+          title="Avg Order Value"
+          value={`৳${avgOrderValue.toFixed(2)}`}
+        />
       </div>
     </div>
   );
