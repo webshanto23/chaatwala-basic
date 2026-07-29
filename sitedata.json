@@ -262,28 +262,6 @@
     }
   },
   "products": {
-    "categories": [
-      {
-        "id": "all",
-        "label": "All"
-      },
-      {
-        "id": "chaat",
-        "label": "Chaat"
-      },
-      {
-        "id": "drinks",
-        "label": "Drinks"
-      },
-      {
-        "id": "combos",
-        "label": "Combos"
-      },
-      {
-        "id": "desserts",
-        "label": "Desserts"
-      }
-    ],
     "productMenu": [
       {
         "title": "Dishes",
@@ -313,6 +291,28 @@
       {
         "href": "/products/drinks",
         "label": "Drinks"
+      }
+    ],
+    "categories": [
+      {
+        "id": "all",
+        "label": "All"
+      },
+      {
+        "id": "chaat",
+        "label": "Chaat"
+      },
+      {
+        "id": "drinks",
+        "label": "Drinks"
+      },
+      {
+        "id": "combos",
+        "label": "Combos"
+      },
+      {
+        "id": "desserts",
+        "label": "Desserts"
       }
     ],
     "combos": [

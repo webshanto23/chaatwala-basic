@@ -27,7 +27,8 @@ function getPermissionRule(pathname: string): PermissionRule | null {
   }
   if (
     pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/profile")
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/orders")
   ) {
     return { require: "user:access", unauthorizedRedirect: "/signin" };
   }
@@ -90,7 +91,7 @@ export async function proxy(request: NextRequest) {
     }
 
     if (
-      (pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/profile")) &&
+      (pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/profile") || pathname.startsWith("/orders")) &&
       isAdmin
     ) {
       return NextResponse.redirect(new URL("/admin/dashboard", request.url));

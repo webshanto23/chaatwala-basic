@@ -1,16 +1,19 @@
-
-import { Mail, PencilLine, Phone } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { Mail, Phone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 type ProfileHeaderProps = {
   name: string;
   email: string;
   phone?: string;
+  image?: string;
 };
 
-export function ProfileHeader({ name, email, phone = "+1 (555) 014-2211" }: ProfileHeaderProps) {
+export function ProfileHeader({
+  name,
+  email,
+  phone,
+  image,
+}: ProfileHeaderProps) {
   const initials = name
     .split(" ")
     .map((part) => part[0])
@@ -21,8 +24,16 @@ export function ProfileHeader({ name, email, phone = "+1 (555) 014-2211" }: Prof
   return (
     <Card className="group rounded-[2rem] border border-border/70 bg-card shadow-xl transition-all">
       <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
-          {initials}
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary overflow-hidden flex-shrink-0">
+          {image ? (
+            <img
+              src={image}
+              alt={name}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            initials
+          )}
         </div>
 
         <div className="min-w-0 flex-1">
@@ -34,15 +45,10 @@ export function ProfileHeader({ name, email, phone = "+1 (555) 014-2211" }: Prof
             </span>
             <span className="flex items-center gap-1.5">
               <Phone className="h-4 w-4" />
-              {phone}
+              {phone ? phone : "Please add Phone & Address"}
             </span>
           </div>
         </div>
-
-        <Button variant="outline" size="sm" className="w-full sm:w-auto rounded-full">
-          <PencilLine className="mr-1.5 h-4 w-4" />
-          Edit Profile
-        </Button>
       </CardContent>
     </Card>
   );

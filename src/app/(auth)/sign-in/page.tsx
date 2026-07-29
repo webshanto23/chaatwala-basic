@@ -31,15 +31,14 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const redirectFrom = searchParams.get("redirect") ?? "/cart";
+
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      if (can("admin:access")) {
-        router.replace("/admin/dashboard");
-      } else {
-        router.replace("/profile/dashboard");
-      }
+      const target = redirectFrom === "/cart" ? "/cart" : (can("admin:access") ? "/admin/dashboard" : "/profile/dashboard");
+      router.replace(target);
     }
-  }, [status, session, router, can]);
+  }, [status, session, router, can, redirectFrom]);
 
   const errorFromUrl = searchParams.get("error");
   const urlError = errorFromUrl ? (errorFromUrl === "CredentialsSignin" ? "Invalid email or password" : "Login failed, please try again") : null;
@@ -63,12 +62,12 @@ export default function SignIn() {
       return;
     }
 
-    router.push("/profile/dashboard");
+    router.push(redirectFrom);
   };
 
   const handleOAuthSignIn = async (provider: string) => {
     router.replace("/signin");
-    await signIn(provider, { callbackUrl: "/profile/dashboard" });
+    await signIn(provider, { callbackUrl: redirectFrom });
   };
 
   return (

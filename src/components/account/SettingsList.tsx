@@ -3,7 +3,11 @@ import { ChevronRight, UserRound, KeyRound } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export function SettingsList() {
+type SettingsListProps = {
+  onEditProfile?: () => void;
+};
+
+export function SettingsList({ onEditProfile }: SettingsListProps) {
   const items = data.account.settings.map((item) => ({
     ...item,
     icon: item.icon === "UserRound" ? UserRound : KeyRound,
@@ -18,11 +22,17 @@ export function SettingsList() {
         <div className="divide-y divide-border/70">
           {items.map((item) => {
             const Icon = item.icon;
+            const isEditProfile = item.label === "Edit Profile";
             return (
               <button
                 key={item.label}
                 type="button"
                 className="flex w-full items-center gap-3 rounded-lg px-1 py-3 text-left transition-colors hover:bg-muted/70"
+                onClick={() => {
+                  if (isEditProfile && onEditProfile) {
+                    onEditProfile();
+                  }
+                }}
               >
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-foreground">
                   <Icon className="h-4 w-4" />
