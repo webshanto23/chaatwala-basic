@@ -7,13 +7,13 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth-context";
 
 const links = [
-  { name: "Dashboard", href: "/admin" },
+  { name: "Dashboard", href: "/admin/dashboard" },
   { name: "Users", href: "/admin/users" },
   { name: "Roles", href: "/admin/roles" },
-  { name: "Audit Logs", href: "/admin/audit-logs" },
-  { name: "Dishes", href: "/admin/dishes" },
-  { name: "Drinks", href: "/admin/drinks" },
-  { name: "Combos", href: "/admin/combos" },
+  { name: "Audit Logs", href: "/admin/audit" },
+  { name: "Dishes", href: "/admin/products/dishes" },
+  { name: "Drinks", href: "/admin/products/drinks" },
+  { name: "Combos", href: "/admin/products/combos" },
   { name: "Orders", href: "/admin/orders" },
 ];
 
@@ -24,7 +24,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     logout();
-    router.push("/admin");
+    router.push("/admin/dashboard");
   };
 
   return (

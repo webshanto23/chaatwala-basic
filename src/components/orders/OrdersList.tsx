@@ -1,12 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/contexts/auth-context";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Package, Clock, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import Image from "next/image";
@@ -80,40 +77,7 @@ function statusBadge(status: string) {
   }
 }
 
-export default function OrdersPage() {
-  const { auth } = useAuth();
-  const router = useRouter();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!auth.isAuthenticated) {
-      router.push("/sign-in?redirect=/orders");
-      return;
-    }
-    const fetchOrders = async () => {
-      try {
-        const res = await fetch("/api/my-orders", { cache: "no-store" });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Failed to fetch orders");
-        }
-        const data = await res.json();
-        setOrders(data.orders ?? []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrders();
-  }, [auth.isAuthenticated, router]);
-
-  if (!auth.isAuthenticated) {
-    return null;
-  }
-
+export function OrdersList({ orders, loading, error, onRetry }: { orders: Order[]; loading: boolean; error: string | null; onRetry?: () => void }) {
   if (loading) {
     return (
       <div className="mx-auto px-4 py-10 max-w-7xl flex items-center justify-center min-h-[60vh]">
@@ -127,9 +91,7 @@ export default function OrdersPage() {
       <div className="mx-auto px-4 py-10 max-w-7xl">
         <h1 className="text-3xl font-bold mb-4 text-foreground">My Orders</h1>
         <p className="text-muted-foreground">{error}</p>
-        <Button className="mt-4" onClick={() => router.push("/cart")}>
-          Return to Cart
-        </Button>
+        {onRetry && <Button className="mt-4" onClick={onRetry}>Retry</Button>}
       </div>
     );
   }

@@ -2,6 +2,25 @@
 
 ## History
 
+### 2026-08-06 — Admin/Customer Route Separation & UX Hardening
+- Updated `src/proxy.ts` to redirect admins away from customer routes (`/cart`, `/checkout`, `/orders`) to `/admin/dashboard`
+- Removed `/cart` from `publicPaths` in proxy so it is no longer treated as a public route
+- Added `user:access` requirement for `/cart` and `/checkout` in `getPermissionRule`
+- Disabled add-to-cart buttons for admins in `ProductCardActions`, `ProductDetailClient`, and `ComboCard`
+- Extended `AuthState` in `auth-context.tsx` to expose `permissions` array for client-side admin checks
+- Refactored customer `orders/page.tsx` from client-side API fetch to server component using `features/orders/service.ts` directly
+- Extracted `OrdersList` client component for order rendering; eliminated `/api/my-orders` round-trip
+
+### 2026-08-06 — Admin Routing Architecture Refactor
+- Resolved Next.js route conflict: admin `orders` and protected `orders` both resolved to `/orders`
+- Fixed by nesting admin pages under `(admin)/admin/` to preserve `/admin/*` URL segments while keeping route-group layout
+- Final admin structure: `(admin)/admin/{dashboard,users,roles,orders,audit,products/{dishes,drinks,combos}}/page.tsx`
+- Moved user-required pages into `(protected)/`: `cart/`, `checkout/`, `orders/`
+- Extracted admin UI shell to `components/admin/admin-shell.tsx`
+- Single layout per group enforced: `(admin)/layout.tsx`, `(protected)/layout.tsx`, `(public)/layout.tsx`, `(auth)/layout.tsx`
+- Updated sidebar links to domain paths: `/admin/products/*`, `/admin/audit`, etc.
+- Fixed `sitedata.json` import path in admin combos page after restructure
+
 ### 2026-08-06 — Architecture Refactor: Service Layer & Route Consolidation
 - Created `src/features/auth/service.ts`, `src/features/products/service.ts`, `src/features/cart/service.ts`, `src/features/orders/service.ts`
 - Removed duplicate auth page `src/app/(auth)/signin/page.tsx`; updated sign-up link to `/sign-in`
@@ -57,10 +76,11 @@
 - **React Context for Cart/Auth/Theme**: Lightweight client state without external state libraries
 - **shadcn/ui radix-nova**: Design system foundation; avoids dependency on external CSS frameworks
 - **Tailwind CSS v4**: Utility-first styling with CSS variable theming
+- **Domain-driven admin routing**: Admin pages grouped by domain (`products/*`, `users`, `orders`, `roles`, `audit`) under single `(admin)` route group with auth-guarded layout
+- **Protected route group**: User-required pages (`cart`, `checkout`, `orders`) isolated under `(protected)` with server-side auth guard
 
 ## Known Issues
 
-- Empty placeholder files in `src/features/orders/` and `src/features/products/`
 - Hardcoded payment values (delivery fee, phone, country) in `src/lib/sslcommerz.ts`
 - `src/proxy.ts` is not wired as Next.js middleware (missing root `middleware.ts`)
 - Price formatting inconsistency: admin pages use `$${price}` while public pages use `৳`

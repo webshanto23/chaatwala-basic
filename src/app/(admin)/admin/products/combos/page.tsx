@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import data from "../../../../../sitedata.json"
+import data from "../../../../../../sitedata.json"
 import DataTable from "@/components/admin/data-table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"

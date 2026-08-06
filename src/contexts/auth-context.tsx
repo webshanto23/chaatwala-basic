@@ -10,6 +10,7 @@ type AuthState = {
   isAuthenticated: boolean;
   role: AuthRole | null;
   name: string | null;
+  permissions: string[];
 };
 
 type AuthContextValue = {
@@ -35,6 +36,7 @@ function InnerAuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: status === "authenticated",
     role: (session?.user?.role as AuthRole) ?? null,
     name: session?.user?.name ?? null,
+    permissions: (session?.user?.permissions as string[]) ?? [],
   }), [status, session]);
 
   const login = useCallback(async (email: string, password: string) => {

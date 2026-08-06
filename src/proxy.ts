@@ -12,8 +12,6 @@ const publicPaths = new Set([
   "/",
   "/about",
   "/products",
-  "/cart",
-  "/signin",
   "/sign-in",
   "/sign-up",
   "/terms-and-conditions",
@@ -28,12 +26,11 @@ function getPermissionRule(pathname: string): PermissionRule | null {
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/profile") ||
-    pathname.startsWith("/orders")
+    pathname.startsWith("/orders") ||
+    pathname.startsWith("/cart") ||
+    pathname.startsWith("/checkout")
   ) {
-    return { require: "user:access", unauthorizedRedirect: "/signin" };
-  }
-  if (pathname.startsWith("/checkout")) {
-    return { require: "user:access", unauthorizedRedirect: "/signin" };
+    return { require: "user:access", unauthorizedRedirect: "/sign-in" };
   }
   return null;
 }
@@ -54,7 +51,11 @@ export async function proxy(request: NextRequest) {
   const permissions = (token?.permissions as Permission[]) ?? [];
   const isAdmin = can(permissions, "admin:access");
 
-  if (pathname === "/signin" || pathname === "/sign-in") {
+  if (pathname === "/signin") {
+    return NextResponse.redirect(new URL("/sign-in", request.url));
+  }
+
+  if (pathname === "/sign-in") {
     if (isAuthenticated) {
       return NextResponse.redirect(
         new URL(isAdmin ? "/admin/dashboard" : "/profile/dashboard", request.url)
@@ -65,7 +66,7 @@ export async function proxy(request: NextRequest) {
 
   if (pathname === "/admin") {
     if (!isAuthenticated) {
-      return NextResponse.redirect(new URL("/signin", request.url));
+      return NextResponse.redirect(new URL("/sign-in", request.url));
     }
     return NextResponse.redirect(
       new URL(isAdmin ? "/admin/dashboard" : "/", request.url)
@@ -76,7 +77,7 @@ export async function proxy(request: NextRequest) {
 
   if (rule) {
     if (!isAuthenticated) {
-      return NextResponse.redirect(new URL(rule.unauthorizedRedirect ?? "/signin", request.url));
+      return NextResponse.redirect(new URL(rule.unauthorizedRedirect ?? "/sign-in", request.url));
     }
 
     const required = Array.isArray(rule.require) ? rule.require : [rule.require];
@@ -91,14 +92,14 @@ export async function proxy(request: NextRequest) {
     }
 
     if (
-      (pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/profile") || pathname.startsWith("/orders")) &&
+      (pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/profile") || pathname.startsWith("/orders") || pathname.startsWith("/cart")) &&
       isAdmin
     ) {
       return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     }
   }
 
-  if (!publicPaths.has(pathname) && !pathname.startsWith("/products/") && !pathname.startsWith("/cart")) {
+  if (!publicPaths.has(pathname) && !pathname.startsWith("/products/")) {
     if (!isAuthenticated) {
       return NextResponse.redirect(new URL("/", request.url));
     }

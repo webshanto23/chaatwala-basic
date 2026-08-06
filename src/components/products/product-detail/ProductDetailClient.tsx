@@ -3,6 +3,7 @@
 import { ProductImage } from "@/components/shared/ProductImage";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/features/cart/context";
+import { useAuth } from "@/contexts/auth-context";
 import Link from "next/link";
 
 type Product = {
@@ -19,6 +20,8 @@ type Product = {
 
 export default function ProductDetailClient({ product }: { product: Product }) {
   const { addItem } = useCart();
+  const { auth } = useAuth();
+  const isAdmin = auth.permissions.includes("admin:access");
 
   const { data, type } = product;
   const imageUrl = data.imageUrl || "/images/chatwala_logo.png";
@@ -61,6 +64,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
             onClick={() =>
               addItem({ productId: data.id, productType: type, quantity: 1 })
             }
+            disabled={isAdmin}
           >
             Add to Cart
           </Button>

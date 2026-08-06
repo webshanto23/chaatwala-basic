@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus } from "lucide-react"
 import { useCart } from "@/features/cart/context"
+import { useAuth } from "@/contexts/auth-context"
 
 type Combo = {
   id: number
@@ -19,6 +20,8 @@ type Combo = {
 export function ComboCard({ combo }: { combo: Combo }) {
   const discount = Math.round((1 - combo.price / combo.originalPrice) * 100)
   const { addItem } = useCart();
+  const { auth } = useAuth();
+  const isAdmin = auth.permissions.includes("admin:access");
 
   return (
     <Card className="group rounded-[2rem] overflow-hidden border-0 bg-gradient-to-br from-white via-secondary/10 to-white shadow-lg shadow-secondary/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
@@ -57,7 +60,7 @@ export function ComboCard({ combo }: { combo: Combo }) {
             <span className="text-sm text-muted-foreground line-through">৳{combo.originalPrice}</span>
             <p className="text-2xl font-bold text-primary">৳{combo.price}</p>
           </div>
-          <Button size="sm" className="h-10 rounded-full px-4 bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => addItem({ productId: String(combo.id), productType: "combo", quantity: 1 })}>
+          <Button size="sm" className="h-10 rounded-full px-4 bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => addItem({ productId: String(combo.id), productType: "combo", quantity: 1 })} disabled={isAdmin}>
             <Plus className="w-4 h-4" />
           </Button>
         </div>
