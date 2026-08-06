@@ -1,3 +1,5 @@
+export const revalidate = 60;
+
 import prisma from "@/lib/prisma";
 import { unstable_cache } from "next/cache";
 import { MetricCard } from "@/components/shared/metric-card";
