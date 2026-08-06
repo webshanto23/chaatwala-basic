@@ -101,6 +101,17 @@ function productImage(product: unknown, productType: string) {
   return (product as { imageUrl: string | null }).imageUrl ?? null;
 }
 
+export async function DELETE() {
+  const session = await (await import("@/lib/auth")).auth();
+  const cart = await getOrCreateCart(session?.user?.id ?? null);
+  await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+  const updated = await prisma.cart.findUnique({
+    where: { id: cart.id },
+    include: { items: { orderBy: { createdAt: "desc" } } },
+  });
+  return NextResponse.json({ cart: serializeCart(updated!) });
+}
+
 export async function GET() {
   const session = await (await import("@/lib/auth")).auth();
   const cart = await getOrCreateCart(session?.user?.id ?? null);

@@ -5,6 +5,7 @@ import { getRoles, getPermissions, assignPermissionToRole, removePermissionFromR
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useRequestDedupe } from "@/hooks/use-request-dedupe";
 
 type Role = {
   id: string;
@@ -24,23 +25,27 @@ export default function RolesPage() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { dedupe } = useRequestDedupe();
 
   const loadData = async () => {
     setLoading(true);
-    const [rolesRes, permsRes] = await Promise.all([getRoles(), getPermissions()]);
+    const [rolesRes, permsRes] = await Promise.all([
+      dedupe("getRoles", () => getRoles()),
+      dedupe("getPermissions", () => getPermissions()),
+    ]);
     if (!("error" in rolesRes) && rolesRes.roles) setRoles(rolesRes.roles);
     if (!("error" in permsRes) && permsRes.permissions) setPermissions(permsRes.permissions);
     setLoading(false);
   };
 
-   
+    
   useEffect(() => {
     const fetchData = async () => {
       await loadData();
     };
 
     fetchData();
-  }, []);
+  }, [dedupe]);
 
   const selectedRole = roles.find((r) => r.id === selectedRoleId);
   const assignedPermissionIds = new Set(selectedRole?.permissions.map((p) => p.permission.id) ?? []);

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { usePermissions } from "@/hooks/use-can";
+import { useRequestDedupe } from "@/hooks/use-request-dedupe";
 import dynamic from "next/dynamic";
 
 const CreateDishModal = dynamic(() => import("@/components/admin/create-dish-modal").then(m => m.default), {
@@ -49,10 +50,11 @@ export default function DishesPage() {
   const canCreateDish = can("food:create");
   const canUpdateDish = can("food:update");
   const canDeleteDish = can("food:delete");
+  const { dedupe } = useRequestDedupe();
 
   useEffect(() => {
     let active = true;
-    getDishes().then((result) => {
+    dedupe("getDishes", () => getDishes()).then((result) => {
       if (active && !("error" in result) && result.dishes) {
         const full = result.dishes as DishRowFull[];
         setFullDishes(full);
@@ -70,7 +72,7 @@ export default function DishesPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [dedupe]);
 
   const filtered = dishes.filter((u) => {
     const q = query.trim().toLowerCase();

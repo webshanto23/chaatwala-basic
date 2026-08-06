@@ -15,6 +15,7 @@ type CartContextValue = {
   addItem: (input: AddToCartInput) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
+  clear: () => Promise<void>;
   refresh: () => Promise<void>;
 };
 
@@ -165,6 +166,34 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const clear = useCallback(async () => {
+    setError(null);
+    const res = await fetch("/api/cart", { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Failed to clear cart");
+    }
+    const data = await res.json();
+    setCart({
+      id: data.cart.id,
+      items: data.cart.items.map((item: {
+        id: string;
+        productId: string;
+        productType: ProductType;
+        name: string;
+        price: number;
+        quantity: number;
+        imageUrl: string | null;
+        createdAt: string;
+        updatedAt: string;
+      }) => ({
+        ...item,
+        createdAt: new Date(item.createdAt),
+        updatedAt: new Date(item.updatedAt),
+      })),
+    });
+  }, []);
+
   const totalItems = useMemo(
     () => cart.items.reduce((sum, item) => sum + item.quantity, 0),
     [cart.items]
@@ -186,6 +215,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         addItem,
         updateQuantity,
         removeItem,
+        clear,
         refresh,
       }}
     >

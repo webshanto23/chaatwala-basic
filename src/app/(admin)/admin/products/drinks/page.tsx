@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { usePermissions } from "@/hooks/use-can";
+import { useRequestDedupe } from "@/hooks/use-request-dedupe";
 import dynamic from "next/dynamic";
 
 const CreateDrinkModal = dynamic(() => import("@/components/admin/create-drink-modal").then(m => m.default), {
@@ -49,10 +50,11 @@ export default function DrinksPage() {
   const canCreateDrink = can("food:create");
   const canUpdateDrink = can("food:update");
   const canDeleteDrink = can("food:delete");
+  const { dedupe } = useRequestDedupe();
 
   useEffect(() => {
     let active = true;
-    getDrinks().then((result) => {
+    dedupe("getDrinks", () => getDrinks()).then((result) => {
       if (active && !("error" in result) && result.drinks) {
         const full = result.drinks as DrinkRowFull[];
         setFullDrinks(full);
@@ -70,7 +72,7 @@ export default function DrinksPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [dedupe]);
 
   const filtered = drinks.filter((u) => {
     const q = query.trim().toLowerCase();

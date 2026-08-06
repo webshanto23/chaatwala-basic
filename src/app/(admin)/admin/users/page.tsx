@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { useRequestDedupe } from "@/hooks/use-request-dedupe";
 
 type UserRow = {
   id: string;
@@ -29,10 +30,11 @@ export default function UsersPage() {
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
   const { can } = usePermissions();
   const canDeleteUser = can("user:delete");
+  const { dedupe } = useRequestDedupe();
 
   const loadData = async () => {
     setLoading(true);
-    const result = await getUsers();
+    const result = await dedupe("getUsers", () => getUsers());
     if (!("error" in result) && result.users && result.roles) {
       setUsers(result.users);
       setRoles(result.roles);
@@ -42,7 +44,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [dedupe]);
 
   const filtered = users.filter((u) => {
     const q = query.trim().toLowerCase();

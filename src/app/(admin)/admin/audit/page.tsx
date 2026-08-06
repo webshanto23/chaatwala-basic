@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { Prisma } from "@prisma/client";
+import { useRequestDedupe } from "@/hooks/use-request-dedupe";
 
 type AuditLog = {
   id: string;
@@ -22,23 +23,33 @@ export default function AuditLogsPage() {
   const [loading, setLoading] = useState(true);
   const [actionFilter, setActionFilter] = useState("");
   const [entityFilter, setEntityFilter] = useState("");
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const { dedupe } = useRequestDedupe();
 
-  const loadLogs = async () => {
+  const loadLogs = async (cursor?: string) => {
     setLoading(true);
-    const result = await getAuditLogs({
-      action: actionFilter || undefined,
-      entity: entityFilter || undefined,
-      limit: 100,
-    });
+    const result = await dedupe(
+      `getAuditLogs-${cursor ?? "start"}`,
+      () =>
+        getAuditLogs({
+          action: actionFilter || undefined,
+          entity: entityFilter || undefined,
+          limit: 20,
+          cursor,
+        })
+    );
     if (!("error" in result) && result.logs) {
-      setLogs(result.logs);
+      setLogs(cursor ? (prev) => [...prev, ...result.logs] : result.logs);
+      setNextCursor(result.nextCursor);
+      setHasMore(!!result.nextCursor);
     }
     setLoading(false);
   };
 
   useEffect(() => {
     loadLogs();
-  }, []);
+  }, [dedupe]);
 
   return (
     <div className="space-y-6">
@@ -55,13 +66,13 @@ export default function AuditLogsPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
               <label className="mb-1 block text-sm font-medium">Action</label>
-              <Input value={actionFilter} onChange={(e) => setActionFilter(e.target.value)} placeholder="e.g. USER_DELETE" />
+              <Input value={actionFilter} onChange={(e) => { setActionFilter(e.target.value); setNextCursor(null); }} placeholder="e.g. USER_DELETE" />
             </div>
             <div className="flex-1">
               <label className="mb-1 block text-sm font-medium">Entity</label>
-              <Input value={entityFilter} onChange={(e) => setEntityFilter(e.target.value)} placeholder="e.g. User" />
+              <Input value={entityFilter} onChange={(e) => { setEntityFilter(e.target.value); setNextCursor(null); }} placeholder="e.g. User" />
             </div>
-            <Button onClick={loadLogs} disabled={loading}>
+            <Button onClick={() => loadLogs()} disabled={loading}>
               {loading ? "Loading..." : "Apply"}
             </Button>
           </div>
@@ -114,6 +125,13 @@ export default function AuditLogsPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+          {hasMore && (
+            <div className="mt-4 flex justify-center">
+              <Button variant="outline" size="sm" onClick={() => nextCursor && loadLogs(nextCursor)} disabled={loading}>
+                Load More
+              </Button>
             </div>
           )}
         </CardContent>

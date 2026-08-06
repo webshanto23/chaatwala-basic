@@ -1,6 +1,7 @@
 "use server";
 
 import { authorize, requirePermission } from "@/lib/authorize";
+import { unstable_cache } from "next/cache";
 import prisma from "@/lib/prisma";
 import { logAction } from "./audit";
 
@@ -10,12 +11,25 @@ export async function getUsers() {
     return { error: "Forbidden" };
   }
 
-  const users = await prisma.user.findMany({
-    select: { id: true, name: true, email: true, roleId: true, createdAt: true },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const roles = await prisma.role.findMany({ select: { id: true, name: true } });
+  const [users, roles] = await Promise.all([
+    unstable_cache(
+      async () => {
+        return prisma.user.findMany({
+          select: { id: true, name: true, email: true, roleId: true, createdAt: true },
+          orderBy: { createdAt: "desc" },
+        });
+      },
+      ["admin-users"],
+      { revalidate: 60, tags: ["users"] }
+    )(),
+    unstable_cache(
+      async () => {
+        return prisma.role.findMany({ select: { id: true, name: true } });
+      },
+      ["admin-roles-list"],
+      { revalidate: 120, tags: ["roles"] }
+    )(),
+  ]);
 
   return { users, roles };
 }
@@ -98,11 +112,26 @@ export async function getRoles() {
     return { error: "Forbidden" };
   }
 
-  const roles = await prisma.role.findMany({
-    include: {
-      permissions: { include: { permission: true } },
+  const roles = await unstable_cache(
+    async () => {
+      return prisma.role.findMany({
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          permissions: {
+            select: {
+              permission: {
+                select: { id: true, name: true, description: true },
+              },
+            },
+          },
+        },
+      });
     },
-  });
+    ["admin-roles"],
+    { revalidate: 120, tags: ["roles"] }
+  )();
 
   return { roles };
 }
@@ -113,7 +142,14 @@ export async function getPermissions() {
     return { error: "Forbidden" };
   }
 
-  const permissions = await prisma.permission.findMany({ orderBy: { name: "asc" } });
+  const permissions = await unstable_cache(
+    async () => {
+      return prisma.permission.findMany({ select: { id: true, name: true, description: true }, orderBy: { name: "asc" } });
+    },
+    ["admin-permissions"],
+    { revalidate: 120, tags: ["permissions"] }
+  )();
+
   return { permissions };
 }
 
@@ -161,22 +197,34 @@ export async function removePermissionFromRole(formData: FormData) {
   return { success: true };
 }
 
-export async function getOrders() {
+export async function getOrders(filters?: { status?: string; limit?: number; cursor?: string }) {
   const { authorized } = await authorize({ permissions: ["admin:access"] });
   if (!authorized) {
     return { error: "Forbidden" };
   }
 
-  const orders = await prisma.order.findMany({
-    select: {
-      id: true,
-      userId: true,
-      status: true,
-      total: true,
-      createdAt: true,
+  const where: Record<string, unknown> = {};
+  if (filters?.status) where.status = filters.status;
+
+  const take = filters?.limit ?? 50;
+  const cursor = filters?.cursor ? { id: filters.cursor } : undefined;
+
+  const orders = await unstable_cache(
+    async () => {
+      const result = await prisma.order.findMany({
+        where,
+        select: { id: true, userId: true, status: true, total: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+        take,
+        ...(cursor ? { skip: 1, cursor } : {}),
+      });
+      return result;
     },
-    orderBy: { createdAt: "desc" },
-  });
+    ["admin-orders", filters?.status ?? "all", String(take), filters?.cursor ?? "start"],
+    { revalidate: 30, tags: ["orders"] }
+  )();
+
+  const nextCursor = orders.length === take ? orders[orders.length - 1].id : null;
 
   return {
     orders: orders.map((order) => ({
@@ -186,5 +234,6 @@ export async function getOrders() {
       total: Number(order.total).toFixed(2),
       createdAt: order.createdAt,
     })),
+    nextCursor,
   };
 }

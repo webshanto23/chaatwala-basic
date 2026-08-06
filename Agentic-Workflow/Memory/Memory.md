@@ -2,6 +2,21 @@
 
 ## History
 
+### 2026-08-06 — Admin Performance Optimization & Duplicate Request Fix
+- Disabled React Strict Mode in `next.config.ts` to prevent duplicate useEffect fires in development
+- Added `src/hooks/use-request-dedupe.ts` for request deduplication across admin pages
+- Applied dedupe hook to all admin pages: dishes, drinks, orders, audit, roles, users
+- Added `unstable_cache` to server actions with 30-120s TTL:
+  - `getDishes`/`getDrinks`: 60s cache, optimized `select` (removed `description`, `imageDeleteUrl` from list views)
+  - `getUsers`/`getRoles`/`getPermissions`: 60-120s cache
+  - `getOrders`: 30s cache with cursor-based pagination (20 per page)
+  - `getAuditLogs`: 60s cache with cursor-based pagination (20 per page)
+- Replaced dashboard revenue calculation with `prisma.order.aggregate()` to avoid fetching all orders
+- Added `clear()` cart API endpoint and auto-clear cart on admin login
+- Hid cart icon for admin users in Navbar (desktop + mobile)
+- Disabled add-to-cart buttons for admins in `ProductCardActions`, `ProductDetailClient`, `ComboCard`
+- Extended `AuthState` with `permissions` array for client-side admin checks
+
 ### 2026-08-06 — Admin/Customer Route Separation & UX Hardening
 - Updated `src/proxy.ts` to redirect admins away from customer routes (`/cart`, `/checkout`, `/orders`) to `/admin/dashboard`
 - Removed `/cart` from `publicPaths` in proxy so it is no longer treated as a public route
@@ -78,6 +93,10 @@
 - **Tailwind CSS v4**: Utility-first styling with CSS variable theming
 - **Domain-driven admin routing**: Admin pages grouped by domain (`products/*`, `users`, `orders`, `roles`, `audit`) under single `(admin)` route group with auth-guarded layout
 - **Protected route group**: User-required pages (`cart`, `checkout`, `orders`) isolated under `(protected)` with server-side auth guard
+- **Request deduplication**: Client-side hook `useRequestDedupe` prevents duplicate server action calls in admin pages
+- **Server-side caching**: `unstable_cache` with tag-based revalidation for admin list data (30-120s TTL)
+- **Cursor-based pagination**: Admin orders and audit logs use cursor pagination to reduce payload size
+- **React Strict Mode disabled**: Prevents duplicate renders and double server action invocations in development
 
 ## Known Issues
 
@@ -85,6 +104,7 @@
 - `src/proxy.ts` is not wired as Next.js middleware (missing root `middleware.ts`)
 - Price formatting inconsistency: admin pages use `$${price}` while public pages use `৳`
 - `ProductCard` component does not support `combo` product type
+- Pre-existing lint warnings in admin pages: "Calling setState synchronously within an effect can trigger cascading renders"
 
 ## Deploy Log
 

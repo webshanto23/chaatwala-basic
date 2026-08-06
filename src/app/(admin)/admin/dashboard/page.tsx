@@ -1,31 +1,35 @@
 import prisma from "@/lib/prisma";
+import { unstable_cache } from "next/cache";
 import { MetricCard } from "@/components/shared/metric-card";
 
 export default async function AdminDashboardPage() {
-  const [userCount, orderCount, dishCount, drinkCount, comboCount] =
+  const [userCount, orderCount, dishCount, drinkCount, comboCount, revenueData] =
     await Promise.all([
       prisma.user.count(),
       prisma.order.count(),
       prisma.dish.count(),
       prisma.drink.count(),
       prisma.combo.count(),
+      unstable_cache(
+        async () => {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const [totalResult, todayResult] = await Promise.all([
+            prisma.order.aggregate({ _sum: { total: true } }),
+            prisma.order.aggregate({ where: { createdAt: { gte: today } }, _sum: { total: true } }),
+          ]);
+          return {
+            totalEarnings: Number(totalResult._sum.total ?? 0),
+            todayRevenue: Number(todayResult._sum.total ?? 0),
+          };
+        },
+        ["admin-dashboard-revenue"],
+        { revalidate: 60, tags: ["orders"] }
+      )(),
     ]);
 
-  const orders = await prisma.order.findMany({
-    select: { total: true, createdAt: true },
-  });
-
-  const totalEarnings = orders.reduce(
-    (sum, order) => sum + Number(order.total),
-    0,
-  );
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayRevenue = orders
-    .filter((order) => order.createdAt >= today)
-    .reduce((sum, order) => sum + Number(order.total), 0);
-
+  const totalEarnings = revenueData.totalEarnings;
+  const todayRevenue = revenueData.todayRevenue;
   const avgOrderValue = orderCount > 0 ? totalEarnings / orderCount : 0;
 
   return (

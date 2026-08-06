@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import data from "../../../sitedata.json";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,9 +24,15 @@ export default function Navbar() {
   const router = useRouter();
   const { auth, logout } = useAuth();
   const { can } = usePermissions();
-  const { totalItems } = useCart();
+  const { totalItems, clear } = useCart();
   const isLoggedIn = auth.isAuthenticated;
   const isAdmin = can("admin:access");
+
+  useEffect(() => {
+    if (isAdmin) {
+      clear().catch(() => {});
+    }
+  }, [isAdmin, clear]);
 
   const publicLinks = data.navigation.publicLinks;
   const userLinks = data.navigation.userLinks;
@@ -47,7 +54,7 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Menu */}
-        <NavigationMenu className="hidden md:flex rounded-full  px-4 py-1">
+        <NavigationMenu key={isAdmin ? "admin" : "public"} className="hidden md:flex rounded-full  px-4 py-1">
           <NavigationMenuList className="gap-2">
             {(!isLoggedIn || !isAdmin) &&
               publicLinks.map((item) => (
@@ -125,18 +132,20 @@ export default function Navbar() {
             )}
           </button>
 
-          <Link
-            href="/cart"
-            className="relative rounded-full p-2 text-foreground transition-colors hover:bg-muted hover:text-primary"
-            aria-label="Cart"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 bg-secondary text-secondary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {totalItems}
-              </span>
-            )}
-          </Link>
+          {!isAdmin && (
+            <Link
+              href="/cart"
+              className="relative rounded-full p-2 text-foreground transition-colors hover:bg-muted hover:text-primary"
+              aria-label="Cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-secondary text-secondary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+          )}
 
           {!isLoggedIn ? (
             <>
@@ -249,18 +258,20 @@ export default function Navbar() {
                     )}
                     {theme === "dark" ? "Light Mode" : "Dark Mode"}
                   </button>
-                  <Link
-                    href="/cart"
-                    className="flex items-center gap-2 rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    Cart
-                    {totalItems > 0 && (
-                      <span className="ml-auto bg-secondary text-secondary-foreground text-xs font-bold rounded-full px-2 py-0.5">
-                        {totalItems}
-                      </span>
-                    )}
-                  </Link>
+                  {!isAdmin && (
+                    <Link
+                      href="/cart"
+                      className="flex items-center gap-2 rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                      Cart
+                      {totalItems > 0 && (
+                        <span className="ml-auto bg-secondary text-secondary-foreground text-xs font-bold rounded-full px-2 py-0.5">
+                          {totalItems}
+                        </span>
+                      )}
+                    </Link>
+                  )}
 
                   {!isLoggedIn ? (
                     <>

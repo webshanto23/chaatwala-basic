@@ -1,5 +1,6 @@
 "use server";
 
+import { unstable_cache } from "next/cache";
 import { authorize, requirePermission } from "@/lib/authorize";
 import { logAction } from "@/app/actions/audit";
 import prisma from "@/lib/prisma";
@@ -264,7 +265,17 @@ export async function getDishes() {
     return { error: "Forbidden" };
   }
 
-  const dishes = await prisma.dish.findMany({ orderBy: { createdAt: "desc" } });
+  const dishes = await unstable_cache(
+    async () => {
+      return prisma.dish.findMany({
+        select: { id: true, name: true, slug: true, price: true, discountPrice: true, isAvailable: true, tag: true, imageUrl: true },
+        orderBy: { createdAt: "desc" },
+      });
+    },
+    ["admin-dishes"],
+    { revalidate: 60, tags: ["dishes"] }
+  )();
+
   return {
     dishes: dishes.map((d) => ({
       id: d.id,
@@ -272,11 +283,11 @@ export async function getDishes() {
       slug: d.slug,
       price: Number(d.price),
       discountPrice: d.discountPrice ? Number(d.discountPrice) : null,
-      description: d.description,
+      description: null,
       isAvailable: d.isAvailable,
       tag: d.tag,
       imageUrl: d.imageUrl,
-      imageDeleteUrl: d.imageDeleteUrl,
+      imageDeleteUrl: null,
     })),
   };
 }
@@ -516,7 +527,17 @@ export async function getDrinks() {
     return { error: "Forbidden" };
   }
 
-  const drinks = await prisma.drink.findMany({ orderBy: { createdAt: "desc" } });
+  const drinks = await unstable_cache(
+    async () => {
+      return prisma.drink.findMany({
+        select: { id: true, name: true, slug: true, price: true, discountPrice: true, isAvailable: true, tag: true, imageUrl: true },
+        orderBy: { createdAt: "desc" },
+      });
+    },
+    ["admin-drinks"],
+    { revalidate: 60, tags: ["drinks"] }
+  )();
+
   return {
     drinks: drinks.map((d) => ({
       id: d.id,
@@ -524,11 +545,11 @@ export async function getDrinks() {
       slug: d.slug,
       price: Number(d.price),
       discountPrice: d.discountPrice ? Number(d.discountPrice) : null,
-      description: d.description,
+      description: null,
       isAvailable: d.isAvailable,
       tag: d.tag,
       imageUrl: d.imageUrl,
-      imageDeleteUrl: d.imageDeleteUrl,
+      imageDeleteUrl: null,
     })),
   };
 }
