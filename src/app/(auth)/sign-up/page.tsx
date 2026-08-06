@@ -86,7 +86,7 @@ export default function SignUp() {
   };
 
   const handleOAuthSignIn = async (provider: string) => {
-    router.replace("/signin");
+    router.replace("/sign-in");
     await signIn(provider, { callbackUrl: "/profile/dashboard" });
   };
 
@@ -183,7 +183,7 @@ export default function SignUp() {
             Already have an account?{" "}
             <Link
               className="underline underline-offset-4 hover:text-primary"
-              href="/signin"
+              href="/sign-in"
             >
               Sign in
             </Link>

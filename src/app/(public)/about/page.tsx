@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 import { AboutHeader } from "@/components/about/about-header"
 import { ContactSection } from "@/components/about/contact-us"
 import { FaqSection } from "@/components/about/faq-section"

@@ -444,7 +444,7 @@
         "label": "Home"
       },
       {
-        "href": "/products",
+        "href": "/products/dishes",
         "label": "Menu"
       },
       {
@@ -545,7 +545,7 @@
         "label": "About"
       },
       {
-        "href": "/products",
+        "href": "/products/dishes",
         "label": "Products"
       }
     ]
@@ -764,20 +764,6 @@
         "href": "/products/combos",
         "category": "Combos"
       }
-    ]
-  },
-  "sqlNotes": {
-    "recommendedTables": [
-      "products",
-      "product_categories",
-      "homepage_sections",
-      "search_index"
-    ],
-    "suggestedSchema": [
-      "CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(255), price NUMERIC(10,2), image TEXT, rating NUMERIC(2,1), tag VARCHAR(50), category VARCHAR(50), description TEXT, href TEXT);",
-      "CREATE TABLE product_categories (id SERIAL PRIMARY KEY, slug VARCHAR(100), name VARCHAR(100));",
-      "CREATE TABLE homepage_sections (id SERIAL PRIMARY KEY, section_name VARCHAR(100), title VARCHAR(255), description TEXT, data JSONB);",
-      "CREATE TABLE search_index (id SERIAL PRIMARY KEY, label VARCHAR(255), description TEXT, href TEXT, category VARCHAR(100));"
     ]
   }
 }

@@ -59,7 +59,7 @@ export default function CartPage() {
 
   const handleProceedToPayment = async () => {
     if (!auth.isAuthenticated) {
-      router.push("/signin?redirect=/cart");
+      router.push("/sign-in?redirect=/cart");
       return;
     }
 

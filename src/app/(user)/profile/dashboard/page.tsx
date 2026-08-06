@@ -6,7 +6,7 @@ export default async function ProfileDashboardPage() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/signin");
+    redirect("/sign-in");
   }
 
   const isAdmin = (session.user.permissions as string[] | undefined)?.includes("admin:access");

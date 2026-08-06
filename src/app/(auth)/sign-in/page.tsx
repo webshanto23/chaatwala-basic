@@ -48,7 +48,7 @@ export default function SignIn() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    router.replace("/signin");
+    router.replace("/sign-in");
 
     const result = await signIn("credentials", {
       email,
@@ -66,7 +66,7 @@ export default function SignIn() {
   };
 
   const handleOAuthSignIn = async (provider: string) => {
-    router.replace("/signin");
+    router.replace("/sign-in");
     await signIn(provider, { callbackUrl: redirectFrom });
   };
 

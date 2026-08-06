@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 export default function LicensePage() {
   return (
     <section className="min-h-screen bg-background text-foreground px-6 py-16">

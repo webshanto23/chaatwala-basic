@@ -60,7 +60,7 @@ export default function Sidebar() {
           Home
         </Link>
         <Link
-          href="/products"
+          href="/products/dishes"
           className={cn(
             "block rounded-md px-3 py-2 text-sm transition-colors",
             pathname === "/"

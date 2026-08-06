@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Package, Clock, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import Image from "next/image";
 
@@ -88,7 +89,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (!auth.isAuthenticated) {
-      router.push("/signin?redirect=/orders");
+      router.push("/sign-in?redirect=/orders");
       return;
     }
     const fetchOrders = async () => {
@@ -149,7 +150,7 @@ export default function OrdersPage() {
               Your orders will appear here once you place one.
             </p>
             <Button asChild>
-              <a href="/products">Browse Products</a>
+              <Link href="/products/dishes">Browse Products</Link>
             </Button>
           </CardContent>
         </Card>

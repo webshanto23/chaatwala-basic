@@ -6,28 +6,57 @@ import ProductDetailClient from "@/components/products/product-detail/ProductDet
 
 async function getProduct(id: string) {
   const [dish, drink, combo] = await Promise.all([
-    prisma.dish.findUnique({ where: { id } }),
-    prisma.drink.findUnique({ where: { id } }),
-    prisma.combo.findUnique({ where: { id } }),
+    prisma.dish.findUnique({
+      where: { id },
+      select: { id: true, name: true, price: true, discountPrice: true, description: true, isAvailable: true, imageUrl: true },
+    }),
+    prisma.drink.findUnique({
+      where: { id },
+      select: { id: true, name: true, price: true, discountPrice: true, description: true, isAvailable: true, imageUrl: true },
+    }),
+    prisma.combo.findUnique({
+      where: { id },
+      select: { id: true, name: true, price: true, originalPrice: true, isAvailable: true, imageUrl: true },
+    }),
   ]);
 
-  if (dish) return { type: "dish" as const, data: dish };
-  if (drink) return { type: "drink" as const, data: drink };
-  if (combo) return { type: "combo" as const, data: combo };
+  if (dish) return { type: "dish" as const, data: { ...dish, price: Number(dish.price), discountPrice: dish.discountPrice ? Number(dish.discountPrice) : null } };
+  if (drink) return { type: "drink" as const, data: { ...drink, price: Number(drink.price), discountPrice: drink.discountPrice ? Number(drink.discountPrice) : null } };
+  if (combo) return { type: "combo" as const, data: { ...combo, price: Number(combo.price), originalPrice: Number(combo.originalPrice) } };
   return null;
 }
 
-function serialize(product: any) {
+type ProductResult =
+  | { type: "dish"; data: { id: string; name: string; price: number; discountPrice: number | null; description: string | null; isAvailable: boolean; imageUrl: string | null } }
+  | { type: "drink"; data: { id: string; name: string; price: number; discountPrice: number | null; description: string | null; isAvailable: boolean; imageUrl: string | null } }
+  | { type: "combo"; data: { id: string; name: string; price: number; originalPrice: number; isAvailable: boolean; imageUrl: string | null } };
+
+function serialize(product: ProductResult) {
+  const base = {
+    id: product.data.id,
+    name: product.data.name,
+    price: Number(product.data.price),
+    isAvailable: product.data.isAvailable,
+    imageUrl: product.data.imageUrl,
+  };
+
+  if (product.type === "combo") {
+    return {
+      type: product.type,
+      data: {
+        ...base,
+        discountPrice: Number(product.data.originalPrice),
+        description: null,
+      },
+    };
+  }
+
   return {
     type: product.type,
     data: {
-      id: product.data.id,
-      name: product.data.name,
-      price: Number(product.data.price),
+      ...base,
       discountPrice: product.data.discountPrice ? Number(product.data.discountPrice) : null,
       description: product.data.description,
-      isAvailable: product.data.isAvailable,
-      imageUrl: product.data.imageUrl,
     },
   };
 }
@@ -45,15 +74,9 @@ export default async function ProductDetailPage({
   }
 
   const serialized = serialize(product);
-  const { data, type } = serialized;
+  const { data } = serialized;
   const imageUrl = data.imageUrl || "/images/chatwala_logo.png";
   const price = data.discountPrice ?? data.price;
-  const categoryPath =
-    type === "dish"
-      ? "dishes"
-      : type === "drink"
-        ? "drinks"
-        : "combos";
 
   const jsonLd = {
     "@context": "https://schema.org",

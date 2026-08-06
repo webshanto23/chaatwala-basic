@@ -8,13 +8,19 @@ import { ThemeProvider } from "@/contexts/theme-context";
 import { AuthProvider } from "@/contexts/auth-context";
 import { CartProvider } from "@/features/cart/context";
 
-const FloatingCart = dynamic(() => import("@/components/shared/FloatingCart").then(m => m.FloatingCart), {
-  ssr: false,
-});
+const FloatingCart = dynamic(
+  () => import("@/components/shared/FloatingCart").then((m) => m.FloatingCart),
+  {
+    ssr: false,
+  },
+);
 
-const SearchBar = dynamic(() => import("@/components/shared/SearchBar").then(m => m.SearchBar), {
-  ssr: false,
-});
+const SearchBar = dynamic(
+  () => import("@/components/shared/SearchBar").then((m) => m.SearchBar),
+  {
+    ssr: false,
+  },
+);
 
 import Navbar from "@/components/shared/Navbar";
 import { Footer } from "@/components/shared/footer/Footer";
@@ -46,15 +52,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {!isAdminRoute && <FloatingCart />}
       </>
     ),
-    [children, isAdminRoute, isHomeRoute]
+    [children, isAdminRoute, isHomeRoute],
   );
 
   return (
     <ThemeProvider>
       <AuthProvider>
-        <CartProvider>
-          {content}
-        </CartProvider>
+        <CartProvider>{content}</CartProvider>
       </AuthProvider>
     </ThemeProvider>
   );

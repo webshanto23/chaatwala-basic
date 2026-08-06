@@ -64,8 +64,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   pages: {
-    signIn: "/signin",
-    error: "/signin",
+    signIn: "/sign-in",
+    error: "/sign-in",
   },
   providers: [
     Google({
@@ -104,10 +104,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
-      const userId = token.id ?? token.sub ?? (user?.id as string | undefined);
-      if (userId) {
-        token.id = userId;
-        const { role, permissions } = await loadUserPermissions(userId);
+      if (user?.id) {
+        token.id = user.id;
+        const { role, permissions } = await loadUserPermissions(user.id);
         token.role = role;
         token.permissions = permissions;
       }
