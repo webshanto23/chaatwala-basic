@@ -1,7 +1,7 @@
 "use server";
 
 import { authorize, requirePermission } from "@/lib/authorize";
-import { unstable_cache } from "next/cache";
+import { unstable_cache, revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { logAction } from "./audit";
 
@@ -77,6 +77,8 @@ export async function updateUserRole(formData: FormData) {
     metadata: { oldRoleId: user.roleId, newRoleId: roleId, newRoleName: newRole.name },
   });
 
+  revalidateTag("users");
+
   return { success: true };
 }
 
@@ -102,6 +104,8 @@ export async function deleteUser(formData: FormData) {
     entityId: userId,
     metadata: { email: user.email },
   });
+
+  revalidateTag("users");
 
   return { success: true };
 }
@@ -172,6 +176,9 @@ export async function assignPermissionToRole(formData: FormData) {
     metadata: { permissionId },
   });
 
+  revalidateTag("roles");
+  revalidateTag("permissions");
+
   return { success: true };
 }
 
@@ -194,6 +201,9 @@ export async function removePermissionFromRole(formData: FormData) {
     metadata: { permissionId },
   });
 
+  revalidateTag("roles");
+  revalidateTag("permissions");
+
   return { success: true };
 }
 
@@ -213,15 +223,15 @@ export async function getOrders(filters?: { status?: string; limit?: number; cur
     async () => {
       const result = await prisma.order.findMany({
         where,
-        select: { id: true, userId: true, status: true, total: true, createdAt: true },
+        select: { id: true, userId: true, user: { select: { name: true, email: true } }, status: true, total: true, sslTxnId: true, createdAt: true },
         orderBy: { createdAt: "desc" },
         take,
         ...(cursor ? { skip: 1, cursor } : {}),
       });
       return result;
     },
-    ["admin-orders", filters?.status ?? "all", String(take), filters?.cursor ?? "start"],
-    { revalidate: 30, tags: ["orders"] }
+    ["admin-orders-v2", filters?.status ?? "all", String(take), filters?.cursor ?? "start"],
+    { revalidate: 300, tags: ["orders"] }
   )();
 
   const nextCursor = orders.length === take ? orders[orders.length - 1].id : null;
@@ -229,9 +239,11 @@ export async function getOrders(filters?: { status?: string; limit?: number; cur
   return {
     orders: orders.map((order) => ({
       userId: order.userId ?? "-",
+      userName: order.user?.name ?? order.user?.email ?? "-",
       orderId: order.id,
       status: order.status,
       total: Number(order.total).toFixed(2),
+      transactionId: order.sslTxnId ?? "-",
       createdAt: order.createdAt,
     })),
     nextCursor,

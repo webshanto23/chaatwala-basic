@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { validatePayment } from "@/lib/sslcommerz";
 
@@ -68,6 +69,9 @@ export async function POST(request: Request) {
     },
   });
 
+  revalidateTag("orders");
+  revalidateTag("user-orders");
+
   return NextResponse.json({ status: "VALID", tran_id: tranId, amount: numericAmount });
 }
 
@@ -134,6 +138,9 @@ export async function GET(request: Request) {
       sslAmount: numericAmount,
     },
   });
+
+  revalidateTag("orders");
+  revalidateTag("user-orders");
 
   return NextResponse.json({ status: "VALID", tran_id: tranId, amount: numericAmount });
 }

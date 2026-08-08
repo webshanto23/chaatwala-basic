@@ -10,60 +10,32 @@ import { NotificationSettings } from "@/components/account/NotificationSettings"
 import { ProfileHeader } from "@/components/account/ProfileHeader";
 import { SecuritySection } from "@/components/account/SecuritySection";
 import { SettingsList } from "@/components/account/SettingsList";
+import { useUserData } from "@/contexts/auth-context";
 
 export default function UserDashboard() {
   const [orderUpdates, setOrderUpdates] = useState(true);
   const [offers, setOffers] = useState(true);
   const [emailSms, setEmailSms] = useState(false);
-  const [profileData, setProfileData] = useState<{
-    name: string;
-    email: string;
-    image: string;
-    phone: string;
-  } | null>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
-  const { data: session, update } = useSession();
+  const { data: session } = useSession();
+  const { profile, addresses, isLoading, refresh } = useUserData();
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await fetch("/api/user/profile", { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          setProfileData({
-            name: data.user.name ?? "",
-            email: data.user.email ?? "",
-            image: data.user.image ?? "",
-            phone: data.phone ?? "",
-          });
-        }
-      } catch {
-        // keep defaults
-      } finally {
-        setProfileLoading(false);
-      }
-    };
-    fetchProfile();
-  }, []);
+    refresh();
+  }, [refresh]);
 
-  const name = profileData?.name ?? session?.user?.name ?? "Ava Carter";
-  const email = profileData?.email ?? session?.user?.email ?? "ava.carter@example.com";
-  const image = profileData?.image ?? session?.user?.image ?? "";
-  const phone = profileData?.phone ?? "";
+  const name = profile?.name ?? session?.user?.name ?? "Ava Carter";
+  const email = profile?.email ?? session?.user?.email ?? "ava.carter@example.com";
+  const image = profile?.image ?? session?.user?.image ?? "";
+  const phone = profile?.phone ?? "";
 
   const handleProfileUpdated = async () => {
-    const res = await fetch("/api/user/profile", { cache: "no-store" });
-    if (res.ok) {
-      const data = await res.json();
-      setProfileData({
-        name: data.user.name ?? "",
-        email: data.user.email ?? "",
-        image: data.user.image ?? "",
-        phone: data.phone ?? "",
-      });
-    }
+    await refresh();
+  };
+
+  const handleAddressChanged = async () => {
+    await refresh();
   };
 
   return (
@@ -78,7 +50,7 @@ export default function UserDashboard() {
           </h1>
         </div>
 
-        {profileLoading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center p-8">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>

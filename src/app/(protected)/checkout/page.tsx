@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { ProductImage } from "@/components/shared/ProductImage"
 import { useCart } from "@/features/cart/context"
-import { useAuth } from "@/contexts/auth-context"
+import { useAuth, useUserData } from "@/contexts/auth-context"
 import { toast } from "sonner"
 import dynamic from "next/dynamic"
 
@@ -27,31 +27,25 @@ type ShippingAddress = {
 export default function CheckoutPage() {
   const { cart, total, isLoading } = useCart()
   const { auth } = useAuth()
+  const { addresses, isLoading: addressLoading, refresh } = useUserData()
   const [isPlacing, setIsPlacing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [address, setAddress] = useState<ShippingAddress | null>(null)
-  const [addressLoading, setAddressLoading] = useState(true)
   const [addressModalOpen, setAddressModalOpen] = useState(false)
 
   useEffect(() => {
     if (!auth.isAuthenticated) {
-      setAddressLoading(false)
       return
     }
-    fetch("/api/user/address", { cache: "no-store" })
-      .then((res) => {
-        if (res.ok) return res.json()
-        if (res.status === 404) return { addresses: [] }
-        return null
-      })
-      .then((data) => {
-        const addresses = data?.addresses ?? []
-        const defaultAddr = addresses.find((a: ShippingAddress) => a.isDefault) || addresses[0] || null
-        setAddress(defaultAddr)
-      })
-      .catch(() => {})
-      .finally(() => setAddressLoading(false))
-  }, [auth.isAuthenticated])
+    const defaultAddr = addresses.find((a: ShippingAddress) => a.isDefault) || addresses[0] || null
+    setAddress(defaultAddr)
+  }, [auth.isAuthenticated, addresses])
+
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      refresh()
+    }
+  }, [auth.isAuthenticated, refresh])
 
   const handlePlaceOrder = async () => {
     if (!auth.isAuthenticated) {
@@ -210,6 +204,7 @@ export default function CheckoutPage() {
           onSaved={(addr) => {
             setAddress(addr)
             setAddressModalOpen(false)
+            refresh()
           }}
         />
       )}

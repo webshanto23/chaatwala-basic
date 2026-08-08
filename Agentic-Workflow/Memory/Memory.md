@@ -2,6 +2,55 @@
 
 ## History
 
+### 2026-08-08 — Admin Orders Page: User Name, Transaction ID, Modals, Real-time Updates
+- `/admin/orders` now displays **User** name (from `order.user.name/email`) and **TransactionId** (`order.sslTxnId`).
+- Responsive layout: desktop uses `DataTable`; mobile uses card layout.
+- Clicking **User** opens a reusable modal with customer details: name, email, phone, address.
+- Clicking **OrderId** opens a reusable modal with order details: user name, status, total, sslTxnId, items, payment method, createdAt.
+- Modal content is fetched via new API routes (`/api/admin/users/[userId]`, `/api/admin/orders/[orderId]`) from client wrapper components (`UserDetailsClient`, `OrderDetailsClient`).
+- Only the close button in modals is client-side (`Modal.tsx` with `"use client"`).
+- **Real-time updates**: removed time-based `revalidate` from orders page and `getOrders` cache.
+- `src/app/api/payment/initiate/route.ts` and `src/app/api/payment/validate/route.ts` call `revalidateTag("orders")` after order creation and successful payment validation.
+- `DataTable` extended with `onRowClick` and `renderCell(col, row)` props for custom cell rendering.
+- Files changed:
+  - `src/app/(admin)/admin/orders/OrdersClient.tsx` — responsive UI, modals, search
+  - `src/app/actions/rbac.ts` — `getOrders` now includes `user` relation and `sslTxnId`
+  - `src/components/admin/data-table.tsx` — added `onRowClick` and `renderCell`
+  - `src/components/admin/modals/Modal.tsx` — client wrapper with close button
+  - `src/components/admin/modals/UserDetailsClient.tsx` — client fetcher for user details
+  - `src/components/admin/modals/OrderDetailsClient.tsx` — client fetcher for order details
+  - `src/app/api/admin/users/[userId]/route.ts` — new API route for user details
+  - `src/app/api/admin/orders/[orderId]/route.ts` — new API route for order details
+
+### 2026-08-08 — Admin Caching Strategy: Reduce DB Hits, Keep Real-time Mutations
+- **Problem**: Admin modals (`UserDetailsClient`, `OrderDetailsClient`) hit DB on every click; sidebar navigation also hit DB repeatedly.
+- **Solution**: Two-tier caching — server-side `unstable_cache` with tag invalidation + client-side `Map` cache for modals.
+- **Client-side modal cache**: Added module-level `Map` in `UserDetailsClient` and `OrderDetailsClient` so repeated clicks on the same entity read from memory instead of refetching.
+- **Server-side cache warming**: Dashboard (`src/app/(admin)/admin/dashboard/page.tsx`) now calls `getUsers()`, `getDishes()`, `getDrinks()`, `getOrders()` after render to warm `unstable_cache`. Subsequent sidebar navigation hits cache, not DB.
+- **Tag-based invalidation on mutations**:
+  - Product mutations (`createDish`, `updateDish`, `deleteDish`, `createDrink`, `updateDrink`, `deleteDrink`) call `revalidateTag("dishes")` / `revalidateTag("drinks")`
+  - User mutations (`POST /api/admin/users`, `updateUserRole`, `deleteUser`) call `revalidateTag("users")`
+  - Role/permission mutations (`assignPermissionToRole`, `removePermissionFromRole`) call `revalidateTag("roles")` and `revalidateTag("permissions")`
+  - Order lifecycle (`/api/payment/initiate`, `/api/payment/validate`) calls `revalidateTag("orders")`
+- **Fallback TTLs**: All `unstable_cache` calls now include `revalidate: 300` (5 min) as a safety net so data refreshes even if a tag invalidation is missed.
+- **Cache tags in use**: `users`, `roles`, `permissions`, `dishes`, `drinks`, `orders`
+- **Rule**: Read-heavy admin data is cached; create/edit/delete operations hit DB in realtime and invalidate relevant tags immediately.
+
+### 2026-08-06 — Admin Server Component Migration (Request Storm Fix)
+- Converted all admin pages from client `useEffect` + server action pattern to **server components with client subcomponents**
+- Pages now fetch data once via `await` in server component and pass as props to client UI components
+- Files changed:
+  - `dishes/page.tsx` → server + `DishesClient.tsx`
+  - `drinks/page.tsx` → server + `DrinksClient.tsx`
+  - `orders/page.tsx` → server + `OrdersClient.tsx`
+  - `audit/page.tsx` → server + `AuditClient.tsx`
+  - `roles/page.tsx` → server + `RolesClient.tsx`
+  - `users/page.tsx` → server + `UsersClient.tsx`
+- Added `export const revalidate` to each server page for ISR caching
+- Dashboard already server component; added `export const revalidate = 60`
+- Server actions (`getDishes`, `deleteDish`, etc.) remain unchanged — only rendering architecture changed
+- Expected result: admin dashboard requests dropped from ~71 to ~5-8, eliminating duplicate RSC payloads
+
 ### 2026-08-06 — Admin Performance Optimization & Duplicate Request Fix
 - Disabled React Strict Mode in `next.config.ts` to prevent duplicate useEffect fires in development
 - Added `src/hooks/use-request-dedupe.ts` for request deduplication across admin pages

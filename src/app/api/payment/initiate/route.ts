@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { initiatePayment } from "@/lib/sslcommerz";
@@ -125,6 +126,9 @@ export async function POST(request: Request) {
   });
 
   await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+
+  revalidateTag("orders");
+  revalidateTag("user-orders");
 
   const cusName = session?.user?.name ?? "Guest";
   const cusEmail = session?.user?.email ?? "guest@example.com";

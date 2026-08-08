@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { addressSchema } from "@/lib/validations/address";
+import { revalidateTag } from "next/cache";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -36,6 +37,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       country: parsed.data.country,
     },
   });
+
+  revalidateTag("user-address");
 
   return NextResponse.json({
     address: {
@@ -78,6 +81,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       data: { isDefault: true },
     });
   }
+
+  revalidateTag("user-address");
 
   return NextResponse.json({ success: true });
 }

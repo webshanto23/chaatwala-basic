@@ -22,9 +22,9 @@ export default async function OrdersPage() {
           price: Number(item.price),
           quantity: item.quantity,
           imageUrl: item.imageUrl,
-          createdAt: item.createdAt.toISOString(),
+          createdAt: item.createdAt,
         })),
-        createdAt: order.createdAt.toISOString(),
+        createdAt: order.createdAt,
       }))}
       loading={false}
       error={null}

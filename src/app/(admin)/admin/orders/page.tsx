@@ -1,8 +1,6 @@
 import { getOrders } from "@/app/actions/rbac";
 import { OrdersClient } from "./OrdersClient";
 
-export const revalidate = 30;
-
 export default async function OrdersPage() {
   const result = await getOrders({ limit: 50 });
   const orders = result.orders ?? [];

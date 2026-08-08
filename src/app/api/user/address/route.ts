@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { addressSchema } from "@/lib/validations/address";
+import { unstable_cache, revalidateTag } from "next/cache";
 
 export async function GET() {
   const session = await auth();
@@ -11,10 +12,16 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const addresses = await prisma.address.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
+  const addresses = await unstable_cache(
+    async () => {
+      return prisma.address.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+    },
+    ["user-addresses", userId],
+    { revalidate: 300, tags: ["user-address"] }
+  )();
 
   return NextResponse.json({
     addresses: addresses.map((a) => ({
@@ -63,6 +70,8 @@ export async function POST(request: Request) {
       isDefault: existing ? false : true,
     },
   });
+
+  revalidateTag("user-address");
 
   return NextResponse.json({
     address: {

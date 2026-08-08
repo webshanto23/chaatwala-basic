@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { authorize, unauthorizedResponse } from "@/lib/authorize";
 import { logAction } from "@/app/actions/audit";
 import prisma from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
 
 export async function GET() {
   const { authorized, session } = await authorize({ permissions: ["user:view"] });
@@ -49,6 +50,8 @@ export async function POST(request: Request) {
         metadata: { email, roleId },
       });
     }
+
+    revalidateTag("users");
 
     return NextResponse.json({ user }, { status: 201 });
   } catch {

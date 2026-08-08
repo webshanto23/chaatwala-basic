@@ -3,6 +3,9 @@ export const revalidate = 60;
 import prisma from "@/lib/prisma";
 import { unstable_cache } from "next/cache";
 import { MetricCard } from "@/components/shared/metric-card";
+import { getUsers } from "@/app/actions/rbac";
+import { getDishes, getDrinks } from "@/features/products/actions";
+import { getOrders } from "@/app/actions/rbac";
 
 export default async function AdminDashboardPage() {
   const [userCount, orderCount, dishCount, drinkCount, comboCount, revenueData] =
@@ -33,6 +36,13 @@ export default async function AdminDashboardPage() {
   const totalEarnings = revenueData.totalEarnings;
   const todayRevenue = revenueData.todayRevenue;
   const avgOrderValue = orderCount > 0 ? totalEarnings / orderCount : 0;
+
+  await Promise.all([
+    getUsers(),
+    getDishes(),
+    getDrinks(),
+    getOrders({ limit: 50 }),
+  ]);
 
   return (
     <div className="space-y-6">

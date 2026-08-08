@@ -6,6 +6,7 @@ import { useMemo } from "react";
 
 import { ThemeProvider } from "@/contexts/theme-context";
 import { AuthProvider } from "@/contexts/auth-context";
+import { UserDataProvider } from "@/contexts/auth-context";
 import { CartProvider } from "@/features/cart/context";
 
 const FloatingCart = dynamic(
@@ -58,7 +59,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <CartProvider>{content}</CartProvider>
+        <UserDataProvider>
+          <CartProvider>{content}</CartProvider>
+        </UserDataProvider>
       </AuthProvider>
     </ThemeProvider>
   );

@@ -1,13 +1,8 @@
-export const revalidate = 300;
-
-import prisma from "@/lib/prisma";
+import { getPopularDrinks } from "@/features/products/service";
 import { DrinkGrid } from "./DrinkGrid";
 
 export async function PopularDrinks() {
-  const drinksFromDb = await prisma.drink.findMany({
-    where: { tag: "popular" },
-    orderBy: { createdAt: "desc" },
-  });
+  const drinksFromDb = await getPopularDrinks();
 
   const drinks = drinksFromDb.map((drink) => ({
     id: drink.id,

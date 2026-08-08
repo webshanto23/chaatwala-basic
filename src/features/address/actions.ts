@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { addressSchema, type AddressInput } from "@/lib/validations/address";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export type Address = {
   id: string;
@@ -77,6 +77,7 @@ export async function createAddress(input: AddressInput): Promise<
 
   revalidatePath("/profile/dashboard");
   revalidatePath("/cart");
+  revalidateTag("user-address");
 
   return {
     success: true,
@@ -131,6 +132,7 @@ export async function updateAddress(id: string, input: AddressInput): Promise<
 
   revalidatePath("/profile/dashboard");
   revalidatePath("/cart");
+  revalidateTag("user-address");
 
   return {
     success: true,
@@ -178,6 +180,7 @@ export async function deleteAddress(id: string) {
 
   revalidatePath("/profile/dashboard");
   revalidatePath("/cart");
+  revalidateTag("user-address");
 
   return { success: true };
 }
@@ -208,6 +211,7 @@ export async function setDefaultAddress(id: string) {
 
   revalidatePath("/profile/dashboard");
   revalidatePath("/cart");
+  revalidateTag("user-address");
 
   return { success: true };
 }

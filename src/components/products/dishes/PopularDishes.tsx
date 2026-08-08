@@ -1,13 +1,8 @@
-export const revalidate = 300;
-
-import prisma from "@/lib/prisma";
+import { getPopularDishes } from "@/features/products/service";
 import { DishGrid } from "./DishGrid";
 
 export async function PopularDishes() {
-  const dishesFromDb = await prisma.dish.findMany({
-    where: { tag: "popular" },
-    orderBy: { createdAt: "desc" },
-  });
+  const dishesFromDb = await getPopularDishes();
 
   const dishes = dishesFromDb.map((dish) => ({
     id: dish.id,

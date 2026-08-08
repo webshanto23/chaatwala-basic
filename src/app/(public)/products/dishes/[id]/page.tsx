@@ -1,29 +1,31 @@
 export const revalidate = 300;
 
-import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import ProductDetailClient from "@/components/products/product-detail/ProductDetailClient";
+import { getProductById } from "@/features/products/service";
 
 async function getProduct(id: string) {
-  const [dish, drink, combo] = await Promise.all([
-    prisma.dish.findUnique({
-      where: { id },
-      select: { id: true, name: true, price: true, discountPrice: true, description: true, isAvailable: true, imageUrl: true },
-    }),
-    prisma.drink.findUnique({
-      where: { id },
-      select: { id: true, name: true, price: true, discountPrice: true, description: true, isAvailable: true, imageUrl: true },
-    }),
-    prisma.combo.findUnique({
-      where: { id },
-      select: { id: true, name: true, price: true, originalPrice: true, isAvailable: true, imageUrl: true },
-    }),
-  ]);
-
-  if (dish) return { type: "dish" as const, data: { ...dish, price: Number(dish.price), discountPrice: dish.discountPrice ? Number(dish.discountPrice) : null } };
-  if (drink) return { type: "drink" as const, data: { ...drink, price: Number(drink.price), discountPrice: drink.discountPrice ? Number(drink.discountPrice) : null } };
-  if (combo) return { type: "combo" as const, data: { ...combo, price: Number(combo.price), originalPrice: Number(combo.originalPrice) } };
-  return null;
+  const product = await getProductById(id);
+  if (!product) {
+    return null;
+  }
+  if (product.type === "combo") {
+    return {
+      type: product.type,
+      data: {
+        ...product.data,
+        discountPrice: Number(product.data.originalPrice),
+        description: null,
+      },
+    };
+  }
+  return {
+    type: product.type,
+    data: {
+      ...product.data,
+      discountPrice: product.data.discountPrice ? Number(product.data.discountPrice) : null,
+    },
+  };
 }
 
 type ProductResult =

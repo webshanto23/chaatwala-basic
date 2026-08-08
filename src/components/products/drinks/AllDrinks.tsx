@@ -1,12 +1,8 @@
-export const revalidate = 300;
-
-import prisma from "@/lib/prisma"
+import { getAllDrinks } from "@/features/products/service";
 import { DrinkGrid } from "./DrinkGrid"
 
 export async function AllDrinks() {
-  const alldrinks = await prisma.drink.findMany({
-    orderBy: { createdAt: "desc" },
-  })
+  const alldrinks = await getAllDrinks()
 
   const drinks = alldrinks.map((drink) => ({
     id: drink.id,

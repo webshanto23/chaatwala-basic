@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { cookies } from "next/headers";
+import { unstable_cache, revalidateTag } from "next/cache";
 
 const GUEST_COOKIE = "chaatwala_guest_id";
 
@@ -109,13 +110,22 @@ export async function DELETE() {
     where: { id: cart.id },
     include: { items: { orderBy: { createdAt: "desc" } } },
   });
+  revalidateTag("cart");
   return NextResponse.json({ cart: serializeCart(updated!) });
 }
 
 export async function GET() {
   const session = await (await import("@/lib/auth")).auth();
-  const cart = await getOrCreateCart(session?.user?.id ?? null);
-  return NextResponse.json({ cart: serializeCart(cart) });
+  const guestId = session?.user?.id ? null : await getGuestId();
+
+  return unstable_cache(
+    async () => {
+      const cart = await getOrCreateCart(session?.user?.id ?? null);
+      return NextResponse.json({ cart: serializeCart(cart) });
+    },
+    ["cart", session?.user?.id ?? guestId],
+    { revalidate: 60, tags: ["cart"] }
+  )();
 }
 
 export async function POST(request: Request) {
@@ -174,6 +184,7 @@ export async function POST(request: Request) {
       include: { items: { orderBy: { createdAt: "desc" } } },
     });
 
+    revalidateTag("cart");
     return NextResponse.json({ cart: serializeCart(updatedCart!) });
   } catch (error) {
     console.error("Cart API error:", error);

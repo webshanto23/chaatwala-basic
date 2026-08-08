@@ -1,12 +1,8 @@
-export const revalidate = 300;
-
-import prisma from "@/lib/prisma";
+import { getAllDishes } from "@/features/products/service";
 import { DishGrid } from "./DishGrid";
 
 export async function AllDishesShowcase() {
-  const alldishes = await prisma.dish.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  const alldishes = await getAllDishes();
 
   const dishes = alldishes.map((dish) => ({
     id: dish.id,

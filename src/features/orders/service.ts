@@ -1,25 +1,59 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { unstable_cache, revalidateTag } from "next/cache";
 
 export async function getOrders() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  return prisma.order.findMany({
-    where: { userId: session.user.id },
-    include: { items: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const userId = session.user.id;
+
+  return unstable_cache(
+    async () => {
+      const orders = await prisma.order.findMany({
+        where: { userId },
+        include: { items: true },
+        orderBy: { createdAt: "desc" },
+      });
+      return orders.map((order) => ({
+        ...order,
+        createdAt: order.createdAt.toISOString(),
+        items: order.items.map((item) => ({
+          ...item,
+          createdAt: item.createdAt.toISOString(),
+        })),
+      }));
+    },
+    ["user-orders", userId],
+    { revalidate: 300, tags: ["user-orders"] }
+  )();
 }
 
 export async function getOrderById(id: string) {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  return prisma.order.findFirst({
-    where: { id, userId: session.user.id },
-    include: { items: true },
-  });
+  const userId = session.user.id;
+
+  return unstable_cache(
+    async () => {
+      const order = await prisma.order.findFirst({
+        where: { id, userId },
+        include: { items: true },
+      });
+      if (!order) return null;
+      return {
+        ...order,
+        createdAt: order.createdAt.toISOString(),
+        items: order.items.map((item) => ({
+          ...item,
+          createdAt: item.createdAt.toISOString(),
+        })),
+      };
+    },
+    ["user-order", id, userId],
+    { revalidate: 300, tags: ["user-orders"] }
+  )();
 }
 
 export async function createOrder(addressId: string) {
@@ -62,6 +96,8 @@ export async function createOrder(addressId: string) {
   });
 
   await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+
+  revalidateTag("user-orders");
 
   return order;
 }

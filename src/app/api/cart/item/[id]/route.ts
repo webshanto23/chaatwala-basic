@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
 
 function serializeCartItem(item: Awaited<ReturnType<typeof prisma.cartItem.findUnique>>) {
   if (!item) return null;
@@ -39,6 +40,7 @@ export async function PATCH(
     data: { quantity },
   });
 
+  revalidateTag("cart");
   return NextResponse.json({ item: serializeCartItem(updated) });
 }
 
@@ -58,6 +60,8 @@ export async function DELETE(
     where: { id: item.cartId },
     include: { items: { orderBy: { createdAt: "desc" } } },
   });
+
+  revalidateTag("cart");
 
   return NextResponse.json({
     cart: cart

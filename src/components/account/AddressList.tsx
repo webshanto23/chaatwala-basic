@@ -9,45 +9,31 @@ import { toast } from "sonner";
 import dynamic from "next/dynamic";
 
 import type { Address } from "@/features/address/actions";
+import { useUserData } from "@/contexts/auth-context";
 
 const AddressFormModal = dynamic(() => import("@/components/account/AddressFormModal").then(m => m.default), { ssr: false });
 
 export function AddressList() {
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { addresses, isLoading, refresh } = useUserData();
   const [editAddress, setEditAddress] = useState<Address | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/user/address", { cache: "no-store" })
-      .then((res) => res.ok ? res.json() : { addresses: [] })
-      .then((data) => {
-        setAddresses(data.addresses ?? []);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+    refresh();
+  }, [refresh]);
 
   const handleSaved = async (_address: Address) => {
-    try {
-      const res = await fetch("/api/user/address", { cache: "no-store" });
-      if (res.ok) {
-        const data = await res.json();
-        setAddresses(data.addresses ?? []);
-      }
-    } catch {
-      // ignore fetch errors
-    }
+    await refresh();
     toast.success("Address saved successfully");
   };
 
   const handleDelete = async (id: string) => {
     await fetch(`/api/user/address/${id}`, { method: "DELETE" });
-    setAddresses((prev) => prev.filter((a) => a.id !== id));
     toast.success("Address deleted");
+    await refresh();
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Card className="rounded-[2rem] border border-border/70 bg-card shadow-xl">
         <CardContent className="p-6 text-center text-muted-foreground">Loading addresses...</CardContent>

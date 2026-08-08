@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProductImage } from "@/components/shared/ProductImage";
 import { useCart } from "@/features/cart/context";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth, useUserData } from "@/contexts/auth-context";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
@@ -29,33 +29,28 @@ export default function CartPage() {
   const router = useRouter();
   const { cart, total, updateQuantity, removeItem, isLoading } = useCart();
   const { auth } = useAuth();
+  const { addresses, isLoading: addressLoading, refresh } = useUserData();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null);
-  const [addressLoading, setAddressLoading] = useState(!auth.isAuthenticated);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const toastShown = useRef(false);
 
   useEffect(() => {
     if (!auth.isAuthenticated) return;
-    fetch("/api/user/address", { cache: "no-store" })
-      .then((res) => {
-        if (res.ok) return res.json();
-        if (res.status === 404) return { addresses: [] };
-        return null;
-      })
-      .then((data) => {
-        const addresses = data?.addresses ?? [];
-        const defaultAddr = addresses.find((a: ShippingAddress) => a.isDefault) || addresses[0] || null;
-        setShippingAddress(defaultAddr);
-        if (addresses.length === 0 && !toastShown.current) {
-          toastShown.current = true;
-          toast.info("Please add your address to start Ordering");
-        }
-      })
-      .catch(() => {})
-      .finally(() => setAddressLoading(false));
-  }, [auth.isAuthenticated]);
+    const defaultAddr = addresses.find((a) => a.isDefault) || addresses[0] || null;
+    setShippingAddress(defaultAddr);
+    if (addresses.length === 0 && !toastShown.current) {
+      toastShown.current = true;
+      toast.info("Please add your address to start Ordering");
+    }
+  }, [auth.isAuthenticated, addresses]);
+
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      refresh();
+    }
+  }, [auth.isAuthenticated, refresh]);
 
   const handleProceedToPayment = async () => {
     if (!auth.isAuthenticated) {
@@ -265,6 +260,7 @@ export default function CartPage() {
           onSaved={(address) => {
             setShippingAddress(address);
             setAddressModalOpen(false);
+            refresh();
           }}
         />
       )}

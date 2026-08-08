@@ -29,7 +29,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     setError(null);
     try {
-      const res = await fetch("/api/cart", { cache: "no-store" });
+      const res = await fetch("/api/cart");
       if (!res.ok) throw new Error("Failed to fetch cart");
       const data = await res.json();
       setCart({

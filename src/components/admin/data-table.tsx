@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Edit3, Trash2 } from "lucide-react"
+import * as React from "react"
 
 interface DataTableProps {
   columns: string[]
@@ -16,9 +17,11 @@ interface DataTableProps {
   onEdit?: (row: Record<string, unknown>) => void
   onDelete?: (row: Record<string, unknown>) => void
   filter?: string
+  onRowClick?: (row: Record<string, unknown>) => void
+  renderCell?: (col: string, row: Record<string, unknown>) => React.ReactNode
 }
 
-export default function DataTable({ columns, data, showActions = false, onEdit, onDelete, filter = "" }: DataTableProps) {
+export default function DataTable({ columns, data, showActions = false, onEdit, onDelete, filter = "", onRowClick, renderCell }: DataTableProps) {
   const q = filter.trim().toLowerCase()
   const filtered = q
     ? data.filter((row) =>
@@ -45,15 +48,15 @@ export default function DataTable({ columns, data, showActions = false, onEdit, 
 
         <TableBody>
           {filtered.map((row: Record<string, unknown>, i: number) => (
-            <TableRow key={i} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
+            <TableRow key={i} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors" onClick={() => onRowClick && onRowClick(row)}>
               {columns.map((col: string) => (
                 <TableCell key={col} className="whitespace-nowrap">
-                  {String(row[col.toLowerCase()])}
+                  {renderCell ? renderCell(col, row) : String(row[col.toLowerCase()])}
                 </TableCell>
               ))}
 
               {showActions && (
-                <TableCell className="flex gap-2 whitespace-nowrap">
+                <TableCell className="flex gap-2 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                   <Button variant="ghost" size="icon" aria-label="Edit" onClick={() => onEdit && onEdit(row)}>
                     <Edit3 className="h-4 w-4" />
                   </Button>

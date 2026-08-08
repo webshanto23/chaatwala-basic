@@ -6,7 +6,7 @@ import { logAction } from "@/app/actions/audit";
 import prisma from "@/lib/prisma";
 import { createDishSchema } from "@/lib/validations/dish";
 import { createDrinkSchema } from "@/lib/validations/drink";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { randomUUID } from "crypto";
 import { uploadImage } from "@/lib/image-upload";
 
@@ -112,6 +112,7 @@ export async function createDish(formData: FormData): Promise<CreateDishResult> 
   revalidatePath("/");
   revalidatePath("/products/dishes");
   revalidatePath(`/products/dishes/${dish.id}`);
+  revalidateTag("dishes");
 
   return {
     success: true,
@@ -211,6 +212,7 @@ export async function updateDish(id: string, formData: FormData): Promise<{ succ
   revalidatePath("/");
   revalidatePath("/products/dishes");
   revalidatePath(`/products/dishes/${dish.id}`);
+  revalidateTag("dishes");
 
   return {
     success: true,
@@ -255,6 +257,7 @@ export async function deleteDish(id: string): Promise<{ success: true } | { erro
   revalidatePath("/");
   revalidatePath("/products/dishes");
   revalidatePath(`/products/dishes/${id}`);
+  revalidateTag("dishes");
 
   return { success: true };
 }
@@ -374,6 +377,7 @@ export async function createDrink(formData: FormData): Promise<CreateDrinkResult
   revalidatePath("/");
   revalidatePath("/products/drinks");
   revalidatePath(`/products/drinks/${drink.id}`);
+  revalidateTag("drinks");
 
   return {
     success: true,
@@ -473,6 +477,7 @@ export async function updateDrink(id: string, formData: FormData): Promise<{ suc
   revalidatePath("/");
   revalidatePath("/products/drinks");
   revalidatePath(`/products/drinks/${drink.id}`);
+  revalidateTag("drinks");
 
   return {
     success: true,
@@ -517,6 +522,7 @@ export async function deleteDrink(id: string): Promise<{ success: true } | { err
   revalidatePath("/");
   revalidatePath("/products/drinks");
   revalidatePath(`/products/drinks/${id}`);
+  revalidateTag("drinks");
 
   return { success: true };
 }
