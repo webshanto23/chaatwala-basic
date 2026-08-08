@@ -38,7 +38,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     },
   });
 
-  revalidateTag("user-address");
+  revalidateTag("user-address", "default");
 
   return NextResponse.json({
     address: {
@@ -82,7 +82,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     });
   }
 
-  revalidateTag("user-address");
+  revalidateTag("user-address", "default");
 
   return NextResponse.json({ success: true });
 }

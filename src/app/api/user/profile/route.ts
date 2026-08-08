@@ -77,7 +77,7 @@ export async function PATCH(request: Request) {
     select: { id: true, name: true, email: true, image: true },
   });
 
-  revalidateTag("user-profile");
+  revalidateTag("user-profile", "default");
 
   return NextResponse.json({
     user: {

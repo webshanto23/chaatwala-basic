@@ -77,7 +77,7 @@ export async function updateUserRole(formData: FormData) {
     metadata: { oldRoleId: user.roleId, newRoleId: roleId, newRoleName: newRole.name },
   });
 
-  revalidateTag("users");
+  revalidateTag("users", "default");
 
   return { success: true };
 }
@@ -105,7 +105,7 @@ export async function deleteUser(formData: FormData) {
     metadata: { email: user.email },
   });
 
-  revalidateTag("users");
+  revalidateTag("users", "default");
 
   return { success: true };
 }
@@ -176,8 +176,8 @@ export async function assignPermissionToRole(formData: FormData) {
     metadata: { permissionId },
   });
 
-  revalidateTag("roles");
-  revalidateTag("permissions");
+  revalidateTag("roles", "default");
+  revalidateTag("permissions", "default");
 
   return { success: true };
 }
@@ -201,8 +201,8 @@ export async function removePermissionFromRole(formData: FormData) {
     metadata: { permissionId },
   });
 
-  revalidateTag("roles");
-  revalidateTag("permissions");
+  revalidateTag("roles", "default");
+  revalidateTag("permissions", "default");
 
   return { success: true };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { MapPin, PencilLine, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -18,11 +18,8 @@ export function AddressList() {
   const [editAddress, setEditAddress] = useState<Address | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
   const handleSaved = async (_address: Address) => {
+    void _address;
     await refresh();
     toast.success("Address saved successfully");
   };

@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     },
   });
 
-  revalidateTag("user-address");
+  revalidateTag("user-address", "default");
 
   return NextResponse.json({
     address: {

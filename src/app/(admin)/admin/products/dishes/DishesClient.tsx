@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { usePermissions } from "@/hooks/use-can";
 import dynamic from "next/dynamic";
-import { getDishes, deleteDish } from "@/features/products/actions";
+import { deleteDish } from "@/features/products/actions";
 
 const CreateDishModal = dynamic(() => import("@/components/admin/create-dish-modal").then(m => m.default), { ssr: false });
 const EditDishModal = dynamic(() => import("@/components/admin/edit-dish-modal").then(m => m.default), { ssr: false });

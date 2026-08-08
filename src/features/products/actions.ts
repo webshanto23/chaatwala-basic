@@ -39,7 +39,7 @@ function slugify(name: string): string {
 async function deleteImage(url: string | null, deleteUrl: string | null) {
   if (!deleteUrl) return;
   try {
-    await fetch(deleteUrl, { method: "DELETE" });
+    await fetch(deleteUrl, { method: "DELETE", signal: AbortSignal.timeout(10000) });
   } catch {
     // ignore cleanup errors
   }
@@ -112,7 +112,7 @@ export async function createDish(formData: FormData): Promise<CreateDishResult> 
   revalidatePath("/");
   revalidatePath("/products/dishes");
   revalidatePath(`/products/dishes/${dish.id}`);
-  revalidateTag("dishes");
+  revalidateTag("dishes", "default");
 
   return {
     success: true,
@@ -212,7 +212,7 @@ export async function updateDish(id: string, formData: FormData): Promise<{ succ
   revalidatePath("/");
   revalidatePath("/products/dishes");
   revalidatePath(`/products/dishes/${dish.id}`);
-  revalidateTag("dishes");
+  revalidateTag("dishes", "default");
 
   return {
     success: true,
@@ -257,7 +257,7 @@ export async function deleteDish(id: string): Promise<{ success: true } | { erro
   revalidatePath("/");
   revalidatePath("/products/dishes");
   revalidatePath(`/products/dishes/${id}`);
-  revalidateTag("dishes");
+  revalidateTag("dishes", "default");
 
   return { success: true };
 }
@@ -377,7 +377,7 @@ export async function createDrink(formData: FormData): Promise<CreateDrinkResult
   revalidatePath("/");
   revalidatePath("/products/drinks");
   revalidatePath(`/products/drinks/${drink.id}`);
-  revalidateTag("drinks");
+  revalidateTag("drinks", "default");
 
   return {
     success: true,
@@ -477,7 +477,7 @@ export async function updateDrink(id: string, formData: FormData): Promise<{ suc
   revalidatePath("/");
   revalidatePath("/products/drinks");
   revalidatePath(`/products/drinks/${drink.id}`);
-  revalidateTag("drinks");
+  revalidateTag("drinks", "default");
 
   return {
     success: true,
@@ -522,7 +522,7 @@ export async function deleteDrink(id: string): Promise<{ success: true } | { err
   revalidatePath("/");
   revalidatePath("/products/drinks");
   revalidatePath(`/products/drinks/${id}`);
-  revalidateTag("drinks");
+  revalidateTag("drinks", "default");
 
   return { success: true };
 }

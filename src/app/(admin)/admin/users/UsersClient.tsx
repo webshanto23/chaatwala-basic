@@ -5,7 +5,6 @@ import { usePermissions } from "@/hooks/use-can";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
 import { updateUserRole, deleteUser } from "@/app/actions/rbac";
 
 type UserRow = { id: string; name: string | null; email: string; roleId: string | null; createdAt: string | Date };
@@ -58,9 +57,8 @@ export function UsersClient({ initialUsers, initialRoles }: { initialUsers: User
           <table className="min-w-full text-sm">
             <thead><tr className="border-b border-border"><th className="px-4 py-3 text-left font-medium">Name</th><th className="px-4 py-3 text-left font-medium">Email</th><th className="px-4 py-3 text-left font-medium">Role</th>{canDeleteUser && (<th className="px-4 py-3 text-right font-medium">Actions</th>)}</tr></thead>
             <tbody>
-              {filtered.length === 0 ? (<tr><td className="px-4 py-6 text-center text-muted-foreground" colSpan={3}>No users found.</td></tr>) : (
+               {filtered.length === 0 ? (<tr><td className="px-4 py-6 text-center text-muted-foreground" colSpan={3}>No users found.</td></tr>) : (
                 filtered.map((user) => {
-                  const currentRole = roles.find((r) => r.id === user.roleId);
                   return (
                     <tr key={user.id} className="border-b border-border last:border-0">
                       <td className="px-4 py-3 whitespace-nowrap">{user.name ?? "-"}</td>

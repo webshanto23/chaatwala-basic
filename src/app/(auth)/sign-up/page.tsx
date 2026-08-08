@@ -79,7 +79,7 @@ export default function SignUp() {
         setError("Failed to create account");
         setIsLoading(false);
       }
-    } catch (err) {
+    } catch {
       setError("Something went wrong. Please try again.");
       setIsLoading(false);
     }

@@ -4,6 +4,7 @@ import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { initiatePayment } from "@/lib/sslcommerz";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const BASE_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
@@ -25,25 +26,15 @@ async function getCartWithProducts(userId: string | null, guestId: string | null
   return null;
 }
 
-async function getProductPrice(productType: string, productId: string) {
-  if (productType === "dish") {
-    const dish = await prisma.dish.findUnique({ where: { id: productId } });
-    return dish?.price ?? null;
-  }
-  if (productType === "drink") {
-    const drink = await prisma.drink.findUnique({ where: { id: productId } });
-    return drink?.price ?? null;
-  }
-  if (productType === "combo") {
-    const combo = await prisma.combo.findUnique({ where: { id: productId } });
-    return combo?.price ?? null;
-  }
-  return null;
-}
-
 export async function POST(request: Request) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
+
+  const rateLimitId = userId ?? `ip:${getClientIp(request)}`;
+  const { success } = await checkRateLimit(rateLimitId, "strict");
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
 
   let guestId: string | null = null;
   if (!userId) {
@@ -57,17 +48,61 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
 
+  const dishIds = cart.items
+    .filter((item) => item.productType === "dish")
+    .map((item) => item.productId);
+  const drinkIds = cart.items
+    .filter((item) => item.productType === "drink")
+    .map((item) => item.productId);
+  const comboIds = cart.items
+    .filter((item) => item.productType === "combo")
+    .map((item) => item.productId);
+
+  const [dishes, drinks, combos] = await Promise.all([
+    dishIds.length
+      ? prisma.dish.findMany({
+          where: { id: { in: dishIds } },
+          select: { id: true, price: true, imageUrl: true },
+        })
+      : Promise.resolve([]),
+    drinkIds.length
+      ? prisma.drink.findMany({
+          where: { id: { in: drinkIds } },
+          select: { id: true, price: true, imageUrl: true },
+        })
+      : Promise.resolve([]),
+    comboIds.length
+      ? prisma.combo.findMany({
+          where: { id: { in: comboIds } },
+          select: { id: true, price: true, imageUrl: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const dishMap = new Map(dishes.map((d) => [d.id, d]));
+  const drinkMap = new Map(drinks.map((d) => [d.id, d]));
+  const comboMap = new Map(combos.map((c) => [c.id, c]));
+
   const cachedPrices = new Map<string, { price: number; name: string; imageUrl: string | null }>();
 
   for (const item of cart.items) {
-    const dbPrice = await getProductPrice(item.productType, item.productId);
-    if (dbPrice === null) {
+    let dbProduct: { price: unknown; imageUrl: string | null } | undefined;
+    if (item.productType === "dish") {
+      dbProduct = dishMap.get(item.productId);
+    } else if (item.productType === "drink") {
+      dbProduct = drinkMap.get(item.productId);
+    } else if (item.productType === "combo") {
+      dbProduct = comboMap.get(item.productId);
+    }
+
+    if (!dbProduct) {
       return NextResponse.json(
         { error: `Product not found: ${item.productId}` },
         { status: 404 }
       );
     }
-    const numericDbPrice = Number(dbPrice);
+
+    const numericDbPrice = Number(dbProduct.price);
     const numericCartPrice = Number(item.price);
     if (Math.abs(numericDbPrice - numericCartPrice) > 0.01) {
       return NextResponse.json(
@@ -75,7 +110,11 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    cachedPrices.set(item.id, { price: numericDbPrice, name: item.name, imageUrl: item.imageUrl });
+    cachedPrices.set(item.id, {
+      price: numericDbPrice,
+      name: item.name,
+      imageUrl: dbProduct.imageUrl,
+    });
   }
 
   const subtotal = cart.items.reduce(
@@ -127,8 +166,8 @@ export async function POST(request: Request) {
 
   await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
 
-  revalidateTag("orders");
-  revalidateTag("user-orders");
+  revalidateTag("orders", "default");
+  revalidateTag("user-orders", "default");
 
   const cusName = session?.user?.name ?? "Guest";
   const cusEmail = session?.user?.email ?? "guest@example.com";

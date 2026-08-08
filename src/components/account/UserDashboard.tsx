@@ -19,7 +19,7 @@ export default function UserDashboard() {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
   const { data: session } = useSession();
-  const { profile, addresses, isLoading, refresh } = useUserData();
+  const { profile, isLoading, refresh } = useUserData();
 
   useEffect(() => {
     refresh();
@@ -31,10 +31,6 @@ export default function UserDashboard() {
   const phone = profile?.phone ?? "";
 
   const handleProfileUpdated = async () => {
-    await refresh();
-  };
-
-  const handleAddressChanged = async () => {
     await refresh();
   };
 

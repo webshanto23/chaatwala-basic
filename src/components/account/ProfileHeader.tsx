@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Mail, Phone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -26,10 +27,13 @@ export function ProfileHeader({
       <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary overflow-hidden flex-shrink-0">
           {image ? (
-            <img
+            <Image
               src={image}
               alt={name}
+              width={64}
+              height={64}
               className="h-full w-full object-cover"
+              unoptimized
             />
           ) : (
             initials

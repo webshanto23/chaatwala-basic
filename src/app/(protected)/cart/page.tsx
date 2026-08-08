@@ -13,18 +13,6 @@ import dynamic from "next/dynamic";
 
 const AddressFormModal = dynamic(() => import("@/components/account/AddressFormModal").then(m => m.default), { ssr: false });
 
-type ShippingAddress = {
-  id: string;
-  fullName: string;
-  phone: string;
-  line1: string;
-  line2: string | null;
-  city: string;
-  postalCode: string;
-  country: string | null;
-  isDefault: boolean;
-};
-
 export default function CartPage() {
   const router = useRouter();
   const { cart, total, updateQuantity, removeItem, isLoading } = useCart();
@@ -32,19 +20,22 @@ export default function CartPage() {
   const { addresses, isLoading: addressLoading, refresh } = useUserData();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const toastShown = useRef(false);
 
   useEffect(() => {
     if (!auth.isAuthenticated) return;
-    const defaultAddr = addresses.find((a) => a.isDefault) || addresses[0] || null;
-    setShippingAddress(defaultAddr);
     if (addresses.length === 0 && !toastShown.current) {
       toastShown.current = true;
       toast.info("Please add your address to start Ordering");
     }
   }, [auth.isAuthenticated, addresses]);
+
+  const defaultAddress = addresses.find((a) => a.isDefault) || addresses[0] || null;
+  const shippingAddress = selectedAddressId
+    ? addresses.find((a) => a.id === selectedAddressId) ?? defaultAddress
+    : defaultAddress;
 
   useEffect(() => {
     if (auth.isAuthenticated) {
@@ -258,7 +249,7 @@ export default function CartPage() {
           address={shippingAddress ?? undefined}
           onClose={() => setAddressModalOpen(false)}
           onSaved={(address) => {
-            setShippingAddress(address);
+            setSelectedAddressId(address.id);
             setAddressModalOpen(false);
             refresh();
           }}

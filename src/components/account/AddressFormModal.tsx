@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ export default function AddressFormModal({ address, onClose, onSaved }: AddressF
   const [line2, setLine2] = useState(address?.line2 ?? "");
   const [city, setCity] = useState(address?.city ?? "");
   const [postalCode, setPostalCode] = useState(address?.postalCode ?? "");
-  const [country, setCountry] = useState(address?.country ?? "BD");
+  const [_country] = useState(address?.country ?? "BD");
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastId = useRef(0);
@@ -63,7 +63,7 @@ export default function AddressFormModal({ address, onClose, onSaved }: AddressF
         line2: line2 || undefined,
         city,
         postalCode,
-        country,
+        country: _country,
       };
 
       const res = address ? await updateAddress(address.id, input) : await createAddress(input);

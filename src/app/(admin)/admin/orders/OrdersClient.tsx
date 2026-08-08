@@ -12,7 +12,7 @@ type OrderRow = { userId: string; userName: string; orderId: string; status: str
 
 export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
   const [query, setQuery] = useState("");
-  const [orders, setOrders] = useState<OrderRow[]>(initialOrders);
+  const [orders] = useState<OrderRow[]>(initialOrders);
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);

@@ -40,13 +40,14 @@ export default function UserDetailsClient({ userId }: { userId: string }) {
     let cancelled = false;
 
     if (userCache.has(userId)) {
-      setData(userCache.get(userId)!);
-      setLoading(false);
+      Promise.resolve().then(() => {
+        if (!cancelled) {
+          setData(userCache.get(userId)!);
+          setLoading(false);
+        }
+      });
       return;
     }
-
-    setLoading(true);
-    setError(null);
 
     fetch(`/api/admin/users/${userId}`)
       .then(async (res) => {

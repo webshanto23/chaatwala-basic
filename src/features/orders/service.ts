@@ -97,7 +97,7 @@ export async function createOrder(addressId: string) {
 
   await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
 
-  revalidateTag("user-orders");
+  revalidateTag("user-orders", "default");
 
   return order;
 }

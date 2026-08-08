@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 type OrderItem = {
   id: string;
@@ -32,13 +33,14 @@ export default function OrderDetailsClient({ orderId }: { orderId: string }) {
     let cancelled = false;
 
     if (orderCache.has(orderId)) {
-      setData(orderCache.get(orderId)!);
-      setLoading(false);
+      Promise.resolve().then(() => {
+        if (!cancelled) {
+          setData(orderCache.get(orderId)!);
+          setLoading(false);
+        }
+      });
       return;
     }
-
-    setLoading(true);
-    setError(null);
 
     fetch(`/api/admin/orders/${orderId}`)
       .then(async (res) => {
@@ -111,7 +113,7 @@ export default function OrderDetailsClient({ orderId }: { orderId: string }) {
             <div key={item.id} className="flex items-center justify-between rounded-lg border border-border p-2">
               <div className="flex items-center gap-3">
                 {item.imageUrl && (
-                  <img src={item.imageUrl} alt={item.name} className="h-10 w-10 rounded object-cover" />
+                  <Image src={item.imageUrl} alt={item.name} width={40} height={40} className="h-10 w-10 rounded object-cover" unoptimized />
                 )}
                 <div>
                   <p className="font-medium">{item.name}</p>

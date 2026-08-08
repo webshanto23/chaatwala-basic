@@ -26,6 +26,7 @@ export class ImgbbProvider implements ImageProvider {
         const response = await fetch(IMAGEBB_API_URL, {
           method: "POST",
           body: formData,
+          signal: AbortSignal.timeout(15000),
         });
 
         if (!response.ok) {

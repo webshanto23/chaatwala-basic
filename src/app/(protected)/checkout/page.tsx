@@ -30,16 +30,22 @@ export default function CheckoutPage() {
   const { addresses, isLoading: addressLoading, refresh } = useUserData()
   const [isPlacing, setIsPlacing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [address, setAddress] = useState<ShippingAddress | null>(null)
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [addressModalOpen, setAddressModalOpen] = useState(false)
 
   useEffect(() => {
     if (!auth.isAuthenticated) {
       return
     }
-    const defaultAddr = addresses.find((a: ShippingAddress) => a.isDefault) || addresses[0] || null
-    setAddress(defaultAddr)
+    if (addresses.length === 0) {
+      toast.info("Please add your address to start Ordering")
+    }
   }, [auth.isAuthenticated, addresses])
+
+  const defaultAddress = addresses.find((a: ShippingAddress) => a.isDefault) || addresses[0] || null
+  const address = selectedAddressId
+    ? addresses.find((a: ShippingAddress) => a.id === selectedAddressId) ?? defaultAddress
+    : defaultAddress
 
   useEffect(() => {
     if (auth.isAuthenticated) {
@@ -202,7 +208,7 @@ export default function CheckoutPage() {
           address={address ?? undefined}
           onClose={() => setAddressModalOpen(false)}
           onSaved={(addr) => {
-            setAddress(addr)
+            setSelectedAddressId(addr.id)
             setAddressModalOpen(false)
             refresh()
           }}

@@ -14,15 +14,18 @@ async function getProduct(id: string) {
       type: product.type,
       data: {
         ...product.data,
+        price: Number(product.data.price),
         discountPrice: Number(product.data.originalPrice),
+        originalPrice: Number(product.data.originalPrice),
         description: null,
       },
     };
   }
   return {
-    type: product.type,
+    type: product.type as "dish" | "drink",
     data: {
       ...product.data,
+      price: Number(product.data.price),
       discountPrice: product.data.discountPrice ? Number(product.data.discountPrice) : null,
     },
   };
@@ -76,7 +79,7 @@ export default async function ProductDetailPage({
   }
 
   const serialized = serialize(product);
-  const { data, type } = serialized;
+  const { data } = serialized;
   const imageUrl = data.imageUrl || "/images/chatwala_logo.png";
   const price = data.discountPrice ?? data.price;
 

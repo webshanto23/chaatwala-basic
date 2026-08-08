@@ -77,7 +77,7 @@ export async function createAddress(input: AddressInput): Promise<
 
   revalidatePath("/profile/dashboard");
   revalidatePath("/cart");
-  revalidateTag("user-address");
+  revalidateTag("user-address", "default");
 
   return {
     success: true,
@@ -132,7 +132,7 @@ export async function updateAddress(id: string, input: AddressInput): Promise<
 
   revalidatePath("/profile/dashboard");
   revalidatePath("/cart");
-  revalidateTag("user-address");
+  revalidateTag("user-address", "default");
 
   return {
     success: true,
@@ -180,7 +180,7 @@ export async function deleteAddress(id: string) {
 
   revalidatePath("/profile/dashboard");
   revalidatePath("/cart");
-  revalidateTag("user-address");
+  revalidateTag("user-address", "default");
 
   return { success: true };
 }
@@ -211,7 +211,7 @@ export async function setDefaultAddress(id: string) {
 
   revalidatePath("/profile/dashboard");
   revalidatePath("/cart");
-  revalidateTag("user-address");
+  revalidateTag("user-address", "default");
 
   return { success: true };
 }

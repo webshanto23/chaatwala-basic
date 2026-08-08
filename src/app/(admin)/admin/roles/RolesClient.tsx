@@ -11,7 +11,7 @@ type Permission = { id: string; name: string; description: string | null };
 
 export function RolesClient({ initialRoles, initialPermissions }: { initialRoles: Role[]; initialPermissions: Permission[] }) {
   const [roles, setRoles] = useState<Role[]>(initialRoles);
-  const [permissions, setPermissions] = useState<Permission[]>(initialPermissions);
+  const permissions = initialPermissions;
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
 
   const selectedRole = roles.find((r) => r.id === selectedRoleId);
@@ -62,7 +62,7 @@ export function RolesClient({ initialRoles, initialPermissions }: { initialRoles
           <CardContent>
             {!selectedRole ? (<p className="text-sm text-muted-foreground">Choose a role from the left to manage its permissions.</p>) : (
               <div className="space-y-2">
-                {permissions.map((perm) => {
+                 {permissions.map((perm) => {
                   const assigned = assignedPermissionIds.has(perm.id);
                   return (
                     <div key={perm.id} className="flex items-center justify-between rounded-md border px-3 py-2">

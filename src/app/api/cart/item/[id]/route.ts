@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 function serializeCartItem(item: Awaited<ReturnType<typeof prisma.cartItem.findUnique>>) {
   if (!item) return null;
@@ -22,6 +23,12 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const rateLimitId = `ip:${getClientIp(request)}`;
+  const { success } = await checkRateLimit(rateLimitId, "medium");
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const { id } = await params;
   const body = await request.json().catch(() => ({}));
   const { quantity } = body as { quantity?: number };
@@ -40,7 +47,7 @@ export async function PATCH(
     data: { quantity },
   });
 
-  revalidateTag("cart");
+  revalidateTag("cart", "default");
   return NextResponse.json({ item: serializeCartItem(updated) });
 }
 
@@ -48,6 +55,12 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const rateLimitId = `ip:${getClientIp(request)}`;
+  const { success } = await checkRateLimit(rateLimitId, "medium");
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const { id } = await params;
   const item = await prisma.cartItem.findUnique({ where: { id } });
   if (!item) {
@@ -61,7 +74,7 @@ export async function DELETE(
     include: { items: { orderBy: { createdAt: "desc" } } },
   });
 
-  revalidateTag("cart");
+  revalidateTag("cart", "default");
 
   return NextResponse.json({
     cart: cart

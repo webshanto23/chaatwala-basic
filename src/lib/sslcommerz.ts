@@ -181,6 +181,7 @@ export async function initiatePayment(
     headers: {
       Accept: "application/json",
     },
+    signal: AbortSignal.timeout(10000),
   });
 
   if (!response.ok) {
@@ -243,6 +244,7 @@ export async function validatePayment(
     headers: {
       Accept: "application/json",
     },
+    signal: AbortSignal.timeout(10000),
   });
 
   if (!response.ok) {

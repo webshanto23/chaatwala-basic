@@ -2,8 +2,15 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { validatePayment } from "@/lib/sslcommerz";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  const rateLimitId = `ip:${getClientIp(request)}`;
+  const { success } = await checkRateLimit(rateLimitId, "strict");
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const body = await request.text();
   const params = new URLSearchParams(body);
 
@@ -69,8 +76,8 @@ export async function POST(request: Request) {
     },
   });
 
-  revalidateTag("orders");
-  revalidateTag("user-orders");
+  revalidateTag("orders", "default");
+  revalidateTag("user-orders", "default");
 
   return NextResponse.json({ status: "VALID", tran_id: tranId, amount: numericAmount });
 }
@@ -139,8 +146,8 @@ export async function GET(request: Request) {
     },
   });
 
-  revalidateTag("orders");
-  revalidateTag("user-orders");
+  revalidateTag("orders", "default");
+  revalidateTag("user-orders", "default");
 
   return NextResponse.json({ status: "VALID", tran_id: tranId, amount: numericAmount });
 }

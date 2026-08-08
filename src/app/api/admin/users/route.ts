@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       });
     }
 
-    revalidateTag("users");
+    revalidateTag("users", "default");
 
     return NextResponse.json({ user }, { status: 201 });
   } catch {

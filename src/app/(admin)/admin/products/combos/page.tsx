@@ -5,7 +5,7 @@ import data from "../../../../../../sitedata.json"
 import DataTable from "@/components/admin/data-table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, Plus } from "lucide-react"
+import { Plus } from "lucide-react"
 
 export default function CombosPage() {
   const columns = ["Name", "Items", "Price"]

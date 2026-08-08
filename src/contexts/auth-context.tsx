@@ -105,26 +105,23 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     setError(null);
     try {
-      const [profileRes, addressRes] = await Promise.all([
-        fetch("/api/user/profile"),
-        fetch("/api/user/address"),
-      ]);
-
-      if (profileRes.ok) {
-        const profileData = await profileRes.json();
-        setProfile({
-          id: profileData.user.id,
-          name: profileData.user.name ?? "",
-          email: profileData.user.email ?? "",
-          image: profileData.user.image ?? "",
-          phone: profileData.phone ?? "",
-        });
+      const res = await fetch("/api/user/me");
+      if (!res.ok) {
+        if (res.status === 401) {
+          setIsLoading(false);
+          return;
+        }
+        throw new Error(`Failed to fetch user data: ${res.status}`);
       }
-
-      if (addressRes.ok) {
-        const addressData = await addressRes.json();
-        setAddresses(addressData.addresses ?? []);
-      }
+      const data = await res.json();
+      setProfile({
+        id: data.profile.id,
+        name: data.profile.name ?? "",
+        email: data.profile.email ?? "",
+        image: data.profile.image ?? "",
+        phone: data.profile.phone ?? "",
+      });
+      setAddresses(data.addresses ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load user data");
     } finally {

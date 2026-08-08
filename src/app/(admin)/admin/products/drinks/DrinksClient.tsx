@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { usePermissions } from "@/hooks/use-can";
 import dynamic from "next/dynamic";
-import { getDrinks, deleteDrink } from "@/features/products/actions";
+import { deleteDrink } from "@/features/products/actions";
 
 const CreateDrinkModal = dynamic(() => import("@/components/admin/create-drink-modal").then(m => m.default), { ssr: false });
 const EditDrinkModal = dynamic(() => import("@/components/admin/edit-drink-modal").then(m => m.default), { ssr: false });

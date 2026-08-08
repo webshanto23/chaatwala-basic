@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const session = await auth();
+  const userId = session?.user?.id;
+
+  const rateLimitId = userId ?? `ip:${getClientIp(request)}`;
+  const { success } = await checkRateLimit(rateLimitId, "strict");
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => ({}));
   const { addressId } = body as { addressId?: string };
   const idempotencyKey = request.headers.get("idempotency-key");
@@ -11,8 +20,6 @@ export async function POST(request: Request) {
   if (!addressId) {
     return NextResponse.json({ error: "addressId is required" }, { status: 400 });
   }
-
-  const userId = session?.user?.id;
 
   let cart;
   if (userId) {

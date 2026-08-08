@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { unstable_cache, revalidateTag } from "next/cache";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const GUEST_COOKIE = "chaatwala_guest_id";
 
@@ -104,13 +105,19 @@ function productImage(product: unknown, productType: string) {
 
 export async function DELETE() {
   const session = await (await import("@/lib/auth")).auth();
+  const rateLimitId = session?.user?.id ?? `ip:${getClientIp(new Request("http://localhost"))}`;
+  const { success } = await checkRateLimit(rateLimitId, "medium");
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const cart = await getOrCreateCart(session?.user?.id ?? null);
   await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
   const updated = await prisma.cart.findUnique({
     where: { id: cart.id },
     include: { items: { orderBy: { createdAt: "desc" } } },
   });
-  revalidateTag("cart");
+  revalidateTag("cart", "default");
   return NextResponse.json({ cart: serializeCart(updated!) });
 }
 
@@ -123,7 +130,7 @@ export async function GET() {
       const cart = await getOrCreateCart(session?.user?.id ?? null);
       return NextResponse.json({ cart: serializeCart(cart) });
     },
-    ["cart", session?.user?.id ?? guestId],
+    ["cart", session?.user?.id ?? (guestId ?? "guest")],
     { revalidate: 60, tags: ["cart"] }
   )();
 }
@@ -131,6 +138,12 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await (await import("@/lib/auth")).auth();
+    const rateLimitId = session?.user?.id ?? `ip:${getClientIp(request)}`;
+    const { success } = await checkRateLimit(rateLimitId, "medium");
+    if (!success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const body = await request.json().catch(() => ({}));
     const { productId, productType, quantity = 1 } = body as {
       productId?: string;
@@ -184,7 +197,7 @@ export async function POST(request: Request) {
       include: { items: { orderBy: { createdAt: "desc" } } },
     });
 
-    revalidateTag("cart");
+    revalidateTag("cart", "default");
     return NextResponse.json({ cart: serializeCart(updatedCart!) });
   } catch (error) {
     console.error("Cart API error:", error);
