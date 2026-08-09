@@ -10,6 +10,7 @@ const links = [
   { name: "Dashboard", href: "/admin/dashboard" },
   { name: "Users", href: "/admin/users" },
   { name: "Roles", href: "/admin/roles" },
+  { name: "Store", href: "/admin/stores" },
   { name: "Audit Logs", href: "/admin/audit" },
   { name: "Dishes", href: "/admin/products/dishes" },
   { name: "Drinks", href: "/admin/products/drinks" },

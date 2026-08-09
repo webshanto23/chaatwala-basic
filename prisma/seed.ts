@@ -26,6 +26,10 @@ const PERMISSION_DESCRIPTIONS: Record<string, string> = {
   "role:manage": "Manage role permissions",
   "audit:view": "View audit logs",
   "admin:access": "Access the admin panel",
+  "store:view": "View stores",
+  "store:create": "Create stores",
+  "store:update": "Update stores",
+  "store:delete": "Delete stores",
 };
 
 async function upsertPermissions() {

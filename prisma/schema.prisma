@@ -22,6 +22,7 @@ model User {
   carts         Cart[]
   addresses     Address[]
   orders        Order[]
+  managedStore  Store?     @relation("StoreManager")
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 }
@@ -182,10 +183,26 @@ model Combo {
   imageUrl       String?
   imageDeleteUrl String?
   isAvailable    Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
   @@index([slug])
+}
+
+model Store {
+  id             String     @id @default(cuid())
+  name           String
+  phone          String
+  address        String
+  imageUrl       String?
+  imageDeleteUrl String?
+  managerId      String?    @unique
+  manager        User?      @relation("StoreManager", fields: [managerId], references: [id], onDelete: SetNull)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([managerId])
+  @@index([createdAt])
 }
 
 model Address {

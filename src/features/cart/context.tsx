@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useCallback, useEffect, useMemo, useState } from "react";
 import type { CartItem, AddToCartInput, ProductType } from "./types";
+import { useAuth } from "@/contexts/auth-context";
 
 type CartContextValue = {
   cart: {
@@ -25,8 +26,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<{ id: string; items: CartItem[] }>({ id: "", items: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { auth } = useAuth();
+  const isAdmin = auth.permissions.includes("admin:access");
 
   const refresh = useCallback(async () => {
+    if (isAdmin) {
+      setCart({ id: "", items: [] });
+      setIsLoading(false);
+      return;
+    }
     setError(null);
     try {
       const res = await fetch("/api/cart");
@@ -55,7 +63,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +80,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [refresh]);
 
   const addItem = useCallback(async (input: AddToCartInput) => {
+    if (isAdmin) return;
     setError(null);
     const res = await fetch("/api/cart", {
       method: "POST",
@@ -112,9 +121,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         updatedAt: new Date(item.updatedAt),
       })),
     });
-  }, []);
+  }, [isAdmin]);
 
   const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
+    if (isAdmin) return;
     setError(null);
     const res = await fetch(`/api/cart/item/${itemId}`, {
       method: "PATCH",
@@ -132,9 +142,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         item.id === itemId ? { ...item, ...data.item, createdAt: new Date(data.item.createdAt), updatedAt: new Date(data.item.updatedAt) } : item
       ),
     }));
-  }, []);
+  }, [isAdmin]);
 
   const removeItem = useCallback(async (itemId: string) => {
+    if (isAdmin) return;
     setError(null);
     const res = await fetch(`/api/cart/item/${itemId}`, { method: "DELETE" });
     if (!res.ok) {
@@ -164,9 +175,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } else {
       setCart((prev) => ({ ...prev, items: prev.items.filter((item) => item.id !== itemId) }));
     }
-  }, []);
+  }, [isAdmin]);
 
   const clear = useCallback(async () => {
+    if (isAdmin) return;
     setError(null);
     const res = await fetch("/api/cart", { method: "DELETE" });
     if (!res.ok) {
@@ -192,7 +204,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         updatedAt: new Date(item.updatedAt),
       })),
     });
-  }, []);
+  }, [isAdmin]);
 
   const totalItems = useMemo(
     () => cart.items.reduce((sum, item) => sum + item.quantity, 0),

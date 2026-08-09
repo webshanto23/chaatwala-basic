@@ -125,14 +125,18 @@ export async function GET() {
   const session = await (await import("@/lib/auth")).auth();
   const guestId = session?.user?.id ? null : await getGuestId();
 
-  return unstable_cache(
+  const cacheKey = ["cart", session?.user?.id ?? (guestId ?? "guest")];
+  
+  const cartData = await unstable_cache(
     async () => {
       const cart = await getOrCreateCart(session?.user?.id ?? null);
-      return NextResponse.json({ cart: serializeCart(cart) });
+      return serializeCart(cart);
     },
-    ["cart", session?.user?.id ?? (guestId ?? "guest")],
+    cacheKey,
     { revalidate: 60, tags: ["cart"] }
   )();
+
+  return NextResponse.json({ cart: cartData });
 }
 
 export async function POST(request: Request) {

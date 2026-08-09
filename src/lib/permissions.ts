@@ -30,6 +30,10 @@ export const ADMIN_PERMISSIONS = [
   "role:manage",
   "audit:view",
   "admin:access",
+  "store:view",
+  "store:create",
+  "store:update",
+  "store:delete",
 ] as const;
 
 // Permissions granted to a store manager.
