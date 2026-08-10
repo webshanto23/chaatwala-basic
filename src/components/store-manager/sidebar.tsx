@@ -11,7 +11,7 @@ const links = [
   { name: "Menu / Inventory Management", href: "/store-manager/inventory" },
 ];
 
-export default function StoreManagerSidebar({ storeId }: { storeId: string }) {
+export default function StoreManagerSidebar({ storeId: _storeId }: { storeId: string }) {
   const pathname = usePathname();
 
   return (

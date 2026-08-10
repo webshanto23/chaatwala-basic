@@ -24,6 +24,8 @@ type ShippingAddress = {
   isDefault: boolean
 }
 
+type Store = { id: string; name: string; address: string }
+
 export default function CheckoutPage() {
   const { cart, total, isLoading } = useCart()
   const { auth } = useAuth()
@@ -32,6 +34,10 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [addressModalOpen, setAddressModalOpen] = useState(false)
+  const [stores, setStores] = useState<Store[]>([])
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
+  const [storeInvalid, setStoreInvalid] = useState(false)
+  const [unavailableItems, setUnavailableItems] = useState<{ productId: string; productType: string; name: string }[]>([])
 
   useEffect(() => {
     if (!auth.isAuthenticated) {
@@ -53,6 +59,75 @@ export default function CheckoutPage() {
     }
   }, [auth.isAuthenticated, refresh])
 
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const res = await fetch("/api/stores");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data.stores?.length > 0) {
+          setStores(data.stores);
+          const saved = typeof window !== "undefined" ? localStorage.getItem("selectedStoreId") : null;
+          if (saved && data.stores.some((s: Store) => s.id === saved)) {
+            setSelectedStoreId(saved);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.isAuthenticated]);
+
+  useEffect(() => {
+    if (!selectedStoreId || cart.items.length === 0) {
+      Promise.resolve().then(() => {
+        setStoreInvalid(false);
+        setUnavailableItems([]);
+      });
+      return;
+    }
+
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const res = await fetch("/api/cart/validate-store", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ storeId: selectedStoreId }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        if (!data.valid && data.unavailableItems?.length > 0) {
+          setStoreInvalid(true);
+          setUnavailableItems(data.unavailableItems);
+        } else {
+          setStoreInvalid(false);
+          setUnavailableItems([]);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedStoreId, cart.items]);
+
+  const handleStoreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const storeId = e.target.value || null;
+    setSelectedStoreId(storeId);
+    if (storeId) {
+      localStorage.setItem("selectedStoreId", storeId);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (!auth.isAuthenticated) {
       toast.error("Please sign in to checkout")
@@ -60,8 +135,18 @@ export default function CheckoutPage() {
     }
 
     if (!address) {
-      toast.error("Please add your address before placing an order")
+      toast.error("Please add a shipping address before checkout")
       setAddressModalOpen(true)
+      return
+    }
+
+    if (!selectedStoreId) {
+      toast.error("Please select a store before checkout")
+      return
+    }
+
+    if (storeInvalid || cart.items.length === 0) {
+      toast.error("Some items are unavailable at the selected store")
       return
     }
 
@@ -69,21 +154,37 @@ export default function CheckoutPage() {
     setError(null)
     try {
       const idempotencyKey = crypto.randomUUID()
-      const res = await fetch("/api/orders", {
+      const res = await fetch("/api/payment/initiate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Idempotency-Key": idempotencyKey,
         },
-        body: JSON.stringify({ addressId: address.id }),
+        body: JSON.stringify({
+          storeId: selectedStoreId,
+          shippingAddress: {
+            fullName: address.fullName,
+            phone: address.phone,
+            line1: address.line1,
+            line2: address.line2,
+            city: address.city,
+            postalCode: address.postalCode,
+            country: address.country,
+          },
+        }),
       })
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || "Failed to place order")
+        throw new Error(data.error || "Failed to initiate payment")
       }
 
-      window.location.href = "/checkout/success"
+      const data = await res.json()
+      if (data.gatewayUrl) {
+        window.location.href = data.gatewayUrl
+      } else {
+        window.location.href = "/checkout/success"
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error")
     } finally {
@@ -140,6 +241,28 @@ export default function CheckoutPage() {
 
                 <Separator />
 
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Select Store</label>
+                  <select
+                    value={selectedStoreId ?? ""}
+                    onChange={handleStoreChange}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">-- Choose a store --</option>
+                    {stores.map((store) => (
+                      <option key={store.id} value={store.id}>
+                        {store.name} — {store.address}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {storeInvalid && (
+                  <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                    {unavailableItems.map((item) => item.name).join(", ")} is Out of stock, Please wait or Select Another Store.
+                  </div>
+                )}
+
                 {address ? (
                   <div
                     className="rounded-xl border border-border/70 bg-muted/30 p-4 space-y-1 cursor-pointer"
@@ -193,7 +316,7 @@ export default function CheckoutPage() {
                 <Button
                   className="w-full mt-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
                   onClick={handlePlaceOrder}
-                  disabled={isPlacing || cart.items.length === 0 || !address}
+                  disabled={isPlacing || cart.items.length === 0 || !address || !selectedStoreId || storeInvalid}
                 >
                   {isPlacing ? "Processing Payment..." : "Proceed to Checkout"}
                 </Button>

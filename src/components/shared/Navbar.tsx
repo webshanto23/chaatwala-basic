@@ -72,20 +72,18 @@ export default function Navbar() {
 
             {isLoggedIn && !isAdmin && !isStoreManager && (
               <>
-                {userLinks
-                  .filter((item) => item.href !== "/")
-                  .map((item) => (
-                    <NavigationMenuItem key={item.href}>
-                      <NavigationMenuLink asChild>
-                        <Link
-                          href={item.href}
-                          className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
-                        >
-                          {item.label}
-                        </Link>
-                      </NavigationMenuLink>
-                    </NavigationMenuItem>
-                  ))}
+                {userLinks.map((item) => (
+                  <NavigationMenuItem key={item.href}>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        href={item.href}
+                        className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                      >
+                        {item.label}
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                ))}
               </>
             )}
 
@@ -236,17 +234,15 @@ export default function Navbar() {
                     </Link>
                   ))}
 
-                  {isLoggedIn && !isAdmin && !isStoreManager && userLinks
-                    .filter((item) => item.href !== "/")
-                    .map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
+                  {isLoggedIn && !isAdmin && !isStoreManager && userLinks.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
 
                   {isStoreManager && (
                     <>

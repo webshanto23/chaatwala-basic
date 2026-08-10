@@ -458,6 +458,10 @@
         "label": "Home"
       },
       {
+        "href": "/products/dishes",
+        "label": "Menu"
+      },
+      {
         "href": "/profile/dashboard",
         "label": "Profile"
       },

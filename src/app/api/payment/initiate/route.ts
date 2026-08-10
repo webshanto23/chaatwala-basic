@@ -48,6 +48,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
 
+  let storeId: string | null = null;
+  try {
+    const body = await request.json();
+    storeId = body?.storeId ?? null;
+  } catch {
+    // body not available
+  }
+
+  if (!storeId) {
+    return NextResponse.json({ error: "storeId is required" }, { status: 400 });
+  }
+
+  const store = await prisma.store.findUnique({
+    where: { id: storeId },
+    select: { id: true },
+  });
+
+  if (!store) {
+    return NextResponse.json({ error: "Store not found" }, { status: 404 });
+  }
+
   const dishIds = cart.items
     .filter((item) => item.productType === "dish")
     .map((item) => item.productId);
@@ -61,27 +82,75 @@ export async function POST(request: Request) {
   const [dishes, drinks, combos] = await Promise.all([
     dishIds.length
       ? prisma.dish.findMany({
-          where: { id: { in: dishIds } },
-          select: { id: true, price: true, imageUrl: true },
+          where: { id: { in: dishIds }, storeId, isAvailable: true },
+          select: { id: true, name: true },
         })
       : Promise.resolve([]),
     drinkIds.length
       ? prisma.drink.findMany({
-          where: { id: { in: drinkIds } },
-          select: { id: true, price: true, imageUrl: true },
+          where: { id: { in: drinkIds }, storeId, isAvailable: true },
+          select: { id: true, name: true },
         })
       : Promise.resolve([]),
     comboIds.length
       ? prisma.combo.findMany({
-          where: { id: { in: comboIds } },
+          where: { id: { in: comboIds }, storeId, isAvailable: true },
+          select: { id: true, name: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const availableIds = new Set([
+    ...dishes.map((d) => d.id),
+    ...drinks.map((d) => d.id),
+    ...combos.map((c) => c.id),
+  ]);
+
+  const unavailableItems = cart.items
+    .filter((item) => !availableIds.has(item.productId))
+    .map((item) => item.name);
+
+  if (unavailableItems.length > 0) {
+    return NextResponse.json(
+      { error: `${unavailableItems.join(", ")} is Out of stock, Please wait or Select Another Store.`, unavailableItems },
+      { status: 409 }
+    );
+  }
+
+  const priceDishIds = cart.items
+    .filter((item) => item.productType === "dish")
+    .map((item) => item.productId);
+  const priceDrinkIds = cart.items
+    .filter((item) => item.productType === "drink")
+    .map((item) => item.productId);
+  const priceComboIds = cart.items
+    .filter((item) => item.productType === "combo")
+    .map((item) => item.productId);
+
+  const [priceDishes, priceDrinks, priceCombos] = await Promise.all([
+    priceDishIds.length
+      ? prisma.dish.findMany({
+          where: { id: { in: priceDishIds } },
+          select: { id: true, price: true, imageUrl: true },
+        })
+      : Promise.resolve([]),
+    priceDrinkIds.length
+      ? prisma.drink.findMany({
+          where: { id: { in: priceDrinkIds } },
+          select: { id: true, price: true, imageUrl: true },
+        })
+      : Promise.resolve([]),
+    priceComboIds.length
+      ? prisma.combo.findMany({
+          where: { id: { in: priceComboIds } },
           select: { id: true, price: true, imageUrl: true },
         })
       : Promise.resolve([]),
   ]);
 
-  const dishMap = new Map(dishes.map((d) => [d.id, d]));
-  const drinkMap = new Map(drinks.map((d) => [d.id, d]));
-  const comboMap = new Map(combos.map((c) => [c.id, c]));
+  const dishMap = new Map(priceDishes.map((d) => [d.id, d]));
+  const drinkMap = new Map(priceDrinks.map((d) => [d.id, d]));
+  const comboMap = new Map(priceCombos.map((c) => [c.id, c]));
 
   const cachedPrices = new Map<string, { price: number; name: string; imageUrl: string | null }>();
 
@@ -143,6 +212,7 @@ export async function POST(request: Request) {
   const order = await prisma.order.create({
     data: {
       userId: userId ?? undefined,
+      storeId,
       subtotal,
       deliveryFee,
       total,
