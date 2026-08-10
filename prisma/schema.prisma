@@ -281,3 +281,17 @@ model OrderItem {
   @@index([orderId])
   @@index([productId, productType])
 }
+
+model StoreInventory {
+  id          String   @id @default(cuid())
+  storeId     String
+  productType String   @db.Text
+  productId   String
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([storeId, productType, productId])
+  @@index([storeId])
+  @@index([productId])
+}
