@@ -14,6 +14,8 @@ export function ProductCardActions({ id, productType }: ProductCardActionsProps)
   const { cart, addItem, updateQuantity, removeItem } = useCart();
   const { auth } = useAuth();
   const isAdmin = auth.permissions.includes("admin:access");
+  const isStoreManager = auth.permissions.includes("store:view");
+  const disableCart = isAdmin || isStoreManager;
 
   const cartItem = cart.items.find(
     (item) => item.productId === id && item.productType === productType,
@@ -22,17 +24,17 @@ export function ProductCardActions({ id, productType }: ProductCardActionsProps)
   const quantity = cartItem?.quantity ?? 0;
 
   const handleAdd = async () => {
-    if (isAdmin) return;
+    if (disableCart) return;
     await addItem({ productId: id, productType, quantity: 1 });
   };
 
   const handleIncrement = async () => {
-    if (isAdmin) return;
+    if (disableCart) return;
     await addItem({ productId: id, productType, quantity: 1 });
   };
 
   const handleDecrement = async () => {
-    if (isAdmin) return;
+    if (disableCart) return;
     if (!cartItem) return;
     if (quantity <= 1) {
       await removeItem(cartItem.id);
@@ -47,7 +49,7 @@ export function ProductCardActions({ id, productType }: ProductCardActionsProps)
         size="sm"
         className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
         onClick={handleAdd}
-        disabled={isAdmin}
+        disabled={disableCart}
       >
         <Plus className="mr-2 h-4 w-4" />
         Add
@@ -62,7 +64,7 @@ export function ProductCardActions({ id, productType }: ProductCardActionsProps)
         variant="outline"
         className="h-9 w-9 rounded-full p-0"
         onClick={handleDecrement}
-        disabled={isAdmin}
+        disabled={disableCart}
       >
         <Minus className="h-3 w-3" />
       </Button>
@@ -73,7 +75,7 @@ export function ProductCardActions({ id, productType }: ProductCardActionsProps)
         size="sm"
         className="h-9 w-9 rounded-full p-0 bg-primary text-primary-foreground hover:bg-primary/90"
         onClick={handleIncrement}
-        disabled={isAdmin}
+        disabled={disableCart}
       >
         <Plus className="h-3 w-3" />
       </Button>

@@ -116,12 +116,15 @@ model Dish {
   tag            String?
   imageUrl       String?
   imageDeleteUrl String?
+  storeId        String?
+  store          Store?   @relation(fields: [storeId], references: [id], onDelete: SetNull)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   @@index([slug])
   @@index([tag])
   @@index([createdAt])
+  @@index([storeId])
 }
 
 model Drink {
@@ -135,12 +138,15 @@ model Drink {
   tag            String?
   imageUrl       String?
   imageDeleteUrl String?
+  storeId        String?
+  store          Store?   @relation(fields: [storeId], references: [id], onDelete: SetNull)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   @@index([slug])
   @@index([tag])
   @@index([createdAt])
+  @@index([storeId])
 }
 
 model Cart {
@@ -183,10 +189,13 @@ model Combo {
   imageUrl       String?
   imageDeleteUrl String?
   isAvailable    Boolean  @default(true)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  storeId        String?
+  store          Store?   @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([slug])
+  @@index([storeId])
 }
 
 model Store {
@@ -198,6 +207,10 @@ model Store {
   imageDeleteUrl String?
   managerId      String?    @unique
   manager        User?      @relation("StoreManager", fields: [managerId], references: [id], onDelete: SetNull)
+  dishes         Dish[]
+  drinks         Drink[]
+  combos         Combo[]
+  orders         Order[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
@@ -231,6 +244,8 @@ model Order {
   user           User?       @relation(fields: [userId], references: [id])
   addressId      String?
   address        Address?    @relation(fields: [addressId], references: [id])
+  storeId        String?
+  store          Store?      @relation(fields: [storeId], references: [id], onDelete: SetNull)
   status         String      @default("pending")
   subtotal       Decimal
   deliveryFee    Decimal     @default(50)
@@ -248,6 +263,7 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+  @@index([storeId])
 }
 
 model OrderItem {

@@ -39,11 +39,15 @@ export const ADMIN_PERMISSIONS = [
 // Permissions granted to a store manager.
 export const STORE_MANAGER_PERMISSIONS = [
   "user:access",
+  "user:view",
   "food:view",
   "food:create",
   "food:update",
   "food:delete",
-  "user:view",
+  "store:view",
+  "store:update",
+  "order:view",
+  "order:update",
 ] as const;
 
 // Mapping from role name to its permission list.

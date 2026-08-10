@@ -22,6 +22,8 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   const { addItem } = useCart();
   const { auth } = useAuth();
   const isAdmin = auth.permissions.includes("admin:access");
+  const isStoreManager = auth.permissions.includes("store:view");
+  const disableCart = isAdmin || isStoreManager;
 
   const { data, type } = product;
   const imageUrl = data.imageUrl || "/images/chatwala_logo.png";
@@ -64,7 +66,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
             onClick={() =>
               addItem({ productId: data.id, productType: type, quantity: 1 })
             }
-            disabled={isAdmin}
+            disabled={disableCart}
           >
             Add to Cart
           </Button>

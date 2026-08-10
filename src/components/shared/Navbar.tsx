@@ -27,6 +27,7 @@ export default function Navbar() {
   const { totalItems, clear } = useCart();
   const isLoggedIn = auth.isAuthenticated;
   const isAdmin = can("admin:access");
+  const isStoreManager = can("store:view") && !isAdmin;
 
   useEffect(() => {
     if (isAdmin) {
@@ -56,21 +57,20 @@ export default function Navbar() {
         {/* Desktop Menu */}
         <NavigationMenu key={isAdmin ? "admin" : "public"} className="hidden md:flex rounded-full  px-4 py-1">
           <NavigationMenuList className="gap-2">
-            {(!isLoggedIn || !isAdmin) &&
-              publicLinks.map((item) => (
-                <NavigationMenuItem key={item.href}>
-                  <NavigationMenuLink asChild>
-                    <Link
-                      href={item.href}
-                      className="hover:text-primary transition-colors"
-                    >
-                      {item.label}
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              ))}
+            {!isLoggedIn && publicLinks.map((item) => (
+              <NavigationMenuItem key={item.href}>
+                <NavigationMenuLink asChild>
+                  <Link
+                    href={item.href}
+                    className="hover:text-primary transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            ))}
 
-            {isLoggedIn && !isAdmin && (
+            {isLoggedIn && !isAdmin && !isStoreManager && (
               <>
                 {userLinks
                   .filter((item) => item.href !== "/")
@@ -86,6 +86,33 @@ export default function Navbar() {
                       </NavigationMenuLink>
                     </NavigationMenuItem>
                   ))}
+              </>
+            )}
+
+            {isStoreManager && (
+              <>
+                {publicLinks.map((item) => (
+                  <NavigationMenuItem key={item.href}>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        href={item.href}
+                        className="hover:text-primary transition-colors"
+                      >
+                        {item.label}
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                ))}
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href="/store-manager/dashboard"
+                      className="hover:text-primary transition-colors"
+                    >
+                      Store Manager Dashboard
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
               </>
             )}
 
@@ -132,7 +159,7 @@ export default function Navbar() {
             )}
           </button>
 
-          {!isAdmin && (
+          {!isAdmin && !isStoreManager && (
             <Link
               href="/cart"
               className="relative rounded-full p-2 text-foreground transition-colors hover:bg-muted hover:text-primary"
@@ -199,8 +226,19 @@ export default function Navbar() {
                 </div>
 
                 <nav className="flex flex-col gap-1">
-                  {(!isLoggedIn || !isAdmin) &&
-                    publicLinks.map((item) => (
+                  {!isLoggedIn && publicLinks.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+
+                  {isLoggedIn && !isAdmin && !isStoreManager && userLinks
+                    .filter((item) => item.href !== "/")
+                    .map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}
@@ -210,11 +248,9 @@ export default function Navbar() {
                       </Link>
                     ))}
 
-                  {isLoggedIn &&
-                    !isAdmin &&
-                    userLinks
-                      .filter((item) => item.href !== "/")
-                      .map((item) => (
+                  {isStoreManager && (
+                    <>
+                      {publicLinks.map((item) => (
                         <Link
                           key={item.href}
                           href={item.href}
@@ -223,6 +259,14 @@ export default function Navbar() {
                           {item.label}
                         </Link>
                       ))}
+                      <Link
+                        href="/store-manager/dashboard"
+                        className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                      >
+                        Store Manager Dashboard
+                      </Link>
+                    </>
+                  )}
 
                   {isAdmin && (
                     <Link
@@ -233,16 +277,15 @@ export default function Navbar() {
                     </Link>
                   )}
 
-                  {isAdmin &&
-                    adminLinks.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
+                  {isAdmin && adminLinks.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
                 </nav>
 
                 <div className="mt-auto flex flex-col gap-2 border-t border-border pt-6">
@@ -258,7 +301,7 @@ export default function Navbar() {
                     )}
                     {theme === "dark" ? "Light Mode" : "Dark Mode"}
                   </button>
-                  {!isAdmin && (
+                  {!isAdmin && !isStoreManager && (
                     <Link
                       href="/cart"
                       className="flex items-center gap-2 rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"

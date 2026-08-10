@@ -23,6 +23,9 @@ function getPermissionRule(pathname: string): PermissionRule | null {
   if (pathname.startsWith("/admin")) {
     return { require: "admin:access", unauthorizedRedirect: "/" };
   }
+  if (pathname.startsWith("/store-manager")) {
+    return { require: "store:view", unauthorizedRedirect: "/" };
+  }
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/profile") ||
@@ -73,6 +76,16 @@ export async function proxy(request: NextRequest) {
     );
   }
 
+  if (pathname === "/store-manager") {
+    if (!isAuthenticated) {
+      return NextResponse.redirect(new URL("/sign-in", request.url));
+    }
+    const isStoreManager = can(permissions, "store:view");
+    return NextResponse.redirect(
+      new URL(isStoreManager ? "/store-manager/dashboard" : "/", request.url)
+    );
+  }
+
   const rule = getPermissionRule(pathname);
 
   if (rule) {
@@ -89,6 +102,19 @@ export async function proxy(request: NextRequest) {
 
     if (pathname.startsWith("/admin") && !isAdmin) {
       return NextResponse.redirect(new URL("/", request.url));
+    }
+
+    const isStoreManager = can(permissions, "store:view");
+    if (pathname.startsWith("/store-manager") && !isStoreManager) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+
+    if (isAdmin && pathname.startsWith("/store-manager")) {
+      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+    }
+
+    if (isStoreManager && (pathname.startsWith("/admin") || pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/profile") || pathname.startsWith("/orders") || pathname.startsWith("/cart"))) {
+      return NextResponse.redirect(new URL("/store-manager/dashboard", request.url));
     }
 
     if (

@@ -9,6 +9,8 @@ const prisma = new PrismaClient();
 
 const PERMISSION_DESCRIPTIONS: Record<string, string> = {
   "order:create": "Place orders",
+  "order:view": "View orders",
+  "order:update": "Update orders",
   "payment:create": "Make payments",
   "food:view": "View food items",
   "food:like": "Like food items",

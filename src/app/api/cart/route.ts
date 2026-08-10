@@ -21,7 +21,7 @@ async function getGuestId() {
   return guestId;
 }
 
-async function getOrCreateCart(userId?: string | null) {
+async function getOrCreateCart(userId?: string | null, guestId?: string | null) {
   if (userId) {
     let cart = await prisma.cart.findFirst({
       where: { userId },
@@ -36,14 +36,14 @@ async function getOrCreateCart(userId?: string | null) {
     return cart;
   }
 
-  const guestId = await getGuestId();
+  const resolvedGuestId = guestId ?? await getGuestId();
   let cart = await prisma.cart.findUnique({
-    where: { guestId },
+    where: { guestId: resolvedGuestId },
     include: { items: { orderBy: { createdAt: "desc" } } },
   });
   if (!cart) {
     cart = await prisma.cart.create({
-      data: { guestId },
+      data: { guestId: resolvedGuestId },
       include: { items: true },
     });
   }
@@ -123,13 +123,14 @@ export async function DELETE() {
 
 export async function GET() {
   const session = await (await import("@/lib/auth")).auth();
-  const guestId = session?.user?.id ? null : await getGuestId();
+  const userId = session?.user?.id ?? null;
+  const guestId = userId ? null : await getGuestId();
 
-  const cacheKey = ["cart", session?.user?.id ?? (guestId ?? "guest")];
-  
+  const cacheKey = ["cart", userId ?? guestId ?? "guest"];
+
   const cartData = await unstable_cache(
     async () => {
-      const cart = await getOrCreateCart(session?.user?.id ?? null);
+      const cart = await getOrCreateCart(userId, guestId ?? undefined);
       return serializeCart(cart);
     },
     cacheKey,

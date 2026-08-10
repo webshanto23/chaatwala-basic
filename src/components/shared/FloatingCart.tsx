@@ -5,9 +5,15 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart, Plus, Minus } from "lucide-react"
 import { useCart } from "@/features/cart/context"
+import { useAuth } from "@/contexts/auth-context"
 
 export function FloatingCart() {
   const { cart, totalItems, total, updateQuantity, removeItem } = useCart();
+  const { auth } = useAuth();
+  const isAdmin = auth.permissions.includes("admin:access");
+  const isStoreManager = auth.permissions.includes("store:view");
+
+  if (isAdmin || isStoreManager) return null;
 
   return (
     <Sheet>

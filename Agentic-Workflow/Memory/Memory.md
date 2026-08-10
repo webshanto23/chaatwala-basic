@@ -2,6 +2,33 @@
 
 ## History
 
+### 2026-08-10 — Admin Store Feature & Bug Fixes
+- Added new `Store` model to Prisma schema with fields: `name`, `phone`, `address`, `imageUrl`, `imageDeleteUrl`, `managerId` (unique, self-relation to `User`)
+- Created admin Store management page at `/admin/stores` with card-based layout
+- Server actions in `src/features/stores/actions.ts`: `getStores`, `getStoreManagers`, `createStore`, `updateStore`, `deleteStore`
+- Store creation/edit modals with image upload, manager dropdown ("None added Yet" default)
+- Added `store:view`, `store:create`, `store:update`, `store:delete` permissions to admin role
+- Added Store link to admin sidebar
+- **Bug fix**: `src/lib/rate-limit.ts` now makes Upstash Redis optional — when env vars are missing, `checkRateLimit` returns `{ success: true }` instead of crashing
+- **Bug fix**: `src/features/cart/context.tsx` — admins no longer hit `/api/cart`; all cart operations skipped when `admin:access` is present
+- **Bug fix**: `src/app/api/cart/route.ts` GET handler fixed — `unstable_cache` now wraps serialized data, not `NextResponse`
+- **Bug fix**: Edit store modal missing toast container — added toast rendering JSX
+- **Bug fix**: Store manager unique constraint (`P2002`) caught generically and shown as toast: "Store manager can't be same"
+
+### 2026-08-10 — Store Manager Dashboard
+- Added `storeId` to Order, Dish, Drink, Combo models for multi-store scoping
+- Created dedicated Store Manager dashboard at `/store-manager/*` with its own layout, shell, and sidebar
+- Server actions in `src/features/store-manager/actions.ts`: `getMyStore`, `getStoreDashboardStats`, `getStoreOrders`, `updateStoreOrderStatus`
+- Dashboard page shows scoped stats: Total Orders, Pending, Cancelled, Delivered, Total Dishes/Drinks/Combos, Total Earnings, Today's Revenue, Avg Order Value
+- My Store page displays assigned store details: name, image, phone, address
+- Orders Management page with cursor-based pagination (25 per page), Accept/Reject actions (paid orders only), and order detail modal
+- Menu/Inventory Management placeholder route created for future implementation
+- Proxy updated: store-manager routes require `store:view`; store managers are redirected away from admin and user routes
+- Permissions added: `order:view`, `order:update` assigned to `STORE_MANAGER_PERMISSIONS`
+- Cached with `unstable_cache` and tag invalidation on order status updates
+- **UI isolation**: Store managers see only Home, Menu, About, and Store Manager Dashboard in navbar; cart icon and add-to-cart buttons are hidden/disabled for store managers
+- **SearchBar hidden**: `SearchBar` returns `null` for admins and store managers, preventing unnecessary `/api/search/popular` DB hits on home page
+
 ### 2026-08-08 — Admin Orders Page: User Name, Transaction ID, Modals, Real-time Updates
 - `/admin/orders` now displays **User** name (from `order.user.name/email`) and **TransactionId** (`order.sslTxnId`).
 - Responsive layout: desktop uses `DataTable`; mobile uses card layout.
@@ -33,7 +60,7 @@
   - Role/permission mutations (`assignPermissionToRole`, `removePermissionFromRole`) call `revalidateTag("roles")` and `revalidateTag("permissions")`
   - Order lifecycle (`/api/payment/initiate`, `/api/payment/validate`) calls `revalidateTag("orders")`
 - **Fallback TTLs**: All `unstable_cache` calls now include `revalidate: 300` (5 min) as a safety net so data refreshes even if a tag invalidation is missed.
-- **Cache tags in use**: `users`, `roles`, `permissions`, `dishes`, `drinks`, `orders`
+- **Cache tags in use**: `users`, `roles`, `permissions`, `dishes`, `drinks`, `orders`, `stores`, `store-managers`
 - **Rule**: Read-heavy admin data is cached; create/edit/delete operations hit DB in realtime and invalidate relevant tags immediately.
 
 ### 2026-08-06 — Admin Server Component Migration (Request Storm Fix)
@@ -122,10 +149,10 @@
 ### v0.1.0 — Core Features
 - **Authentication**: NextAuth v5 beta with Google, Facebook, and Credentials providers
 - **RBAC**: Custom string-based permission system with `admin`, `user`, and `store_manager` roles
-- **Admin Dashboard**: Users, roles, audit logs, dishes, drinks, combos, orders management
+- **Admin Dashboard**: Users, roles, audit logs, dishes, drinks, combos, orders, stores management
 - **Public Storefront**: Home page, about page, product listings (dishes, drinks, combos), product detail pages
 - **User Area**: Profile, address management, order history, checkout flow
-- **Cart**: Guest and authenticated cart support via cookie-based guest ID
+- **Cart**: Guest and authenticated cart support via cookie-based guest ID; admins excluded from cart
 - **Search**: Product search and popular tags endpoints
 - **Image Upload**: imgbb integration with sharp compression
 - **Audit Logging**: Action tracking for sensitive operations
@@ -140,12 +167,18 @@
 - **React Context for Cart/Auth/Theme**: Lightweight client state without external state libraries
 - **shadcn/ui radix-nova**: Design system foundation; avoids dependency on external CSS frameworks
 - **Tailwind CSS v4**: Utility-first styling with CSS variable theming
-- **Domain-driven admin routing**: Admin pages grouped by domain (`products/*`, `users`, `orders`, `roles`, `audit`) under single `(admin)` route group with auth-guarded layout
+- **Domain-driven admin routing**: Admin pages grouped by domain (`products/*`, `users`, `orders`, `roles`, `audit`, `stores`) under single `(admin)` route group with auth-guarded layout
 - **Protected route group**: User-required pages (`cart`, `checkout`, `orders`) isolated under `(protected)` with server-side auth guard
 - **Request deduplication**: Client-side hook `useRequestDedupe` prevents duplicate server action calls in admin pages
 - **Server-side caching**: `unstable_cache` with tag-based revalidation for admin list data (30-120s TTL)
 - **Cursor-based pagination**: Admin orders and audit logs use cursor pagination to reduce payload size
 - **React Strict Mode disabled**: Prevents duplicate renders and double server action invocations in development
+- **Optional Redis fallback**: Rate limiter gracefully degrades when Upstash Redis env vars are missing
+- **Admin-cart isolation**: Cart context checks `admin:access` permission and skips all cart operations for admins
+- **Prisma unique constraint handling**: Server actions catch `P2002` errors generically and return user-friendly messages instead of raw Prisma errors
+- **Store Manager isolation**: Separate `/store-manager` route group with layout guard enforcing `store:view` permission and assigned store check
+- **Store-scoped data access**: All store manager queries filter by `storeId` from `user.managedStore`; orders, dishes, drinks, combos linked to stores
+- **Sonner toasts**: Used for user-facing feedback in store manager order actions (accept/reject)
 
 ## Known Issues
 
@@ -161,3 +194,13 @@
 > - **What changed**: [description]
 > - **Why it changed**: [rationale]
 > - **Impact**: [affected features, performance, risk]
+
+### 2026-08-10 — Store Feature, Redis Fallback, Admin Cart Isolation
+- **What changed**: Added Store management page with create/edit modals; made Redis rate limiter optional; blocked cart access for admins
+- **Why it changed**: Business requirement for store management; Redis env not available in all environments; admins should not interact with cart
+- **Impact**: New store admin flow; rate limiting gracefully degrades; reduced unnecessary `/api/cart` calls from admin sessions
+
+### 2026-08-10 — Store Manager Dashboard
+- **What changed**: Added dedicated store manager dashboard with stats, store details, orders management, and inventory placeholder
+- **Why it changed**: Store managers need isolated workspace to manage their assigned store without admin/user access
+- **Impact**: New `/store-manager/*` route group; orders/products scoped by `storeId`; proxy redirects store managers away from admin/user routes
