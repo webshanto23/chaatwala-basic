@@ -35,14 +35,17 @@ export default function SignIn() {
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      const target = redirectFrom === "/cart" ? "/cart" : (can("admin:access") ? "/admin/dashboard" : "/profile/dashboard");
+      const target = can("admin:access") ? "/admin/dashboard" : (redirectFrom === "/cart" ? "/cart" : "/profile/dashboard");
       router.replace(target);
     }
   }, [status, session, router, can, redirectFrom]);
 
   const errorFromUrl = searchParams.get("error");
+  const verifiedFromUrl = searchParams.get("verified");
   const urlError = errorFromUrl ? (errorFromUrl === "CredentialsSignin" ? "Invalid email or password" : "Login failed, please try again") : null;
+  const urlVerified = verifiedFromUrl === "true" ? "Email verified successfully! Please sign in." : null;
   const displayError = error ?? urlError;
+  const displaySuccess = urlVerified;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,6 +101,11 @@ export default function SignIn() {
                 {displayError}
               </p>
             )}
+            {displaySuccess && (
+              <p className="rounded-md border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-400">
+                {displaySuccess}
+              </p>
+            )}
 
             <form className="space-y-2" onSubmit={handleSubmit}>
               <InputGroup>
@@ -129,6 +137,14 @@ export default function SignIn() {
               <Button className="w-full" size="sm" type="submit" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
+              <div className="text-right">
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-muted-foreground hover:text-primary underline underline-offset-4"
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </form>
 
             <AuthDivider>OR</AuthDivider>

@@ -1,5 +1,8 @@
+"use client";
+
 import data from "../../../sitedata.json";
 import { ChevronRight, UserRound, KeyRound } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -8,6 +11,7 @@ type SettingsListProps = {
 };
 
 export function SettingsList({ onEditProfile }: SettingsListProps) {
+  const router = useRouter();
   const items = data.account.settings.map((item) => ({
     ...item,
     icon: item.icon === "UserRound" ? UserRound : KeyRound,
@@ -23,6 +27,7 @@ export function SettingsList({ onEditProfile }: SettingsListProps) {
           {items.map((item) => {
             const Icon = item.icon;
             const isEditProfile = item.label === "Edit Profile";
+            const isChangePassword = item.label === "Change Password";
             return (
               <button
                 key={item.label}
@@ -31,6 +36,8 @@ export function SettingsList({ onEditProfile }: SettingsListProps) {
                 onClick={() => {
                   if (isEditProfile && onEditProfile) {
                     onEditProfile();
+                  } else if (isChangePassword) {
+                    router.push("/change-password");
                   }
                 }}
               >

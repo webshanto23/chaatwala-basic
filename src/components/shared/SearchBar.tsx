@@ -6,7 +6,6 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/contexts/auth-context";
 import { usePermissions } from "@/hooks/use-can";
 
 type SearchItem = {
@@ -21,7 +20,6 @@ const CLIENT_CACHE_TTL = 60 * 1000;
 const DEBOUNCE_MS = 350;
 
 export function SearchBar() {
-  const { auth } = useAuth();
   const { can } = usePermissions();
   const isAdmin = can("admin:access");
   const isStoreManager = can("store:view");
@@ -31,8 +29,6 @@ export function SearchBar() {
   const [error, setError] = useState<string | null>(null);
   const [popularTags, setPopularTags] = useState<string[]>([]);
   const [isLoadingPopular, setIsLoadingPopular] = useState(true);
-
-  if (isAdmin || isStoreManager) return null;
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortController = useRef<AbortController | null>(null);
@@ -145,6 +141,8 @@ export function SearchBar() {
   }, []);
 
   const hasResults = useMemo(() => query.trim().length > 0, [query]);
+
+  if (isAdmin || isStoreManager) return null;
 
   return (
     <div className="flex flex-col items-center justify-center bg-linear-to-r from-primary/10 via-secondary/10 to-accent/10 px-4 py-8 sm:px-6 lg:px-8">

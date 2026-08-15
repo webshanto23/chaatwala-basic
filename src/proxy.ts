@@ -17,6 +17,11 @@ const publicPaths = new Set([
   "/terms-and-conditions",
   "/license",
   "/privacy-policy",
+  "/forgot-password",
+  "/reset-password",
+  "/set-password",
+  "/verify-email",
+  "/change-password",
 ]);
 
 function getPermissionRule(pathname: string): PermissionRule | null {
@@ -33,7 +38,7 @@ function getPermissionRule(pathname: string): PermissionRule | null {
     pathname.startsWith("/cart") ||
     pathname.startsWith("/checkout")
   ) {
-    return { require: "user:access", unauthorizedRedirect: "/sign-in" };
+    return { require: "user:access", unauthorizedRedirect: "/" };
   }
   return null;
 }
@@ -60,9 +65,7 @@ export async function proxy(request: NextRequest) {
 
   if (pathname === "/sign-in") {
     if (isAuthenticated) {
-      return NextResponse.redirect(
-        new URL(isAdmin ? "/admin/dashboard" : "/profile/dashboard", request.url)
-      );
+      return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
   }
@@ -104,22 +107,22 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
+    if (isAdmin && pathname.startsWith("/store-manager")) {
+      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+    }
+
     const isStoreManager = can(permissions, "store:view");
     if (pathname.startsWith("/store-manager") && !isStoreManager) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    if (isAdmin && pathname.startsWith("/store-manager")) {
-      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-    }
-
-    if (isStoreManager && (pathname.startsWith("/admin") || pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/profile") || pathname.startsWith("/orders") || pathname.startsWith("/cart"))) {
+    if (!isAdmin && isStoreManager && (pathname.startsWith("/admin") || pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/profile") || pathname.startsWith("/orders") || pathname.startsWith("/cart"))) {
       return NextResponse.redirect(new URL("/store-manager/dashboard", request.url));
     }
 
     if (
-      (pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/profile") || pathname.startsWith("/orders") || pathname.startsWith("/cart")) &&
-      isAdmin
+      isAdmin &&
+      (pathname.startsWith("/dashboard") || pathname.startsWith("/checkout") || pathname.startsWith("/profile") || pathname.startsWith("/orders") || pathname.startsWith("/cart"))
     ) {
       return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     }

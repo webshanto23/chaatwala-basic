@@ -13,8 +13,3 @@ CREATE TABLE "StoreInventory" (
 CREATE UNIQUE INDEX "StoreInventory_storeId_productType_productId_key" ON "StoreInventory"("storeId", "productType", "productId");
 CREATE INDEX "StoreInventory_storeId_idx" ON "StoreInventory"("storeId");
 CREATE INDEX "StoreInventory_productId_idx" ON "StoreInventory"("productId");
-
--- Make existing dishes/drinks/combos global
-UPDATE "Dish" SET "storeId" = NULL WHERE "storeId" IS NOT NULL;
-UPDATE "Drink" SET "storeId" = NULL WHERE "storeId" IS NOT NULL;
-UPDATE "Combo" SET "storeId" = NULL WHERE "storeId" IS NOT NULL;

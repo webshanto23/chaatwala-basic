@@ -204,3 +204,16 @@
 - **What changed**: Added dedicated store manager dashboard with stats, store details, orders management, and inventory placeholder
 - **Why it changed**: Store managers need isolated workspace to manage their assigned store without admin/user access
 - **Impact**: New `/store-manager/*` route group; orders/products scoped by `storeId`; proxy redirects store managers away from admin/user routes
+
+### 2026-08-10 — Store Manager Inventory: Global Products + Per-Store Availability
+- **What changed**: Refactored inventory from store-scoped products to global products with per-store availability via `StoreInventory` model; removed store manager CRUD for dishes/drinks/combos; added table view with sortable columns and availability toggle
+- **Why it changed**: Multiple stores should share the same global menu; store managers only need to control which items are available in their store, not create separate products
+- **Impact**: 
+  - New `StoreInventory` model with unique constraint on `(storeId, productType, productId)`
+  - Migration `20260810000000_add_store_inventory` executed manually via `prisma db execute`
+  - All existing dishes/drinks made global (`storeId: null`)
+  - StoreInventory entries populated for all existing global items across all stores
+  - Store manager actions updated: `getStoreDishes/Drinks/Combos()` now fetch global items (`storeId: null`); new `getStoreInventory()` returns merged global items with per-store availability; new `toggleStoreItemAvailability()` server action
+  - Removed: `createStoreDish/Drink/Combo`, `updateStoreDish/Drink/Combo`, `deleteStoreDish/Drink/Combo`
+  - Inventory UI (`InventoryClient.tsx`) converted to table view with sortable columns (Name, Price, Status), search, and availability toggle buttons
+  - Build passes; tsconfig and lint clean for inventory files

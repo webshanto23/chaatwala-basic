@@ -3,6 +3,10 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { signUpSchema } from "@/lib/validations/auth";
+import { generateToken, hashToken } from "@/lib/crypto";
+import { sendVerificationEmail } from "@/lib/email";
+
+const VERIFY_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
 export async function registerUser(formData: FormData) {
   const rawData = {
@@ -28,6 +32,20 @@ export async function registerUser(formData: FormData) {
       roleId: userRole?.id,
     },
   });
+
+  const token = generateToken();
+  const hashedToken = await hashToken(token);
+  const expires = new Date(Date.now() + VERIFY_TOKEN_EXPIRY_MS);
+
+  await prisma.verificationToken.create({
+    data: {
+      identifier: user.email,
+      token: hashedToken,
+      expires,
+    },
+  });
+
+  await sendVerificationEmail(user.email, token);
 
   return { success: true, user: { id: user.id, email: user.email, name: user.name } };
 }

@@ -33,6 +33,7 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
@@ -52,6 +53,7 @@ export default function SignUp() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
       const formData = new FormData();
@@ -62,25 +64,15 @@ export default function SignUp() {
       const result = await registerUser(formData);
 
       if (result.success) {
-        const signInResult = await signIn("credentials", {
-          email,
-          password,
-          redirect: false,
-        });
-
-        if (signInResult?.error) {
-          setError("Account created, but auto sign-in failed. Please sign in manually.");
-          setIsLoading(false);
-          return;
-        }
-
-        router.push("/profile/dashboard");
+        setSuccess("Account created successfully. Please verify your email to continue.");
+        setName("");
+        setPassword("");
       } else {
         setError("Failed to create account");
-        setIsLoading(false);
       }
     } catch {
       setError("Something went wrong. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -122,8 +114,37 @@ export default function SignUp() {
                 {displayError}
               </p>
             )}
+            {success && (
+              <div className="space-y-3">
+                <p className="rounded-md border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-400">
+                  {success}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  We sent a verification link to <strong>{email}</strong>.
+                </p>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    className="w-full"
+                    size="sm"
+                    onClick={() => router.push("/verify-email")}
+                  >
+                    Verify Email
+                  </Button>
+                  <Button
+                    className="w-full"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open(`mailto:${email}`, "_blank")}
+                  >
+                    Open Mail App
+                  </Button>
+                </div>
+              </div>
+            )}
 
-            <form className="space-y-2" onSubmit={handleSubmit}>
+            {!success && (
+              <div>
+                <form className="space-y-2" onSubmit={handleSubmit}>
               <InputGroup>
                 <InputGroupInput
                   placeholder="Enter your name"
@@ -178,6 +199,8 @@ export default function SignUp() {
                 <XIcon data-icon="inline-start" />
               </Button>
             </div>
+            </div>
+          )}
           </div>
           <p className="text-muted-foreground text-sm">
             Already have an account?{" "}
