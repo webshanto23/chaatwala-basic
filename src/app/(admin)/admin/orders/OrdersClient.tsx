@@ -4,25 +4,40 @@ import { useState } from "react";
 import DataTable from "@/components/admin/data-table";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/admin/modals/Modal";
 import UserDetailsClient from "@/components/admin/modals/UserDetailsClient";
 import OrderDetailsClient from "@/components/admin/modals/OrderDetailsClient";
+import { getOrders } from "@/app/actions/rbac";
 
 type OrderRow = { userId: string; userName: string; orderId: string; status: string; total: string; transactionId: string };
 
-export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
+export function OrdersClient({ initialOrders, initialNextCursor }: { initialOrders: OrderRow[]; initialNextCursor?: string | null }) {
   const [query, setQuery] = useState("");
-  const [orders] = useState<OrderRow[]>(initialOrders);
+  const [orders, setOrders] = useState<OrderRow[]>(initialOrders);
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null | undefined>(initialNextCursor);
 
   const filtered = orders.filter((o) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
     return o.userName.toLowerCase().includes(q) || o.orderId.toLowerCase().includes(q) || o.status.toLowerCase().includes(q) || o.total.toLowerCase().includes(q) || o.transactionId.toLowerCase().includes(q);
   });
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    const result = await getOrders({ limit: 20, cursor: nextCursor });
+    if (!("error" in result) && result.orders) {
+      setOrders((prev) => [...prev, ...result.orders]);
+      setNextCursor(result.nextCursor);
+    }
+    setLoadingMore(false);
+  };
 
   const displayData = filtered.map((o) => ({
     userid: o.userName,
@@ -136,6 +151,14 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
           <div className="text-center text-muted-foreground py-8">No orders found.</div>
         )}
       </div>
+
+      {nextCursor && (
+        <div className="flex justify-center">
+          <Button onClick={loadMore} disabled={loadingMore} variant="outline">
+            {loadingMore ? "Loading..." : "Load More"}
+          </Button>
+        </div>
+      )}
 
       {selectedUserId && (
         <Modal open={userModalOpen} onOpenChange={setUserModalOpen} title="Customer Details">

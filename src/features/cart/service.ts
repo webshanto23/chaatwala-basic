@@ -1,6 +1,8 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { cookies } from "next/headers";
+import { findProduct, getEffectivePrice } from "@/lib/products";
+import type { ProductType } from "@/features/cart/types";
 
 const GUEST_COOKIE = "chaatwala_guest_id";
 
@@ -28,7 +30,7 @@ export async function getCart() {
       where: { userId },
       include: { items: { orderBy: { createdAt: "desc" } } },
     });
-    if (!cart) {
+    if (!cart || cart.userId !== userId) {
       cart = await prisma.cart.create({
         data: { userId },
         include: { items: true },
@@ -51,8 +53,44 @@ export async function getCart() {
   return cart;
 }
 
+async function verifyItemOwnership(itemId: string) {
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+
+  const item = await prisma.cartItem.findUnique({
+    where: { id: itemId },
+    include: {
+      cart: { select: { id: true, userId: true, guestId: true } },
+    },
+  });
+
+  if (!item) {
+    throw new Error("Cart item not found");
+  }
+
+  if (userId) {
+    if (item.cart.userId !== userId) {
+      throw new Error("Unauthorized: item does not belong to this user");
+    }
+  } else {
+    const guestId = await getGuestId();
+    if (item.cart.guestId !== guestId) {
+      throw new Error("Unauthorized: item does not belong to this user");
+    }
+  }
+
+  return item;
+}
+
 export async function addToCart(input: { productId: string; productType: string; quantity?: number }) {
   const cart = await getCart();
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+
+  if (userId && cart.userId !== userId) {
+    throw new Error("Unauthorized: cart does not belong to this user");
+  }
+
   const existing = cart.items.find(item => item.productId === input.productId);
 
   if (existing) {
@@ -61,15 +99,27 @@ export async function addToCart(input: { productId: string; productType: string;
       data: { quantity: existing.quantity + (input.quantity ?? 1) },
     });
   } else {
+    const validTypes: ProductType[] = ["dish", "drink", "combo"];
+    if (!validTypes.includes(input.productType as ProductType)) {
+      throw new Error("Invalid productType");
+    }
+
+    const product = await findProduct(input.productType as ProductType, input.productId);
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    const price = getEffectivePrice(product);
+
     await prisma.cartItem.create({
       data: {
         cartId: cart.id,
         productId: input.productId,
         productType: input.productType,
-        name: "Product",
-        price: 0,
+        name: product.name,
+        price,
         quantity: input.quantity ?? 1,
-        imageUrl: null,
+        imageUrl: product.imageUrl,
       },
     });
   }
@@ -78,6 +128,8 @@ export async function addToCart(input: { productId: string; productType: string;
 }
 
 export async function updateCartItem(itemId: string, quantity: number) {
+  await verifyItemOwnership(itemId);
+
   if (quantity <= 0) {
     await prisma.cartItem.delete({ where: { id: itemId } });
   } else {
@@ -87,6 +139,7 @@ export async function updateCartItem(itemId: string, quantity: number) {
 }
 
 export async function removeCartItem(itemId: string) {
+  await verifyItemOwnership(itemId);
   await prisma.cartItem.delete({ where: { id: itemId } });
   return getCart();
 }

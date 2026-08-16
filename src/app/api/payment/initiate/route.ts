@@ -49,9 +49,11 @@ export async function POST(request: Request) {
   }
 
   let storeId: string | null = null;
+  let shippingAddress: { fullName?: string; line1?: string; city?: string; postalCode?: string; country?: string } | null = null;
   try {
     const body = await request.json();
     storeId = body?.storeId ?? null;
+    shippingAddress = body?.shippingAddress ?? null;
   } catch {
     // body not available
   }
@@ -131,13 +133,13 @@ export async function POST(request: Request) {
     priceDishIds.length
       ? prisma.dish.findMany({
           where: { id: { in: priceDishIds } },
-          select: { id: true, price: true, imageUrl: true },
+          select: { id: true, price: true, discountPrice: true, imageUrl: true },
         })
       : Promise.resolve([]),
     priceDrinkIds.length
       ? prisma.drink.findMany({
           where: { id: { in: priceDrinkIds } },
-          select: { id: true, price: true, imageUrl: true },
+          select: { id: true, price: true, discountPrice: true, imageUrl: true },
         })
       : Promise.resolve([]),
     priceComboIds.length
@@ -155,7 +157,7 @@ export async function POST(request: Request) {
   const cachedPrices = new Map<string, { price: number; name: string; imageUrl: string | null }>();
 
   for (const item of cart.items) {
-    let dbProduct: { price: unknown; imageUrl: string | null } | undefined;
+    let dbProduct: { price: unknown; discountPrice?: unknown; imageUrl: string | null } | undefined;
     if (item.productType === "dish") {
       dbProduct = dishMap.get(item.productId);
     } else if (item.productType === "drink") {
@@ -171,16 +173,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const numericDbPrice = Number(dbProduct.price);
+    const effectiveDbPrice =
+      (item.productType === "dish" || item.productType === "drink") && dbProduct.discountPrice
+        ? Number(dbProduct.discountPrice)
+        : Number(dbProduct.price);
     const numericCartPrice = Number(item.price);
-    if (Math.abs(numericDbPrice - numericCartPrice) > 0.01) {
+    if (Math.abs(effectiveDbPrice - numericCartPrice) > 0.01) {
       return NextResponse.json(
         { error: `Price mismatch for ${item.name}. Please refresh your cart.` },
         { status: 400 }
       );
     }
     cachedPrices.set(item.id, {
-      price: numericDbPrice,
+      price: effectiveDbPrice,
       name: item.name,
       imageUrl: dbProduct.imageUrl,
     });
@@ -249,18 +254,12 @@ export async function POST(request: Request) {
   let shipPostcode = "";
   let shipCountry = "BD";
 
-  try {
-    const body = await request.json();
-    const addr = body.shippingAddress;
-    if (addr) {
-      shipFullName = addr.fullName ?? cusName;
-      shipLine1 = addr.line1 ?? "";
-      shipCity = addr.city ?? "";
-      shipPostcode = addr.postalCode ?? "";
-      shipCountry = addr.country ?? "BD";
-    }
-  } catch {
-    // body not available, use defaults
+  if (shippingAddress) {
+    shipFullName = shippingAddress.fullName ?? cusName;
+    shipLine1 = shippingAddress.line1 ?? "";
+    shipCity = shippingAddress.city ?? "";
+    shipPostcode = shippingAddress.postalCode ?? "";
+    shipCountry = shippingAddress.country ?? "BD";
   }
 
   const productNames = cart.items.map((item) => item.name).join(", ");

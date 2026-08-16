@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { auth } from "@/lib/auth";
+import { findProduct, getEffectivePrice } from "@/lib/products";
 
 const GUEST_COOKIE = "chaatwala_guest_id";
 
@@ -27,7 +29,7 @@ async function getOrCreateCart(userId?: string | null, guestId?: string | null) 
       where: { userId },
       include: { items: { orderBy: { createdAt: "desc" } } },
     });
-    if (!cart) {
+    if (!cart || cart.userId !== userId) {
       cart = await prisma.cart.create({
         data: { userId },
         include: { items: true },
@@ -71,40 +73,8 @@ function serializeCart(cart: Awaited<ReturnType<typeof getOrCreateCart>>) {
   };
 }
 
-async function findProduct(productType: string, productId: string) {
-  if (productType === "dish") {
-    return prisma.dish.findUnique({ where: { id: productId } });
-  }
-  if (productType === "drink") {
-    return prisma.drink.findUnique({ where: { id: productId } });
-  }
-  if (productType === "combo") {
-    return prisma.combo.findUnique({ where: { id: productId } });
-  }
-  return null;
-}
-
-function productName(product: unknown, productType: string) {
-  if (productType === "dish") return (product as { name: string }).name;
-  if (productType === "drink") return (product as { name: string }).name;
-  return (product as { name: string }).name;
-}
-
-function productPrice(product: unknown) {
-  const price = (product as { price: unknown }).price;
-  return typeof price === "object" && price !== null && "toNumber" in price
-    ? (price as { toNumber: () => number }).toNumber()
-    : Number(price);
-}
-
-function productImage(product: unknown, productType: string) {
-  if (productType === "dish") return (product as { imageUrl: string | null }).imageUrl ?? null;
-  if (productType === "drink") return (product as { imageUrl: string | null }).imageUrl ?? null;
-  return (product as { imageUrl: string | null }).imageUrl ?? null;
-}
-
-export async function DELETE() {
-  const session = await (await import("@/lib/auth")).auth();
+export async function DELETE(request: Request) {
+  const session = await auth();
   const rateLimitId = session?.user?.id ?? `ip:${getClientIp(new Request("http://localhost"))}`;
   const { success } = await checkRateLimit(rateLimitId, "medium");
   if (!success) {
@@ -121,8 +91,8 @@ export async function DELETE() {
   return NextResponse.json({ cart: serializeCart(updated!) });
 }
 
-export async function GET() {
-  const session = await (await import("@/lib/auth")).auth();
+export async function GET(request: Request) {
+  const session = await auth();
   const userId = session?.user?.id ?? null;
   const guestId = userId ? null : await getGuestId();
 
@@ -142,7 +112,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await (await import("@/lib/auth")).auth();
+    const session = await auth();
     const rateLimitId = session?.user?.id ?? `ip:${getClientIp(request)}`;
     const { success } = await checkRateLimit(rateLimitId, "medium");
     if (!success) {
@@ -165,12 +135,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid productType" }, { status: 400 });
     }
 
-    const product = await findProduct(productType, productId);
+    const product = await findProduct(productType as "dish" | "drink" | "combo", productId);
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    const numericPrice = productPrice(product);
+    const numericPrice = getEffectivePrice(product);
 
     const cart = await getOrCreateCart(session?.user?.id ?? null);
 
@@ -189,10 +159,10 @@ export async function POST(request: Request) {
           cartId: cart.id,
           productId,
           productType,
-          name: productName(product, productType),
+          name: product.name,
           price: numericPrice,
           quantity,
-          imageUrl: productImage(product, productType),
+          imageUrl: product.imageUrl,
         },
       });
     }
