@@ -7,5 +7,5 @@ export default async function AuditPage() {
   const result = await getAuditLogs({ limit: 20 });
   const logs = result.logs ?? [];
 
-  return <AuditClient initialLogs={logs} />;
+  return <AuditClient initialLogs={logs} initialNextCursor={result.nextCursor} />;
 }

@@ -10,7 +10,7 @@ type Drink = {
 
 export function DrinkGrid({ drinks }: { drinks: Drink[] }) {
   return (
-    <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+    <div className="flex gap-5 flex-wrap justify-center md:justify-start">
       {drinks.map((drink) => (
         <ProductCard
           key={drink.id}

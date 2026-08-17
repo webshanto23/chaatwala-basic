@@ -17,7 +17,7 @@
 */
 
 import { auth } from "@/lib/auth";
-import { can, canAny, type Permission } from "@/lib/permissions";
+import { can, canAny, type Permission, type RoleName } from "@/lib/permissions";
 import { NextResponse } from "next/server";
 import type { Session } from "next-auth";
 
@@ -25,20 +25,19 @@ type PermissionCheckInput = {
   permissions: Permission | Permission[];
 };
 
+type RoleCheckInput = {
+  role: RoleName | RoleName[];
+};
+
 export async function authorize(input: PermissionCheckInput) {
   const session = await auth();
 
-  // If there's no authenticated user, immediately return unauthorized.
   if (!session?.user) {
     return { authorized: false as const, session: null };
   }
 
-  // Normalize stored permissions (may be undefined) to an array.
   const permissions = (session.user.permissions as Permission[]) ?? [];
-
-  // Normalize required input into an array and check permissions.
   const required = Array.isArray(input.permissions) ? input.permissions : [input.permissions];
-  // Authorized if any required permission is present or user has the wildcard '*'.
   const authorized = canAny(permissions, required) || can(permissions, "*");
 
   return { authorized: authorized as boolean, session };
@@ -52,10 +51,39 @@ export async function requirePermission(
   permission: Permission | Permission[]
 ): Promise<{ authorized: true; session: Session } | { authorized: false; session: null }> {
   const result = await authorize({ permissions: permission });
-  // Enforce permission: return typed success with session on pass,
-  // or a clear failure shape on deny.
   if (!result.authorized || !result.session?.user) {
     return { authorized: false, session: null };
   }
   return { authorized: true, session: result.session };
+}
+
+export function getUserRole(session: Session | null): RoleName | null {
+  if (!session?.user?.role) {
+    return null;
+  }
+  return session.user.role as RoleName;
+}
+
+export async function authorizeRole(input: RoleCheckInput) {
+  const session = await auth();
+
+  if (!session?.user) {
+    return { authorized: false as const, session: null, role: null };
+  }
+
+  const role = getUserRole(session);
+  const required = Array.isArray(input.role) ? input.role : [input.role];
+  const authorized = role ? required.includes(role) : false;
+
+  return { authorized, session, role };
+}
+
+export async function requireRole(
+  role: RoleName | RoleName[]
+): Promise<{ authorized: true; session: Session; role: RoleName } | { authorized: false; session: null; role: null }> {
+  const result = await authorizeRole({ role });
+  if (!result.authorized || !result.session?.user) {
+    return { authorized: false, session: null, role: null };
+  }
+  return { authorized: true, session: result.session, role: result.role! };
 }

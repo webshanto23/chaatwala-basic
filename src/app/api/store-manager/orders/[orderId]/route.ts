@@ -1,19 +1,26 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
-import { getSession } from "@/features/auth/service";
-import { can } from "@/lib/permissions";
+import { requireRole, authorize, unauthorizedResponse } from "@/lib/authorize";
+import { getUserRole } from "@/lib/authorize";
 import prisma from "@/lib/prisma";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
-  const { orderId } = await params;
-  const session = await getSession();
-  if (!session?.user?.permissions) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { authorized, session } = await requireRole(["admin", "store_manager"]);
+  if (!authorized || !session?.user) {
+    return unauthorizedResponse("You do not have permission to view orders");
   }
 
-  if (!can(session.user.permissions, "order:view")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const role = getUserRole(session);
+  if (role !== "admin" && role !== "store_manager") {
+    return unauthorizedResponse("You do not have permission to view orders");
   }
+
+  const { authorized: permAuthorized } = await authorize({ permissions: ["order:view"] });
+  if (!permAuthorized) {
+    return unauthorizedResponse("You do not have permission to view orders");
+  }
+
+  const { orderId } = await params;
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },

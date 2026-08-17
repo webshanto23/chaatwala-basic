@@ -1,18 +1,18 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/features/auth/service";
-import { can } from "@/lib/permissions";
+import { getUserRole } from "@/lib/authorize";
 import prisma from "@/lib/prisma";
 import StoreManagerShell from "@/components/store-manager/store-manager-shell";
 
 export default async function StoreManagerLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
-  if (!session?.user?.permissions) {
-    redirect("/");
+  if (!session?.user) {
+    redirect("/sign-in");
   }
 
-  const isStoreManager = can(session.user.permissions, "store:view");
-  if (!isStoreManager) {
-    redirect("/");
+  const role = getUserRole(session);
+  if (role !== "admin" && role !== "store_manager") {
+    redirect("/access-denied");
   }
 
   const user = await prisma.user.findUnique({
@@ -21,7 +21,7 @@ export default async function StoreManagerLayout({ children }: { children: React
   });
 
   if (!user?.managedStore) {
-    redirect("/");
+    redirect("/access-denied");
   }
 
   return <StoreManagerShell storeId={user.managedStore.id}>{children}</StoreManagerShell>;

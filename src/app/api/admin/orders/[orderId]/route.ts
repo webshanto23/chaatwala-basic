@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
-import { authorize, unauthorizedResponse } from "@/lib/authorize";
+import { requireRole, authorize, unauthorizedResponse } from "@/lib/authorize";
 import prisma from "@/lib/prisma";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ orderId: string }> }) {
-  const { authorized } = await authorize({ permissions: ["admin:access"] });
+  const { authorized: roleAuthorized } = await requireRole("admin");
+  if (!roleAuthorized) {
+    return unauthorizedResponse("You do not have permission to view orders");
+  }
 
+  const { authorized } = await authorize({ permissions: ["order:view"] });
   if (!authorized) {
     return unauthorizedResponse("You do not have permission to view orders");
   }

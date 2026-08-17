@@ -28,11 +28,6 @@ export async function PopularDrinks() {
           </div>
 
           {/* Right side */}
-          <div className="w-full lg:w-auto">
-            <button className="w-full lg:w-auto rounded-full border border-border/70 bg-background px-4 py-2 text-sm text-foreground transition hover:border-primary hover:text-primary">
-              View all
-            </button>
-          </div>
         </div>
 
         {/* Grid */}

@@ -21,8 +21,8 @@ type Product = {
 export default function ProductDetailClient({ product }: { product: Product }) {
   const { addItem } = useCart();
   const { auth } = useAuth();
-  const isAdmin = auth.permissions.includes("admin:access");
-  const isStoreManager = auth.permissions.includes("store:view");
+  const isAdmin = auth.role === "admin";
+  const isStoreManager = auth.role === "store_manager";
   const disableCart = isAdmin || isStoreManager;
 
   const { data, type } = product;

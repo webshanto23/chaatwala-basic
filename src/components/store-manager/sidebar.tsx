@@ -11,11 +11,15 @@ const links = [
   { name: "Menu / Inventory Management", href: "/store-manager/inventory" },
 ];
 
-export default function StoreManagerSidebar({ storeId: _storeId }: { storeId: string }) {
+export default function StoreManagerSidebar({
+  storeId: _storeId,
+}: {
+  storeId: string;
+}) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r bg-card p-4">
+    <section className=" h-full w-64 border-r bg-card p-4">
       <h2 className="mb-6 text-xl font-bold text-primary">Store Manager</h2>
 
       <nav className="flex-1 space-y-2">
@@ -34,6 +38,20 @@ export default function StoreManagerSidebar({ storeId: _storeId }: { storeId: st
           </Link>
         ))}
       </nav>
-    </aside>
+      <div>
+        <h2 className="mb-6 text-xl font-bold text-primary">Settings</h2>
+        <Link
+          href="/store-manager/settings"
+          className={cn(
+            "block rounded-md px-3 py-2 text-sm transition-colors",
+            pathname === "/store-manager/settings"
+              ? "bg-primary font-medium text-primary-foreground"
+              : "text-foreground hover:bg-muted",
+          )}
+        >
+          Settings
+        </Link>
+      </div>
+    </section>
   );
 }

@@ -9,17 +9,32 @@ import type { Prisma } from "@prisma/client";
 
 type AuditLog = { id: string; action: string; entity: string; entityId: string | null; metadata: Prisma.JsonValue | null; createdAt: Date; user: { name: string | null; email: string | null } | null };
 
-export function AuditClient({ initialLogs }: { initialLogs: AuditLog[] }) {
+export function AuditClient({ initialLogs, initialNextCursor }: { initialLogs: AuditLog[]; initialNextCursor?: string | null }) {
   const [logs, setLogs] = useState<AuditLog[]>(initialLogs);
   const [actionFilter, setActionFilter] = useState("");
   const [entityFilter, setEntityFilter] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null | undefined>(initialNextCursor);
 
   const loadLogs = async () => {
     setLoading(true);
+    setNextCursor(null);
     const result = await getAuditLogs({ action: actionFilter || undefined, entity: entityFilter || undefined, limit: 20 });
     if (!("error" in result) && result.logs) setLogs(result.logs);
+    setNextCursor(result.nextCursor);
     setLoading(false);
+  };
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    const result = await getAuditLogs({ action: actionFilter || undefined, entity: entityFilter || undefined, limit: 20, cursor: nextCursor });
+    if (!("error" in result) && result.logs) {
+      setLogs((prev) => [...prev, ...result.logs]);
+      setNextCursor(result.nextCursor);
+    }
+    setLoadingMore(false);
   };
 
   return (
@@ -69,6 +84,14 @@ export function AuditClient({ initialLogs }: { initialLogs: AuditLog[] }) {
           )}
         </CardContent>
       </Card>
+
+      {nextCursor && (
+        <div className="flex justify-center">
+          <Button onClick={loadMore} disabled={loadingMore} variant="outline">
+            {loadingMore ? "Loading..." : "Load More"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

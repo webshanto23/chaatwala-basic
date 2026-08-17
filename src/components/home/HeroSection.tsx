@@ -1,12 +1,25 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { StoreButton } from "@/components/home/StoreButton";
+import {
+  getPublicStoresInfo,
+  getStoreAvailabilities,
+} from "@/features/stores/service";
 
-export function HeroSection() {
+export async function HeroSection() {
+  const [stores, availabilities] = await Promise.all([
+    getPublicStoresInfo(),
+    getStoreAvailabilities(),
+  ]);
+
+  const availabilityMap = new Map(availabilities.map((a) => [a.id, a.isOpen]));
+  const storesWithAvailability = stores.map((s) => ({
+    ...s,
+    isOpen: availabilityMap.get(s.id) ?? true,
+  }));
   return (
     <section className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 `bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.18),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.12),transparent_25%)]`" />
@@ -80,29 +93,19 @@ export function HeroSection() {
               </div>
 
               <div className="space-y-4 p-5">
-                <div className="flex items-center justify-between rounded-3xl bg-primary/10 px-4 py-3 text-sm text-primary shadow-inner shadow-primary/10">
-                  <div>
+                <div className="flex items-center justify-center rounded-3xl bg-primary/10 px-4 py-3 text-sm text-primary shadow-inner shadow-primary/10">
+                  <div className="space-y-1 text-center">
                     <p className="font-semibold">Authentic Foods</p>
                     <p className="text-xs text-muted-foreground">
                       Industry-leading chefs and recipes curated for you!
                     </p>
                   </div>
-                  <Sparkles className="h-5 w-5" />
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Badge
-                    variant="spicy"
-                    className="rounded-full px-4 py-2 text-sm shadow"
-                  >
-                    Spicy & Flavorful
-                  </Badge>
-                  <Badge
-                    variant="new"
-                    className="rounded-full px-4 py-2 text-sm shadow"
-                  >
-                    Fresh Today
-                  </Badge>
+                  {storesWithAvailability.map((store) => (
+                    <StoreButton key={store.id} store={store} />
+                  ))}
                 </div>
               </div>
             </div>

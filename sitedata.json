@@ -528,15 +528,15 @@
       },
       {
         "name": "Dishes",
-        "href": "/admin/dishes"
+        "href": "/admin/products/dishes"
       },
       {
         "name": "Drinks",
-        "href": "/admin/drinks"
+        "href": "/admin/products/drinks"
       },
       {
         "name": "Combos",
-        "href": "/admin/combos"
+        "href": "/admin/products/combos"
       }
     ],
     "adminLinks": [

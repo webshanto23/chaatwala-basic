@@ -27,7 +27,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { auth } = useAuth();
-  const isAdmin = auth.permissions.includes("admin:access");
+  const isAdmin = auth.role === "admin";
 
   const refresh = useCallback(async () => {
     if (isAdmin) {

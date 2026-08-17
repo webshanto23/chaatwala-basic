@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -9,11 +10,10 @@ import { Lock } from "lucide-react";
 import { DecorIcon } from "@/components/ui/decor-icon";
 import { Logo } from "@/components/shared/footer/logo";
 import { changePassword } from "@/app/actions/password";
-import { useSession } from "next-auth/react";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
-  const { status } = useSession();
+  const { data: session } = useSession();
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -21,10 +21,12 @@ export default function ChangePasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  if (status === "unauthenticated") {
-    router.replace("/sign-in");
-    return null;
-  }
+  const getTargetDashboard = () => {
+    const role = session?.user?.role;
+    if (role === "admin") return "/admin/dashboard";
+    if (role === "store_manager") return "/store-manager/dashboard";
+    return "/profile/dashboard";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +44,7 @@ export default function ChangePasswordPage() {
       setSuccess(result.message || "Password changed successfully.");
       setCurrentPassword("");
       setNewPassword("");
-      setTimeout(() => router.push("/profile/dashboard"), 2000);
+      setTimeout(() => router.push(getTargetDashboard()), 2000);
     } else {
       setError(result.error || "Something went wrong. Please try again.");
     }

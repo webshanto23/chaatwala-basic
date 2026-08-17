@@ -31,6 +31,7 @@ declare module "@auth/core/jwt" {
     id: string;
     role: UserRole;
     permissions: Permission[];
+    sessionVersion: number;
   }
 }
 
@@ -109,7 +110,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const { role, permissions } = await loadUserPermissions(user.id);
         token.role = role;
         token.permissions = permissions;
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { sessionVersion: true },
+        });
+        token.sessionVersion = dbUser?.sessionVersion ?? 0;
+      } else if (token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { sessionVersion: true },
+        });
+
+        const dbVersion = dbUser?.sessionVersion ?? 0;
+        const tokenVersion = (token.sessionVersion as number) ?? 0;
+
+        if (dbVersion !== tokenVersion) {
+          const { role, permissions } = await loadUserPermissions(token.id);
+          token.role = role;
+          token.permissions = permissions;
+          token.sessionVersion = dbVersion;
+        }
       }
+
       return token;
     },
     async session({ session, token }) {

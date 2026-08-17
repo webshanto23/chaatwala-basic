@@ -23,11 +23,11 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 export default function Navbar() {
   const router = useRouter();
   const { auth, logout } = useAuth();
-  const { can } = usePermissions();
+  const { role } = usePermissions();
   const { totalItems, clear } = useCart();
   const isLoggedIn = auth.isAuthenticated;
-  const isAdmin = can("admin:access");
-  const isStoreManager = can("store:view") && !isAdmin;
+  const isAdmin = role === "admin";
+  const isStoreManager = role === "store_manager";
 
   useEffect(() => {
     if (isAdmin) {

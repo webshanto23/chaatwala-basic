@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useCallback, useMemo, useState } from "react";
 import { SessionProvider, signIn, signOut, useSession } from "next-auth/react";
+import type { Session } from "next-auth";
 import type { RoleName } from "@/lib/permissions";
 
 type AuthRole = RoleName | null;
@@ -21,9 +22,14 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+type AuthProviderProps = {
+  children: React.ReactNode;
+  initialSession: Session | null;
+};
+
+export function AuthProvider({ children, initialSession }: AuthProviderProps) {
   return (
-    <SessionProvider>
+    <SessionProvider session={initialSession ?? undefined}>
       <InnerAuthProvider>{children}</InnerAuthProvider>
     </SessionProvider>
   );

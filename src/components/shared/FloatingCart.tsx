@@ -10,8 +10,8 @@ import { useAuth } from "@/contexts/auth-context"
 export function FloatingCart() {
   const { cart, totalItems, total, updateQuantity, removeItem } = useCart();
   const { auth } = useAuth();
-  const isAdmin = auth.permissions.includes("admin:access");
-  const isStoreManager = auth.permissions.includes("store:view");
+  const isAdmin = auth.role === "admin";
+  const isStoreManager = auth.role === "store_manager";
 
   if (isAdmin || isStoreManager) return null;
 

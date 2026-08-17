@@ -21,8 +21,8 @@ export function ComboCard({ combo }: { combo: Combo }) {
   const discount = Math.round((1 - combo.price / combo.originalPrice) * 100)
   const { addItem } = useCart();
   const { auth } = useAuth();
-  const isAdmin = auth.permissions.includes("admin:access");
-  const isStoreManager = auth.permissions.includes("store:view");
+  const isAdmin = auth.role === "admin";
+  const isStoreManager = auth.role === "store_manager";
   const disableCart = isAdmin || isStoreManager;
 
   return (

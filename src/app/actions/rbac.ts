@@ -1,15 +1,18 @@
 "use server";
 
-import { authorize, requirePermission } from "@/lib/authorize";
+import { authorize, requirePermission, requireRole } from "@/lib/authorize";
 import { unstable_cache, revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { logAction } from "./audit";
 
-export async function getUsers() {
+export async function getUsers(filters?: { limit?: number; cursor?: string }) {
   const { authorized } = await authorize({ permissions: ["user:view"] });
   if (!authorized) {
     return { error: "Forbidden" };
   }
+
+  const take = filters?.limit ?? 20;
+  const cursor = filters?.cursor ? { id: filters.cursor } : undefined;
 
   const [users, roles] = await Promise.all([
     unstable_cache(
@@ -17,9 +20,11 @@ export async function getUsers() {
         return prisma.user.findMany({
           select: { id: true, name: true, email: true, roleId: true, createdAt: true },
           orderBy: { createdAt: "desc" },
+          take,
+          ...(cursor ? { skip: 1, cursor } : {}),
         });
       },
-      ["admin-users"],
+      ["admin-users", String(take), filters?.cursor ?? "start"],
       { revalidate: 60, tags: ["users"] }
     )(),
     unstable_cache(
@@ -31,7 +36,9 @@ export async function getUsers() {
     )(),
   ]);
 
-  return { users, roles };
+  const nextCursor = users.length === take ? users[users.length - 1].id : null;
+
+  return { users, roles, nextCursor };
 }
 
 export async function getDishes() {
@@ -67,6 +74,11 @@ export async function updateUserRole(formData: FormData) {
   await prisma.user.update({
     where: { id: userId },
     data: { roleId },
+  });
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { sessionVersion: { increment: 1 } },
   });
 
   await logAction({
@@ -168,6 +180,11 @@ export async function assignPermissionToRole(formData: FormData) {
     data: { roleId, permissionId },
   });
 
+  await prisma.user.updateMany({
+    where: { roleId },
+    data: { sessionVersion: { increment: 1 } },
+  });
+
   await logAction({
     userId: session.user.id,
     action: "PERMISSION_ASSIGN",
@@ -193,6 +210,11 @@ export async function removePermissionFromRole(formData: FormData) {
     where: { roleId_permissionId: { roleId, permissionId } },
   });
 
+  await prisma.user.updateMany({
+    where: { roleId },
+    data: { sessionVersion: { increment: 1 } },
+  });
+
   await logAction({
     userId: session.user.id,
     action: "PERMISSION_REMOVE",
@@ -208,7 +230,12 @@ export async function removePermissionFromRole(formData: FormData) {
 }
 
 export async function getOrders(filters?: { status?: string; limit?: number; cursor?: string }) {
-  const { authorized } = await authorize({ permissions: ["admin:access"] });
+  const { authorized: roleAuthorized } = await requireRole("admin");
+  if (!roleAuthorized) {
+    return { error: "Forbidden" };
+  }
+
+  const { authorized } = await authorize({ permissions: ["order:view"] });
   if (!authorized) {
     return { error: "Forbidden" };
   }

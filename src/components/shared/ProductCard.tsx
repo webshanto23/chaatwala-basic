@@ -34,7 +34,7 @@ export function ProductCard({
 }: ProductCardProps) {
   return (
     <div
-      className={`shrink-0 w-56 rounded-[2rem] border border-border/70 bg-linear-to-br from-card to-primary/5 shadow-xl shadow-primary/10 transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl snap-start group ${
+      className={`shrink-0 w-56 rounded-[2rem] border border-border/70 shadow-xl shadow-primary/10 transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl snap-start group ${
         className ?? ""
       }`}
     >

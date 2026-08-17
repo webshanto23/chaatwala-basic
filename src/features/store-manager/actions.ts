@@ -1,6 +1,6 @@
 "use server";
 
-import { authorize } from "@/lib/authorize";
+import { authorize, requireRole } from "@/lib/authorize";
 import { unstable_cache, revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { logAction } from "@/app/actions/audit";
@@ -26,6 +26,9 @@ export type OrderRow = {
 };
 
 export async function getMyStore() {
+  const { authorized: roleAuthorized } = await requireRole(["admin", "store_manager"]);
+  if (!roleAuthorized) return { error: "Forbidden" };
+
   const { authorized, session } = await authorize({ permissions: ["store:view"] });
   if (!authorized || !session?.user) return { error: "Forbidden" };
 
@@ -51,6 +54,9 @@ export async function getMyStore() {
 }
 
 export async function getStoreDashboardStats() {
+  const { authorized: roleAuthorized } = await requireRole(["admin", "store_manager"]);
+  if (!roleAuthorized) return { error: "Forbidden" };
+
   const { authorized, session } = await authorize({ permissions: ["store:view"] });
   if (!authorized || !session?.user) return { error: "Forbidden" };
 
@@ -139,6 +145,9 @@ export async function getStoreDashboardStats() {
 }
 
 export async function getStoreOrders(filters?: { status?: string; limit?: number; cursor?: string }): Promise<{ orders: OrderRow[]; nextCursor: string | null } | { error: string }> {
+  const { authorized: roleAuthorized } = await requireRole(["admin", "store_manager"]);
+  if (!roleAuthorized) return { error: "Forbidden" };
+
   const { authorized, session } = await authorize({ permissions: ["order:view"] });
   if (!authorized || !session?.user) return { error: "Forbidden" };
 
@@ -202,6 +211,9 @@ export async function getStoreOrders(filters?: { status?: string; limit?: number
 }
 
 export async function updateStoreOrderStatus(orderId: string, status: string) {
+  const { authorized: roleAuthorized } = await requireRole(["admin", "store_manager"]);
+  if (!roleAuthorized) return { error: "Forbidden" };
+
   const { authorized, session } = await authorize({ permissions: ["order:update"] });
   if (!authorized || !session?.user) return { error: "Forbidden" };
 
@@ -329,6 +341,9 @@ async function getManagedStoreId(sessionUserId: string) {
 // ─── Global items ─────────────────────────────────────────────────────────────
 
 export async function getStoreDishes() {
+  const { authorized: roleAuthorized } = await requireRole(["admin", "store_manager"]);
+  if (!roleAuthorized) return { error: "Forbidden" };
+
   const { authorized, session } = await authorize({ permissions: ["food:view"] });
   if (!authorized || !session?.user) return { error: "Forbidden" };
 
@@ -361,6 +376,9 @@ export async function getStoreDishes() {
 }
 
 export async function getStoreDrinks() {
+  const { authorized: roleAuthorized } = await requireRole(["admin", "store_manager"]);
+  if (!roleAuthorized) return { error: "Forbidden" };
+
   const { authorized, session } = await authorize({ permissions: ["food:view"] });
   if (!authorized || !session?.user) return { error: "Forbidden" };
 
@@ -393,6 +411,9 @@ export async function getStoreDrinks() {
 }
 
 export async function getStoreCombos() {
+  const { authorized: roleAuthorized } = await requireRole(["admin", "store_manager"]);
+  if (!roleAuthorized) return { error: "Forbidden" };
+
   const { authorized, session } = await authorize({ permissions: ["food:view"] });
   if (!authorized || !session?.user) return { error: "Forbidden" };
 
@@ -427,6 +448,9 @@ export async function getStoreCombos() {
 // ─── StoreInventory (per-store availability) ──────────────────────────────────
 
 export async function getStoreInventory() {
+  const { authorized: roleAuthorized } = await requireRole(["admin", "store_manager"]);
+  if (!roleAuthorized) return { error: "Forbidden" };
+
   const { authorized, session } = await authorize({ permissions: ["food:view"] });
   if (!authorized || !session?.user) return { error: "Forbidden" };
 
@@ -477,6 +501,9 @@ export async function getStoreInventory() {
 }
 
 export async function toggleStoreItemAvailability(productType: "dish" | "drink" | "combo", productId: string, isAvailable: boolean) {
+  const { authorized: roleAuthorized } = await requireRole(["admin", "store_manager"]);
+  if (!roleAuthorized) return { error: "Forbidden" };
+
   const { authorized, session } = await authorize({ permissions: ["food:update"] });
   if (!authorized || !session?.user) return { error: "Forbidden" };
 

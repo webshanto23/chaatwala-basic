@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,46 +17,42 @@ type SearchItem = {
 };
 
 const CLIENT_CACHE_TTL = 60 * 1000;
-const DEBOUNCE_MS = 350;
 
 export function SearchBar() {
-  const { can } = usePermissions();
-  const isAdmin = can("admin:access");
-  const isStoreManager = can("store:view");
+  const { role } = usePermissions();
+  const isAdmin = role === "admin";
+  const isStoreManager = role === "store_manager";
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [popularTags, setPopularTags] = useState<string[]>([]);
-  const [isLoadingPopular, setIsLoadingPopular] = useState(true);
 
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortController = useRef<AbortController | null>(null);
   const clientCache = useRef(
     new Map<string, { data: SearchItem[]; timestamp: number }>(),
   );
+  // Popular searches are fetched from the server and cached in the component state. The search results are also cached in a Map to avoid unnecessary network requests for the same query within a short time frame. The search input is debounced to prevent excessive API calls while typing.
+  // useEffect(() => {
+  //   let cancelled = false;
 
-  useEffect(() => {
-    let cancelled = false;
+  //   fetch("/api/search/popular")
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       if (!cancelled && Array.isArray(data.tags)) {
+  //         setPopularTags(data.tags);
+  //       }
+  //     })
+  //     .catch(() => {
+  //       if (!cancelled) setPopularTags([]);
+  //     })
+  //     .finally(() => {
+  //       if (!cancelled) setIsLoadingPopular(false);
+  //     });
 
-    fetch("/api/search/popular")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!cancelled && Array.isArray(data.tags)) {
-          setPopularTags(data.tags);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setPopularTags([]);
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingPopular(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, []);
 
   const searchProducts = useCallback(async (searchQuery: string) => {
     const trimmed = searchQuery.trim();
@@ -113,32 +109,9 @@ export function SearchBar() {
     }
   }, []);
 
-  useEffect(() => {
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-
-    debounceTimer.current = setTimeout(() => {
-      searchProducts(query);
-    }, DEBOUNCE_MS);
-
-    return () => {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-      if (abortController.current) {
-        abortController.current.abort();
-      }
-    };
+  const handleSearch = useCallback(() => {
+    searchProducts(query);
   }, [query, searchProducts]);
-
-  useEffect(() => {
-    return () => {
-      if (abortController.current) {
-        abortController.current.abort();
-      }
-    };
-  }, []);
 
   const hasResults = useMemo(() => query.trim().length > 0, [query]);
 
@@ -147,7 +120,7 @@ export function SearchBar() {
   return (
     <div className="flex flex-col items-center justify-center bg-linear-to-r from-primary/10 via-secondary/10 to-accent/10 px-4 py-8 sm:px-6 lg:px-8">
       <div className="w-full max-w-3xl">
-          <div className="rounded-[2rem] border border-border/80 bg-card/90 p-6 shadow-xl shadow-primary/10 backdrop-blur-xl sm:p-8">
+        <div className="rounded-[2rem] border border-border/80 bg-card/90 p-6 shadow-xl shadow-primary/10 backdrop-blur-xl sm:p-8">
           <div className="mb-4 text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.35em] text-secondary">
               Good afternoon!
@@ -165,12 +138,19 @@ export function SearchBar() {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  handleSearch();
+                }
+              }}
               placeholder="Search dishes, drinks, combos..."
               className="flex-1 rounded-l-full border-none bg-transparent px-5 py-4 text-sm placeholder:text-muted-foreground focus-visible:ring-0"
             />
             <Button
               className="rounded-r-full px-6 py-4"
               type="button"
+              onClick={handleSearch}
               disabled={isLoading}
             >
               <Search className="mr-2 h-4 w-4" />
@@ -178,7 +158,7 @@ export function SearchBar() {
             </Button>
           </Field>
 
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
+          {/* <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
             <span className="font-medium text-foreground">
               Popular searches:
             </span>
@@ -199,7 +179,7 @@ export function SearchBar() {
                     {tag}
                   </button>
                 ))}
-          </div>
+          </div> */}
 
           {error && (
             <p className="mt-4 text-center text-sm text-red-500">{error}</p>

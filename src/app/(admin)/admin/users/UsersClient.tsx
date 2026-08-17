@@ -5,16 +5,18 @@ import { usePermissions } from "@/hooks/use-can";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { updateUserRole, deleteUser } from "@/app/actions/rbac";
+import { updateUserRole, deleteUser, getUsers } from "@/app/actions/rbac";
 
 type UserRow = { id: string; name: string | null; email: string; roleId: string | null; createdAt: string | Date };
 type RoleOption = { id: string; name: string };
 
-export function UsersClient({ initialUsers, initialRoles }: { initialUsers: UserRow[]; initialRoles: RoleOption[] }) {
+export function UsersClient({ initialUsers, initialRoles, initialNextCursor }: { initialUsers: UserRow[]; initialRoles: RoleOption[]; initialNextCursor?: string | null }) {
   const [query, setQuery] = useState("");
   const [users, setUsers] = useState<UserRow[]>(initialUsers);
   const [roles] = useState<RoleOption[]>(initialRoles);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null | undefined>(initialNextCursor);
   const { can } = usePermissions();
   const canDeleteUser = can("user:delete");
 
@@ -23,6 +25,17 @@ export function UsersClient({ initialUsers, initialRoles }: { initialUsers: User
     if (!q) return true;
     return (u.name ?? "").toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || roles.find((r) => r.id === u.roleId)?.name.toLowerCase().includes(q);
   });
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    const result = await getUsers({ limit: 20, cursor: nextCursor });
+    if (!("error" in result) && result.users) {
+      setUsers((prev) => [...prev, ...result.users]);
+      setNextCursor(result.nextCursor);
+    }
+    setLoadingMore(false);
+  };
 
   const handleDelete = async (userId: string) => {
     if (!confirm("Delete this user? This cannot be undone.")) return;
@@ -77,6 +90,14 @@ export function UsersClient({ initialUsers, initialRoles }: { initialUsers: User
           </table>
         </CardContent>
       </Card>
+
+      {nextCursor && (
+        <div className="flex justify-center">
+          <Button onClick={loadMore} disabled={loadingMore} variant="outline">
+            {loadingMore ? "Loading..." : "Load More"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

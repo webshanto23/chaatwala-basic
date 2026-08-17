@@ -10,7 +10,7 @@ type Dish = {
 
 export function DishGrid({ dishes }: { dishes: Dish[] }) {
   return (
-    <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+    <div className="flex gap-5 flex-wrap justify-center sm:justify-start">
       {dishes.map((dish) => (
         <ProductCard
           key={dish.id}

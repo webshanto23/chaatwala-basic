@@ -33,44 +33,62 @@ export default function Sidebar() {
       <h2 className="mb-6 text-xl font-bold text-primary">Admin Panel</h2>
 
       <nav className="flex-1 space-y-2">
-        {links.map((link) => (
+        <div>
+          {links.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+              className={cn(
+                "block rounded-md px-3 py-2 text-sm transition-colors",
+                pathname === link.href
+                  ? "bg-primary font-medium text-primary-foreground"
+                  : "text-foreground hover:bg-muted",
+              )}
+            >
+              {link.name}
+            </Link>
+          ))}
+        </div>
+        {/* Settings for admin */}
+        <div>
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Settings</h2>
           <Link
-            key={link.name}
-            href={link.href}
+            href="/admin/settings"
             className={cn(
               "block rounded-md px-3 py-2 text-sm transition-colors",
-              pathname === link.href
+              pathname === "/admin/settings"
                 ? "bg-primary font-medium text-primary-foreground"
                 : "text-foreground hover:bg-muted",
             )}
           >
-            {link.name}
+            Settings
           </Link>
-        ))}
-
-        <h2 className="mb-6 text-xl font-bold text-primary">Public View</h2>
-        <Link
-          href="/"
-          className={cn(
-            "block rounded-md px-3 py-2 text-sm transition-colors",
-            pathname === "/"
-              ? "bg-primary font-medium text-primary-foreground"
-              : "text-foreground hover:bg-muted",
-          )}
-        >
-          Home
-        </Link>
-        <Link
-          href="/products/dishes"
-          className={cn(
-            "block rounded-md px-3 py-2 text-sm transition-colors",
-            pathname === "/"
-              ? "bg-primary font-medium text-primary-foreground"
-              : "text-foreground hover:bg-muted",
-          )}
-        >
-          Products
-        </Link>
+        </div>
+        <div>
+          <h2 className="mb-6 text-xl font-bold text-primary">Public View</h2>
+          <Link
+            href="/"
+            className={cn(
+              "block rounded-md px-3 py-2 text-sm transition-colors",
+              pathname === "/"
+                ? "bg-primary font-medium text-primary-foreground"
+                : "text-foreground hover:bg-muted",
+            )}
+          >
+            Home
+          </Link>
+          <Link
+            href="/products/dishes"
+            className={cn(
+              "block rounded-md px-3 py-2 text-sm transition-colors",
+              pathname === "/products/dishes"
+                ? "bg-primary font-medium text-primary-foreground"
+                : "text-foreground hover:bg-muted",
+            )}
+          >
+            Products
+          </Link>
+        </div>
       </nav>
 
       <button

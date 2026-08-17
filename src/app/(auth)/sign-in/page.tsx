@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
-import { usePermissions } from "@/hooks/use-can";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +23,6 @@ export default function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
-  const { can } = usePermissions();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,10 +33,19 @@ export default function SignIn() {
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      const target = can("admin:access") ? "/admin/dashboard" : (redirectFrom === "/cart" ? "/cart" : "/profile/dashboard");
-      router.replace(target);
+      const role = session.user.role;
+      const isAdmin = role === "admin";
+      const isStoreManager = role === "store_manager";
+
+      if (isAdmin) {
+        router.replace("/admin/dashboard");
+      } else if (isStoreManager) {
+        router.replace("/store-manager/dashboard");
+      } else {
+        router.replace(redirectFrom === "/cart" ? "/cart" : "/profile/dashboard");
+      }
     }
-  }, [status, session, router, can, redirectFrom]);
+  }, [status, session, router, redirectFrom]);
 
   const errorFromUrl = searchParams.get("error");
   const verifiedFromUrl = searchParams.get("verified");
@@ -65,12 +72,12 @@ export default function SignIn() {
       return;
     }
 
-    router.push(redirectFrom);
+    setIsLoading(false);
   };
 
   const handleOAuthSignIn = async (provider: string) => {
     router.replace("/sign-in");
-    await signIn(provider, { callbackUrl: redirectFrom });
+    await signIn(provider);
   };
 
   return (

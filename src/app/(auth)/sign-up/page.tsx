@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
-import { usePermissions } from "@/hooks/use-can";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +25,6 @@ export default function SignUp() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
-  const { can } = usePermissions();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -37,13 +35,16 @@ export default function SignUp() {
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      if (can("admin:access")) {
+      const role = session.user.role;
+      if (role === "admin") {
         router.replace("/admin/dashboard");
+      } else if (role === "store_manager") {
+        router.replace("/store-manager/dashboard");
       } else {
         router.replace("/profile/dashboard");
       }
     }
-  }, [status, session, router, can]);
+  }, [status, session, router]);
 
   const errorFromUrl = searchParams.get("error");
   const urlError = errorFromUrl ? (errorFromUrl === "CredentialsSignin" ? "Invalid email or password" : "Login failed, please try again") : null;

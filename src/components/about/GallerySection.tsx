@@ -1,15 +1,14 @@
-"use client"
+"use client";
 
-import data from "../../../sitedata.json"
-import { Button } from "@/components/ui/button"
-import Image from "next/image"
+import data from "../../../sitedata.json";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
-const galleryImages = data.about.gallery.images
-
+const galleryImages = data.about.gallery.images;
 
 export function GallerySection() {
   return (
-    <section className="px-4 sm:px-6 lg:px-8 py-12 bg-gradient-to-br from-secondary/5 via-background to-primary/10">
+    <section className="px-4 sm:px-6 lg:px-8 py-12 mx-auto max-w-7xl">
       <div className="mx-auto max-w-7xl rounded-[2rem] border border-border/70 bg-card/95 p-8 shadow-xl shadow-secondary/10">
         <div className="text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
@@ -22,8 +21,8 @@ export function GallerySection() {
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {galleryImages.map((image) => (
-            <div 
-              key={image.id} 
+            <div
+              key={image.id}
               className="aspect-square rounded-[1.75rem] overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl relative"
             >
               <Image
@@ -37,11 +36,15 @@ export function GallerySection() {
         </div>
 
         <div className="text-center mt-8">
-          <Button variant="outline" size="lg" className="rounded-full border-border/70 text-foreground hover:bg-primary/10 hover:text-primary">
+          <Button
+            variant="outline"
+            size="lg"
+            className="rounded-full border-border/70 text-foreground hover:bg-primary/10 hover:text-primary"
+          >
             View More
           </Button>
         </div>
       </div>
     </section>
-  )
+  );
 }

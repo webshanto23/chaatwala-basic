@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { usePermissions } from "@/hooks/use-can";
 import dynamic from "next/dynamic";
-import { deleteDrink } from "@/features/products/actions";
+import { deleteDrink, getDrinks } from "@/features/products/actions";
 
 const CreateDrinkModal = dynamic(() => import("@/components/admin/create-drink-modal").then(m => m.default), { ssr: false });
 const EditDrinkModal = dynamic(() => import("@/components/admin/edit-drink-modal").then(m => m.default), { ssr: false });
@@ -15,7 +15,7 @@ const EditDrinkModal = dynamic(() => import("@/components/admin/edit-drink-modal
 type DrinkRow = { id: string; name: string; price: string; tag: string; available: string };
 type DrinkRowFull = { id: string; name: string; slug: string; price: number; discountPrice: number | null; description: string | null; isAvailable: boolean; tag: string | null; imageUrl: string | null };
 
-export function DrinksClient({ initialDrinks }: { initialDrinks: DrinkRowFull[] }) {
+export function DrinksClient({ initialDrinks, initialNextCursor }: { initialDrinks: DrinkRowFull[]; initialNextCursor?: string | null }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -30,6 +30,8 @@ export function DrinksClient({ initialDrinks }: { initialDrinks: DrinkRowFull[] 
     }))
   );
   const [fullDrinks, setFullDrinks] = useState<DrinkRowFull[]>(initialDrinks);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null | undefined>(initialNextCursor);
   const { can } = usePermissions();
   const canCreateDrink = can("food:create");
   const canUpdateDrink = can("food:update");
@@ -40,6 +42,19 @@ export function DrinksClient({ initialDrinks }: { initialDrinks: DrinkRowFull[] 
     if (!q) return true;
     return u.name.toLowerCase().includes(q);
   });
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    const result = await getDrinks({ limit: 20, cursor: nextCursor });
+    if (!("error" in result) && result.drinks) {
+      const newFull = result.drinks as DrinkRowFull[];
+      setDrinks((prev) => [...prev, ...newFull.map((d) => ({ id: d.id, name: d.name, price: `$${Number(d.price).toFixed(2)}`, tag: d.tag ?? "-", available: d.isAvailable ? "Yes" : "No" }))]);
+      setFullDrinks((prev) => [...prev, ...newFull]);
+      setNextCursor(result.nextCursor);
+    }
+    setLoadingMore(false);
+  };
 
   const handleCreated = (drink: { id: string; name: string; price: number; tag: string | null; isAvailable: boolean }) => {
     setDrinks((prev) => [{ id: drink.id, name: drink.name, price: `$${Number(drink.price).toFixed(2)}`, tag: drink.tag ?? "-", available: drink.isAvailable ? "Yes" : "No" }, ...prev]);
@@ -77,6 +92,14 @@ export function DrinksClient({ initialDrinks }: { initialDrinks: DrinkRowFull[] 
       </div>
 
       <DataTable columns={["Name", "Price", "Tag", "Available"]} data={filtered} showActions={showActions} onEdit={canUpdateDrink ? handleEdit : undefined} onDelete={canDeleteDrink ? handleDelete : undefined} />
+
+      {nextCursor && (
+        <div className="flex justify-center">
+          <Button onClick={loadMore} disabled={loadingMore} variant="outline">
+            {loadingMore ? "Loading..." : "Load More"}
+          </Button>
+        </div>
+      )}
 
       {open && <CreateDrinkModal onClose={() => setOpen(false)} onCreated={handleCreated} />}
       {editOpen && selectedDrink && (<EditDrinkModal drink={selectedDrink} onClose={() => setEditOpen(false)} onUpdated={handleUpdated} />)}

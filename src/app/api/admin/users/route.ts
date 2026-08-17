@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
-import { authorize, unauthorizedResponse } from "@/lib/authorize";
+import { requireRole, authorize, unauthorizedResponse } from "@/lib/authorize";
 import { logAction } from "@/app/actions/audit";
 import prisma from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 
 export async function GET() {
-  const { authorized, session } = await authorize({ permissions: ["user:view"] });
+  const { authorized: roleAuthorized, session } = await requireRole("admin");
+  if (!roleAuthorized || !session?.user) {
+    return unauthorizedResponse("You do not have permission to view users");
+  }
 
-  if (!authorized || !session?.user) {
+  const { authorized } = await authorize({ permissions: ["user:view"] });
+  if (!authorized) {
     return unauthorizedResponse("You do not have permission to view users");
   }
 
@@ -26,9 +30,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { authorized, session } = await authorize({ permissions: ["user:access"] });
+  const { authorized: roleAuthorized, session } = await requireRole("admin");
+  if (!roleAuthorized || !session?.user) {
+    return unauthorizedResponse("You do not have permission to create users");
+  }
 
-  if (!authorized || !session?.user) {
+  const { authorized } = await authorize({ permissions: ["user:access"] });
+  if (!authorized) {
     return unauthorizedResponse("You do not have permission to create users");
   }
 

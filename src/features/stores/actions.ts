@@ -1,6 +1,6 @@
 "use server";
 
-import { authorize, requirePermission } from "@/lib/authorize";
+import { authorize, requireRole, requirePermission } from "@/lib/authorize";
 import { unstable_cache, revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { logAction } from "@/app/actions/audit";
@@ -24,6 +24,9 @@ type Store = {
 type Manager = { id: string; name: string | null; email: string };
 
 export async function getStores(): Promise<{ stores: Store[] } | { error: string }> {
+  const { authorized: roleAuthorized } = await requireRole("admin");
+  if (!roleAuthorized) return { error: "Forbidden" };
+
   const { authorized } = await authorize({ permissions: ["store:view"] });
   if (!authorized) return { error: "Forbidden" };
 
@@ -63,6 +66,9 @@ export async function getStores(): Promise<{ stores: Store[] } | { error: string
 }
 
 export async function getStoreManagers(): Promise<{ managers: Manager[] } | { error: string }> {
+  const { authorized: roleAuthorized } = await requireRole("admin");
+  if (!roleAuthorized) return { error: "Forbidden", managers: [] };
+
   const { authorized } = await authorize({ permissions: ["store:view"] });
   if (!authorized) return { error: "Forbidden", managers: [] };
 

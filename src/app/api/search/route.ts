@@ -64,14 +64,14 @@ export async function GET(request: Request) {
       id: dish.id,
       label: dish.name,
       description: dish.description ?? "",
-      href: `/products/dishes`,
+      href: `/products/dishes/${dish.id}`,
       category: dish.tag ?? "Dish",
     })),
     ...drinks.map((drink) => ({
       id: drink.id,
       label: drink.name,
       description: drink.description ?? "",
-      href: `/products/drinks`,
+      href: `/products/drinks/${drink.id}`,
       category: drink.tag ?? "Drink",
     })),
     ...combos.map((combo) => ({
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
       description: Array.isArray(combo.items)
         ? combo.items.slice(0, 3).join(", ")
         : "",
-      href: `/products/combos`,
+      href: `/products/combos/${combo.id}`,
       category: "Combo",
     })),
   ];

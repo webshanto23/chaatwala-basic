@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces, Inter } from "next/font/google";
+import { auth } from "@/lib/auth";
 import "./globals.css";
-import { AppShell } from "@/components/layout/app-shell";
+import { ThemeProvider } from "@/contexts/theme-context";
+import { AuthProvider, UserDataProvider } from "@/contexts/auth-context";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -67,11 +69,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Restaurant",
@@ -94,14 +98,20 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}${fraunces.variable} ${inter.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col">
-        <AppShell>{children}</AppShell>
+        <ThemeProvider>
+          <AuthProvider initialSession={session}>
+            <UserDataProvider>
+              {children}
+              <Toaster position="top-right" richColors />
+            </UserDataProvider>
+          </AuthProvider>
+        </ThemeProvider>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(organizationJsonLd),
           }}
         />
-        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

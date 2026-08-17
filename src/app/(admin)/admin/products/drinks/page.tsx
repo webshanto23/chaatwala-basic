@@ -4,8 +4,8 @@ import { DrinksClient } from "./DrinksClient";
 export const revalidate = 60;
 
 export default async function DrinksPage() {
-  const result = await getDrinks();
+  const result = await getDrinks({ limit: 20 });
   const drinks = result.drinks ?? [];
 
-  return <DrinksClient initialDrinks={drinks} />;
+  return <DrinksClient initialDrinks={drinks} initialNextCursor={result.nextCursor} />;
 }

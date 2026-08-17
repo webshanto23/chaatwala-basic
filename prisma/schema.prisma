@@ -24,6 +24,7 @@ model User {
   orders        Order[]
   managedStore  Store?     @relation("StoreManager")
   passwordResetTokens PasswordResetToken[]
+  sessionVersion Int       @default(0)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 }
@@ -226,6 +227,7 @@ model Store {
   orders         Order[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
+  isOpen         Boolean    @default(true)
 
   @@index([managerId])
   @@index([createdAt])

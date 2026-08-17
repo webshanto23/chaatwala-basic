@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { usePermissions } from "@/hooks/use-can";
 import dynamic from "next/dynamic";
-import { deleteDish } from "@/features/products/actions";
+import { deleteDish, getDishes } from "@/features/products/actions";
 
 const CreateDishModal = dynamic(() => import("@/components/admin/create-dish-modal").then(m => m.default), { ssr: false });
 const EditDishModal = dynamic(() => import("@/components/admin/edit-dish-modal").then(m => m.default), { ssr: false });
@@ -15,7 +15,7 @@ const EditDishModal = dynamic(() => import("@/components/admin/edit-dish-modal")
 type DishRow = { id: string; name: string; price: string; tag: string; available: string };
 type DishRowFull = { id: string; name: string; slug: string; price: number; discountPrice: number | null; description: string | null; isAvailable: boolean; tag: string | null; imageUrl: string | null };
 
-export function DishesClient({ initialDishes }: { initialDishes: DishRowFull[] }) {
+export function DishesClient({ initialDishes, initialNextCursor }: { initialDishes: DishRowFull[]; initialNextCursor?: string | null }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -30,6 +30,8 @@ export function DishesClient({ initialDishes }: { initialDishes: DishRowFull[] }
     }))
   );
   const [fullDishes, setFullDishes] = useState<DishRowFull[]>(initialDishes);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null | undefined>(initialNextCursor);
   const { can } = usePermissions();
   const canCreateDish = can("food:create");
   const canUpdateDish = can("food:update");
@@ -40,6 +42,19 @@ export function DishesClient({ initialDishes }: { initialDishes: DishRowFull[] }
     if (!q) return true;
     return u.name.toLowerCase().includes(q);
   });
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    const result = await getDishes({ limit: 20, cursor: nextCursor });
+    if (!("error" in result) && result.dishes) {
+      const newFull = result.dishes as DishRowFull[];
+      setDishes((prev) => [...prev, ...newFull.map((d) => ({ id: d.id, name: d.name, price: `$${Number(d.price).toFixed(2)}`, tag: d.tag ?? "-", available: d.isAvailable ? "Yes" : "No" }))]);
+      setFullDishes((prev) => [...prev, ...newFull]);
+      setNextCursor(result.nextCursor);
+    }
+    setLoadingMore(false);
+  };
 
   const handleCreated = (dish: { id: string; name: string; price: number; tag: string | null; isAvailable: boolean }) => {
     setDishes((prev) => [{ id: dish.id, name: dish.name, price: `$${Number(dish.price).toFixed(2)}`, tag: dish.tag ?? "-", available: dish.isAvailable ? "Yes" : "No" }, ...prev]);
@@ -77,6 +92,14 @@ export function DishesClient({ initialDishes }: { initialDishes: DishRowFull[] }
       </div>
 
       <DataTable columns={["Name", "Price", "Tag", "Available"]} data={filtered} showActions={showActions} onEdit={canUpdateDish ? handleEdit : undefined} onDelete={canDeleteDish ? handleDelete : undefined} />
+
+      {nextCursor && (
+        <div className="flex justify-center">
+          <Button onClick={loadMore} disabled={loadingMore} variant="outline">
+            {loadingMore ? "Loading..." : "Load More"}
+          </Button>
+        </div>
+      )}
 
       {open && <CreateDishModal onClose={() => setOpen(false)} onCreated={handleCreated} />}
       {editOpen && selectedDish && (<EditDishModal dish={selectedDish} onClose={() => setEditOpen(false)} onUpdated={handleUpdated} />)}
