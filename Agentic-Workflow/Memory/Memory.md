@@ -2,6 +2,17 @@
 
 ## History
 
+### 2026-08-18 — Production Performance Profiling Audit
+- **Methodology**: Production build (`npm run build`), `next start` with `PROFILE_QUERIES=1`, isolated profiling API endpoints with Prisma `$on("query")` event capture
+- **Homepage store locator**: `getPublicStoresInfo()` and `getStoreAvailabilities()` run in `Promise.all` (parallel in code) but Prisma serializes due to `connection_limit=1` in `DATABASE_URL`. Cold: 8 queries, 510ms DB time, 450ms function time. Warm: 0 queries, ~2ms. No N+1 — single `findMany` per function. Cache: `unstable_cache` (300s / 60s TTL)
+- **Product detail**: `getProductById()` runs 3 `findUnique` (dish/drink/combo) in `Promise.all` — serialized by `connection_limit=1`. 13 queries, 718ms cold / 0 queries, 0ms warm. `getRelatedProducts()` is NOT cached — runs 4 queries, 221ms on EVERY request (cold and warm). `store.findUnique` skipped (all `storeId` are null)
+- **Search**: `/api/search` runs 3 parallel `ILIKE` queries (Dish, Drink, Combo) — serialized by `connection_limit=1`. 13 queries, 711ms DB time, always hits DB (no `unstable_cache`). HTTP-only `s-maxage=60`. Catalog: 18 products (12 dishes, 6 drinks, 0 combos)
+- **ISR ineffective**: All pages return `Cache-Control: private, no-cache, no-store` — root layout's `auth()` call makes every page dynamic, overriding page-level `revalidate=300`. Only `unstable_cache` provides data-level caching. `unstable_cache` persists across restarts via `.next/cache/fetch-cache/`
+- **Client JS**: Homepage 804KB JS + 123KB CSS (14 chunks). Largest: 224K framework, 112K shared, 108K deps. Product detail adds 12K (`ProductDetailClient`). Dynamic imports (FloatingCart, SearchBar, GallerySection, AllDishesShowcase) use skeleton loaders correctly
+- **Network audit**: Admin/Store Manager shells (`AdminShell`, `StoreManagerShell`) do NOT use `AppShell`, `CartProvider`, `SearchBar`, or `FloatingCart`. No `/api/cart` or `/api/search` requests in admin/store-manager routes. Shared root layout makes `/api/user/me` call on all pages
+- **Key bottleneck**: `connection_limit=1` in `DATABASE_URL` serializes all Prisma queries, negating all `Promise.all` parallelism. Combined with ~135ms transaction overhead per query (BEGIN/DEALLOCATE/COMMIT + 45ms RTT to Neon Singapore), multi-query operations are 3-4x slower than they should be
+- **Files changed**: NONE — all profiling instrumentation was temporary and removed. Build, lint, and 220/236 tests (16 pre-existing failures) pass
+
 ### 2026-08-15 — Admin Cursor Pagination
 - Added cursor-based pagination to admin list pages: Users, Audit Logs, Dishes, Drinks, Orders
 - Server actions updated to accept `{ limit?, cursor? }` and return `nextCursor`:
@@ -194,6 +205,10 @@
 
 ## Known Issues
 
+- **Connection limit serializes DB queries**: `DATABASE_URL` has `connection_limit=1` (Neon pgbouncer). All `Promise.all` Prisma calls are serialized. Increasing to 5-10 would enable true parallelism and cut cold request DB time by ~60%
+- **`getRelatedProducts` is uncached**: Runs a DB query on every product detail page view, even when `getProductById` is cached via `unstable_cache`. Should be wrapped in `unstable_cache`
+- **Page-level `revalidate=300` is ineffective**: Root layout's `auth()` call makes all pages dynamic (`Cache-Control: private, no-cache, no-store`). Only `unstable_cache` provides caching at the function level
+- **Search uses ILIKE without indexes**: Searches on `name`/`description` use full table scans. No indexes exist on these columns. Acceptable at 18 products but will degrade linearly
 - Hardcoded payment values (delivery fee, phone, country) in `src/lib/sslcommerz.ts`
 - `src/proxy.ts` redirect logic is complex; role-based route guards require careful testing for edge cases
 - Resend email sending limited to test domain (`onboarding@resend.dev`) until a verified domain is added
@@ -410,7 +425,35 @@
   - Migration `20260810000000_add_store_inventory` executed manually via `prisma db execute`
   - All existing dishes/drinks made global (`storeId: null`)
   - StoreInventory entries populated for all existing global items across all stores
-  - Store manager actions updated: `getStoreDishes/Drinks/Combos()` now fetch global items (`storeId: null`); new `getStoreInventory()` returns merged global items with per-store availability; new `toggleStoreItemAvailability()` server action
-  - Removed: `createStoreDish/Drink/Combo`, `updateStoreDish/Drink/Combo`, `deleteStoreDish/Drink/Combo`
-  - Inventory UI (`InventoryClient.tsx`) converted to table view with sortable columns (Name, Price, Status), search, and availability toggle buttons
-  - Build passes; tsconfig and lint clean for inventory files
+- Store manager actions updated: `getStoreDishes/Drinks/Combos()` now fetch global items (`storeId: null`); new `getStoreInventory()` returns merged global items with per-store availability; new `toggleStoreItemAvailability()` server action
+- Removed: `createStoreDish/Drink/Combo`, `updateStoreDish/Drink/Combo`, `deleteStoreDish/Drink/Combo`
+- Inventory UI (`InventoryClient.tsx`) converted to table view with sortable columns (Name, Price, Status), search, and availability toggle buttons
+- Build passes; tsconfig and lint clean for inventory files
+
+### 2026-08-18 — Product Detail Enhancements, Discount Pricing, Store Locator, Search Fixes
+- **Product detail pages** (`/products/dishes/[id]`, `/products/drinks/[id]`, `/products/combos/[id]`) enhanced with:
+  - Tag badges (`popular`, `spicy`, `new`) rendered as rounded-3xl pills
+  - Stock/availability status with color-coded badges
+  - Store attribution (`Sold by <store name>`) when `storeId` is set
+  - Discount percentage display (e.g., "15% OFF")
+  - Combo item list rendering for combo products
+  - Related products grid at bottom (same type, excluding current product)
+  - JSON-LD structured data for SEO (`Product` schema with `price`, `availability`)
+- **Discount prices on listing pages** — Product cards now show:
+  - Discounted price in bold if `discountPrice` exists
+  - Crossed-out original price (`line-through`) when discounted
+  - Regular price if no discount
+  - Applied to: home signature sections, PopularDishes, AllDishesShowcase, PopularDrinks, AllDrinks, DishGrid, DrinkGrid
+- **Discount pricing service layer** — `src/features/products/service.ts` extended:
+  - `getAllDishes()`, `getAllDrinks()`, `getPopularDishes()`, `getPopularDrinks()` select `discountPrice`
+  - `getProductById()` returns extended fields: `discountPrice`, `originalPrice`, `storeId`, `tag`, `description`, `isAvailable`, `imageUrl`
+  - `getRelatedProducts(type, id)` returns 4 related items of same type excluding current
+- **Store locator** — HeroSection.tsx now renders store buttons using `getPublicStoresInfo()` and `getStoreAvailabilities()` server components with 5-min/1-min cache
+- **Search fixes**:
+  - Disabled popular search `useEffect` auto-fetch in `SearchBar.tsx`
+  - Removed auto-search debounce; search now only fires on Enter key or button click
+- **Sign-in redirect fix** — Removed competing `router.push` that raced with `useEffect` redirect in sign-in page
+- **Server-side role guard** — `(customer)/(protected)/layout.tsx` now redirects based on session permissions server-side instead of client-only
+- **sitedata.json route audit** — Updated stale admin product links (`dishes/drinks/combos` → `/admin/products/*`); removed unused `home.ts` data module
+- **Auth trust host** — Added `AUTH_TRUST_HOST=true` to `.env.local` to resolve `UntrustedHost` error in production mode (`next start`)
+- **TypeScript/build fixes** — Resolved multiple type errors during implementation; removed `src/lib/data/home.ts` (unused after architecture restructure); build passes with no type errors
