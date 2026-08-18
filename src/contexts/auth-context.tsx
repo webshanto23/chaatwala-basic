@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 type AuthProviderProps = {
   children: React.ReactNode;
-  initialSession: Session | null;
+  initialSession?: Session | null;
 };
 
 export function AuthProvider({ children, initialSession }: AuthProviderProps) {
