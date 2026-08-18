@@ -10,6 +10,8 @@ type ProductCardProps = {
   image: string;
   name: string;
   price: number | string;
+  originalPrice?: number;
+  discountPrice?: number | null;
   detail?: string;
   rating?: number;
   tag?: ProductTag;
@@ -24,6 +26,8 @@ export function ProductCard({
   image,
   name,
   price,
+  originalPrice,
+  discountPrice,
   detail,
   rating,
   tag,
@@ -42,6 +46,8 @@ export function ProductCard({
         image={image}
         name={name}
         price={price}
+        originalPrice={originalPrice}
+        discountPrice={discountPrice}
         detail={detail}
         rating={rating}
         tag={tag}

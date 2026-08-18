@@ -230,32 +230,32 @@
       "images": [
         {
           "id": 1,
-          "src": "https://images.unsplash.com/photo-1523580494863-6f3031224c94",
+          "src": "/images/gallery-1.jpg",
           "alt": "Pani Puri"
         },
         {
           "id": 2,
-          "src": "https://images.unsplash.com/photo-1531058020387-3be344556be6",
+          "src": "/images/gallery-2.jpg",
           "alt": "Burger"
         },
         {
           "id": 3,
-          "src": "https://images.unsplash.com/photo-1492724441997-5dc865305da7",
+          "src": "/images/gallery-3.jpg",
           "alt": "Chicken"
         },
         {
           "id": 4,
-          "src": "https://images.unsplash.com/photo-1464375117522-1311d6a5b81f",
+          "src": "/images/gallery-4.jpg",
           "alt": "Fried Rice"
         },
         {
           "id": 5,
-          "src": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678",
+          "src": "/images/gallery-5.jpg",
           "alt": "Kachori"
         },
         {
           "id": 6,
-          "src": "https://images.unsplash.com/photo-1531058020387-3be344556be6",
+          "src": "/images/gallery-6.jpg",
           "alt": "Chaat"
         }
       ]
@@ -319,11 +319,7 @@
       {
         "id": 1,
         "name": "Chaat Lover Combo",
-        "items": [
-          "Pani Puri",
-          "Bhel Puri",
-          "Dahi Puri"
-        ],
+        "items": ["Pani Puri", "Bhel Puri", "Dahi Puri"],
         "price": 299,
         "originalPrice": 399,
         "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b"
@@ -331,11 +327,7 @@
       {
         "id": 2,
         "name": "Meal Deal",
-        "items": [
-          "Chicken Biryani",
-          "Raita",
-          "Salad"
-        ],
+        "items": ["Chicken Biryani", "Raita", "Salad"],
         "price": 349,
         "originalPrice": 449,
         "image": "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f"
@@ -343,11 +335,7 @@
       {
         "id": 3,
         "name": "Snack Pack",
-        "items": [
-          "Singara Chaat",
-          "Aloo Tikki",
-          "Thums Up"
-        ],
+        "items": ["Singara Chaat", "Aloo Tikki", "Thums Up"],
         "price": 199,
         "originalPrice": 249,
         "image": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092"
@@ -355,12 +343,7 @@
       {
         "id": 4,
         "name": "Family Feast",
-        "items": [
-          "Veg Biryani",
-          "Paneer Tikka",
-          "Naan",
-          "Raita"
-        ],
+        "items": ["Veg Biryani", "Paneer Tikka", "Naan", "Raita"],
         "price": 599,
         "originalPrice": 799,
         "image": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092"

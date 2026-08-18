@@ -5,6 +5,8 @@ type Drink = {
   name: string;
   detail: string;
   price: number | string;
+  originalPrice: number;
+  discountPrice: number | null;
   image: string;
 };
 
@@ -18,6 +20,8 @@ export function DrinkGrid({ drinks }: { drinks: Drink[] }) {
           image={drink.image}
           name={drink.name}
           price={drink.price}
+          originalPrice={drink.originalPrice}
+          discountPrice={drink.discountPrice}
           detail={drink.detail}
           customBadge=""
           productType="drink"

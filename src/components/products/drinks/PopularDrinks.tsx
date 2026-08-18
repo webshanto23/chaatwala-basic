@@ -8,7 +8,9 @@ export async function PopularDrinks() {
     id: drink.id,
     name: drink.name,
     detail: drink.description ?? "",
-    price: Number(drink.price),
+    price: drink.discountPrice ? Number(drink.discountPrice) : Number(drink.price),
+    originalPrice: Number(drink.price),
+    discountPrice: drink.discountPrice ? Number(drink.discountPrice) : null,
     image: drink.imageUrl ?? "",
   }));
 

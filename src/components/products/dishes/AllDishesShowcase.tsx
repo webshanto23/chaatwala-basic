@@ -7,7 +7,9 @@ export async function AllDishesShowcase() {
   const dishes = alldishes.map((dish) => ({
     id: dish.id,
     name: dish.name,
-    price: Number(dish.price),
+    price: dish.discountPrice ? Number(dish.discountPrice) : Number(dish.price),
+    originalPrice: Number(dish.price),
+    discountPrice: dish.discountPrice ? Number(dish.discountPrice) : null,
     detail: dish.description ?? "",
     image: dish.imageUrl ?? "",
   }));

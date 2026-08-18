@@ -8,6 +8,8 @@ type ProductCardContentProps = {
   image: string;
   name: string;
   price: number | string;
+  originalPrice?: number;
+  discountPrice?: number | null;
   detail?: string;
   rating?: number;
   tag?: ProductTag;
@@ -19,6 +21,8 @@ export function ProductCardContent({
   image,
   name,
   price,
+  originalPrice,
+  discountPrice,
   detail,
   rating,
   tag,
@@ -86,7 +90,14 @@ export function ProductCardContent({
           </h3>
         )}
 
-        <p className="text-lg font-bold text-primary">৳{price}</p>
+        {discountPrice !== undefined && discountPrice !== null && originalPrice !== undefined && originalPrice > discountPrice ? (
+          <div className="flex items-center gap-2">
+            <p className="text-lg font-bold text-primary">৳{Number(discountPrice).toFixed(2)}</p>
+            <span className="text-xs line-through text-muted-foreground">৳{Number(originalPrice).toFixed(2)}</span>
+          </div>
+        ) : (
+          <p className="text-lg font-bold text-primary">৳{price}</p>
+        )}
       </div>
     </>
   );

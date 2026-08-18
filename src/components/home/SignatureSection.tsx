@@ -6,6 +6,8 @@ export type FoodItem = {
   id: string;
   name: string;
   price: number;
+  originalPrice: number;
+  discountPrice: number | null;
   rating: number;
   image: string;
   detail: string;
@@ -52,6 +54,8 @@ export function SignatureSection({ title, items }: SignatureSectionProps) {
               image={item.image}
               name={item.name}
               price={item.price}
+              originalPrice={item.originalPrice}
+              discountPrice={item.discountPrice}
               detail={item.detail}
               rating={item.rating}
               tag={item.tag}

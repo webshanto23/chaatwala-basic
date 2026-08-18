@@ -4,6 +4,8 @@ type Dish = {
   id: string;
   name: string;
   price: number | string;
+  originalPrice: number;
+  discountPrice: number | null;
   image: string;
   detail?: string;
 };
@@ -18,6 +20,8 @@ export function DishGrid({ dishes }: { dishes: Dish[] }) {
           image={dish.image}
           name={dish.name}
           price={dish.price}
+          originalPrice={dish.originalPrice}
+          discountPrice={dish.discountPrice}
           detail={dish.detail}
           productType="dish"
           href={`/products/dishes/${dish.id}`}

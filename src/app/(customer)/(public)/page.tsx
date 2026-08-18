@@ -21,6 +21,7 @@ export default async function Home() {
       id: string;
       name: string;
       price: number | unknown;
+      discountPrice: number | unknown | null;
       imageUrl: string | null;
       description: string | null;
       tag: string | null;
@@ -30,28 +31,36 @@ export default async function Home() {
     id: string;
     name: string;
     price: number;
+    originalPrice: number;
+    discountPrice: number | null;
     image: string;
     detail: string;
     rating: number;
     type: "dish" | "drink";
     tag?: "spicy" | "popular" | "new";
-  } => ({
-    id: d.id,
-    name: d.name,
-    price: Number(d.price),
-    image: d.imageUrl ?? "",
-    detail: d.description ?? "",
-    rating: 4.8,
-    type,
-    tag:
-      d.tag === "popular"
-        ? "popular"
-        : d.tag === "spicy"
-          ? "spicy"
-          : d.tag === "new"
-            ? "new"
-            : undefined,
-  });
+  } => {
+    const basePrice = Number(d.price);
+    const discount = d.discountPrice !== null && d.discountPrice !== undefined ? Number(d.discountPrice) : null;
+    return {
+      id: d.id,
+      name: d.name,
+      price: discount ?? basePrice,
+      originalPrice: basePrice,
+      discountPrice: discount,
+      image: d.imageUrl ?? "",
+      detail: d.description ?? "",
+      rating: 4.8,
+      type,
+      tag:
+        d.tag === "popular"
+          ? "popular"
+          : d.tag === "spicy"
+            ? "spicy"
+            : d.tag === "new"
+              ? "new"
+              : undefined,
+    };
+  };
 
   const mostLoved = shuffle([
     ...popularDishes.map((d) => toFoodItem(d, "dish")),

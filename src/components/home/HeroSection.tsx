@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
+import { ArrowRight, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { StoreButton } from "@/components/home/StoreButton";
@@ -82,9 +82,9 @@ export async function HeroSection() {
             <div className="absolute -left-10 top-8 h-40 w-40 rounded-full bg-secondary/20 blur-3xl" />
             <div className="absolute -right-8 bottom-0 h-56 w-56 rounded-full bg-accent/20 blur-3xl" />
             <div className="isolate overflow-hidden rounded-[2rem] border border-border/60 bg-card/90 shadow-[0_32px_120px_-58px_rgba(251,140,0,0.55)]">
-              <div className="aspect-[4/3] w-full overflow-hidden">
+              <div className=" w-full overflow-hidden">
                 <Image
-                  src="/og-image.svg"
+                  src="/images/banner.jpg"
                   alt="Delicious street food spread"
                   width={630}
                   height={480}
