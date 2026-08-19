@@ -15,7 +15,14 @@ export async function proxy(request: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET,
     });
     if (token) {
-      return NextResponse.redirect(new URL("/", request.url));
+      const role = token.role as string | undefined;
+      if (role === "admin") {
+        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+      }
+      if (role === "store_manager") {
+        return NextResponse.redirect(new URL("/store-manager/dashboard", request.url));
+      }
+      return NextResponse.redirect(new URL("/profile/dashboard", request.url));
     }
     return NextResponse.next();
   }

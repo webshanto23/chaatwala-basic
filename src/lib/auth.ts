@@ -118,7 +118,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.sessionVersion = dbUser?.sessionVersion ?? 0;
       } else if (token.id) {
         const dbUser = await prisma.user.findUnique({
-          where: { id: token.id },
+          where: { id: token.id as string },
           select: { sessionVersion: true },
         });
 
@@ -126,7 +126,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const tokenVersion = (token.sessionVersion as number) ?? 0;
 
         if (dbVersion !== tokenVersion) {
-          const { role, permissions } = await loadUserPermissions(token.id);
+          const { role, permissions } = await loadUserPermissions(token.id as string);
           token.role = role;
           token.permissions = permissions;
           token.sessionVersion = dbVersion;

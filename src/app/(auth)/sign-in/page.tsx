@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,35 +17,16 @@ import { GoogleIcon } from "@/components/icons/google-icon";
 import { Logo } from "@/components/shared/footer/logo";
 import { XIcon } from "@/components/icons/x-icon";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session, status } = useSession();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const redirectFrom = searchParams.get("redirect") ?? "/cart";
-
-  useEffect(() => {
-    if (status === "authenticated" && session?.user) {
-      const role = session.user.role;
-      const isAdmin = role === "admin";
-      const isStoreManager = role === "store_manager";
-
-      if (isAdmin) {
-        router.replace("/admin/dashboard");
-      } else if (isStoreManager) {
-        router.replace("/store-manager/dashboard");
-      } else {
-        router.replace(redirectFrom === "/cart" ? "/cart" : "/profile/dashboard");
-      }
-    }
-  }, [status, session, router, redirectFrom]);
 
   const errorFromUrl = searchParams.get("error");
   const verifiedFromUrl = searchParams.get("verified");

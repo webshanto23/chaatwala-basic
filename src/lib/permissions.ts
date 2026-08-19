@@ -1,3 +1,17 @@
+// ============================================================================
+// ROLE / PERMISSION CONTRACT
+// ============================================================================
+// ROLE answers: "Which application/area can you enter?"
+//   admin           -> Admin application
+//   store_manager   -> Store Manager application
+//   user            -> Customer application
+//
+// PERMISSION answers: "What can you do once you're there?"
+//   Permissions are capability checks ONLY.
+//   Do NOT use permissions to infer roles.
+//   Do NOT add permissions that merely identify a role.
+// ============================================================================
+
 // A Permission is represented as a simple string, e.g. "food:view".
 export type Permission = string;
 
@@ -6,13 +20,9 @@ export type RoleName = "admin" | "user" | "store_manager";
 
 // Permissions granted to a regular user.
 export const USER_PERMISSIONS = [
-  "user:access",
   "order:create",
   "payment:create",
   "food:view",
-  "food:like",
-  "food:share",
-  "feedback:create",
 ] as const;
 
 // Permissions granted to an admin user.
@@ -25,11 +35,8 @@ export const ADMIN_PERMISSIONS = [
   "food:create",
   "food:update",
   "food:delete",
-  "admin:create",
-  "admin:delete",
   "role:manage",
   "audit:view",
-  "admin:access",
   "store:view",
   "store:create",
   "store:update",
@@ -38,8 +45,6 @@ export const ADMIN_PERMISSIONS = [
 
 // Permissions granted to a store manager.
 export const STORE_MANAGER_PERMISSIONS = [
-  "user:access",
-  "user:view",
   "food:view",
   "food:create",
   "food:update",

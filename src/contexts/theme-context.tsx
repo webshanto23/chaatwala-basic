@@ -1,11 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useSyncExternalStore, useState } from "react";
 
 type Theme = "dark" | "light";
 
 type ThemeContextValue = {
   theme: Theme;
+  mounted: boolean;
   toggleTheme: () => void;
   setTheme: (theme: Theme) => void;
 };
@@ -14,11 +15,11 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 const STORAGE_KEY = "chaatwala-theme";
 
-function getInitialTheme(): Theme {
-  if (typeof window === "undefined") return "dark";
+function getStoredTheme(): Theme | null {
+  if (typeof window === "undefined") return null;
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored === "dark" || stored === "light") return stored;
-  return "dark";
+  return null;
 }
 
 function applyTheme(currentTheme: Theme) {
@@ -30,10 +31,24 @@ function applyTheme(currentTheme: Theme) {
   }
 }
 
+function useMounted() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
+  const mounted = useMounted();
+  const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
+    const stored = getStoredTheme();
+    if (stored) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTheme(stored);
+    }
     applyTheme(theme);
     localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
@@ -43,7 +58,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, mounted, toggleTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );

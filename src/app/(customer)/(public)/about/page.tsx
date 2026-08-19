@@ -28,33 +28,35 @@ const Gallery = dynamic(
 
 export default function AboutPage() {
   return (
-    <main className="px-4 md:px-6 lg:px-8 py-10 md:py-16 space-y-16 mx-auto max-w-7xl bg-linear-to-r from-primary/10 via-secondary/10 to-accent/10 font-sans">
-      <section className="text-center space-y-3">
-        <AboutHeader />
-      </section>
-      <section>
-        <WhyChaatwala />
-        <Gallery />
-      </section>
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <HistorySection />
-        <VisionSection />
-        <OwnersTakeSection />
-      </section>
+    <main className="w-full min-h-screen  bg-linear-to-r from-primary/10 via-secondary/10 to-accent/10 font-sans">
+      <div className="max-w-7xl mx-auto space-y-12 py-12 px-4 sm:px-6 lg:px-8">
+        <section className="text-center space-y-3">
+          <AboutHeader />
+        </section>
+        <section>
+          <WhyChaatwala />
+          <Gallery />
+        </section>
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <HistorySection />
+          <VisionSection />
+          <OwnersTakeSection />
+        </section>
 
-      <section>
-        <FaqSection />
-      </section>
-      <section>
-        <MetricsStrip />
-      </section>
-      <section>
-        <MapSection />
-      </section>
+        <section className="">
+          <FaqSection />
+        </section>
+        <section className="">
+          <MetricsStrip />
+        </section>
+        <section className="">
+          <MapSection />
+        </section>
 
-      <section>
-        <ContactSection />
-      </section>
+        <section className="">
+          <ContactSection />
+        </section>
+      </div>
     </main>
   );
 }

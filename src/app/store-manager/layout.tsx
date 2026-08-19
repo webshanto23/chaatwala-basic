@@ -11,7 +11,7 @@ export default async function StoreManagerLayout({ children }: { children: React
   }
 
   const role = getUserRole(session);
-  if (role !== "admin" && role !== "store_manager") {
+  if (role !== "store_manager") {
     redirect("/access-denied");
   }
 

@@ -24,7 +24,10 @@ export default function CheckoutSuccessPage() {
     }
     const fetchOrder = async () => {
       try {
-        const res = await fetch(`/api/payment/validate?val_id=${encodeURIComponent(tranId)}`, {
+        const res = await fetch("/api/payment/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ val_id: tranId }),
           cache: "no-store",
         });
         const data = await res.json();

@@ -38,7 +38,7 @@ export default function Navbar() {
   const publicLinks = data.navigation.publicLinks;
   const userLinks = data.navigation.userLinks;
   const adminLinks = data.navigation.adminLinks;
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, mounted } = useTheme();
 
   return (
     <header className="w-full sticky top-0 z-50 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 backdrop-blur-xl transition-colors duration-200">
@@ -150,11 +150,11 @@ export default function Navbar() {
             className="rounded-full p-2 text-foreground transition-colors hover:bg-muted hover:text-primary"
             aria-label="Toggle theme"
           >
-            {theme === "dark" ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
+            {mounted
+              ? theme === "dark"
+                ? <Sun className="h-5 w-5" />
+                : <Moon className="h-5 w-5" />
+              : <Moon className="h-5 w-5" />}
           </button>
 
           {!isAdmin && !isStoreManager && (
@@ -290,12 +290,12 @@ export default function Navbar() {
                     onClick={toggleTheme}
                     className="flex items-center gap-2 rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
                   >
-                    {theme === "dark" ? (
-                      <Sun className="h-4 w-4" />
-                    ) : (
-                      <Moon className="h-4 w-4" />
-                    )}
-                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                    {mounted
+                      ? theme === "dark"
+                        ? <Sun className="h-4 w-4" />
+                        : <Moon className="h-4 w-4" />
+                      : <Moon className="h-4 w-4" />}
+                    {mounted ? (theme === "dark" ? "Light Mode" : "Dark Mode") : "Dark Mode"}
                   </button>
                   {!isAdmin && !isStoreManager && (
                     <Link

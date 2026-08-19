@@ -2,6 +2,52 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { auth } from "@/lib/auth";
+import { cookies } from "next/headers";
+
+const GUEST_COOKIE = "chaatwala_guest_id";
+
+async function getGuestIdFromCookie() {
+  const cookieStore = await cookies();
+  return cookieStore.get(GUEST_COOKIE)?.value ?? null;
+}
+
+async function resolveCartOwner() {
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  const guestId = userId ? null : await getGuestIdFromCookie();
+  return { session, userId, guestId };
+}
+
+async function getCartIdForOwner(userId: string | null, guestId: string | null, itemId: string) {
+  const item = await prisma.cartItem.findUnique({
+    where: { id: itemId },
+    select: { cartId: true },
+  });
+
+  if (!item) {
+    return null;
+  }
+
+  const cart = await prisma.cart.findUnique({
+    where: { id: item.cartId },
+    select: { id: true, userId: true, guestId: true },
+  });
+
+  if (!cart) {
+    return null;
+  }
+
+  if (userId && cart.userId === userId) {
+    return cart.id;
+  }
+
+  if (!userId && guestId && cart.guestId === guestId) {
+    return cart.id;
+  }
+
+  return null;
+}
 
 function serializeCartItem(item: Awaited<ReturnType<typeof prisma.cartItem.findUnique>>) {
   if (!item) return null;
@@ -23,7 +69,13 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const rateLimitId = `ip:${getClientIp(request)}`;
+  const { userId, guestId } = await resolveCartOwner();
+
+  if (!userId && !guestId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rateLimitId = userId ?? `ip:${getClientIp(request)}`;
   const { success } = await checkRateLimit(rateLimitId, "medium");
   if (!success) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
@@ -37,9 +89,9 @@ export async function PATCH(
     return NextResponse.json({ error: "Quantity must be at least 1" }, { status: 400 });
   }
 
-  const item = await prisma.cartItem.findUnique({ where: { id } });
-  if (!item) {
-    return NextResponse.json({ error: "Cart item not found" }, { status: 404 });
+  const cartId = await getCartIdForOwner(userId, guestId, id);
+  if (!cartId) {
+    return NextResponse.json({ error: "Cart item not found or access denied" }, { status: 404 });
   }
 
   const updated = await prisma.cartItem.update({
@@ -55,22 +107,28 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const rateLimitId = `ip:${getClientIp(request)}`;
+  const { userId, guestId } = await resolveCartOwner();
+
+  if (!userId && !guestId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rateLimitId = userId ?? `ip:${getClientIp(request)}`;
   const { success } = await checkRateLimit(rateLimitId, "medium");
   if (!success) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const { id } = await params;
-  const item = await prisma.cartItem.findUnique({ where: { id } });
-  if (!item) {
-    return NextResponse.json({ error: "Cart item not found" }, { status: 404 });
+  const cartId = await getCartIdForOwner(userId, guestId, id);
+  if (!cartId) {
+    return NextResponse.json({ error: "Cart item not found or access denied" }, { status: 404 });
   }
 
   await prisma.cartItem.delete({ where: { id } });
 
   const cart = await prisma.cart.findUnique({
-    where: { id: item.cartId },
+    where: { id: cartId },
     include: { items: { orderBy: { createdAt: "desc" } } },
   });
 

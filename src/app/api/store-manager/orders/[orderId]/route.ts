@@ -5,13 +5,13 @@ import { getUserRole } from "@/lib/authorize";
 import prisma from "@/lib/prisma";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
-  const { authorized, session } = await requireRole(["admin", "store_manager"]);
+  const { authorized, session } = await requireRole("store_manager");
   if (!authorized || !session?.user) {
     return unauthorizedResponse("You do not have permission to view orders");
   }
 
   const role = getUserRole(session);
-  if (role !== "admin" && role !== "store_manager") {
+  if (role !== "store_manager") {
     return unauthorizedResponse("You do not have permission to view orders");
   }
 
