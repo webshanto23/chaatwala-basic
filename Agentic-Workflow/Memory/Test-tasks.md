@@ -1,103 +1,648 @@
-# Load-Test Readiness Assessment
+CHAATWALA — AUTH / SESSION / CART / REFRESH FLOW INVESTIGATION
+MODE: READ-ONLY — DO NOT MODIFY ANY FILE
 
-## Already Implemented
+You are auditing the existing Chaatwala application.
 
-- **Route/data revalidation (ISR)** — `export const revalidate` is set on public pages (home, product detail, dishes, drinks, combos) and the admin dashboard.
-- **Database indexing** — Prisma schema includes indexes on `userId`, `status`, `slug`, `createdAt`, `guestId`, `productId + productType`, and unique constraints on `email`, `slug`, `sslTxnId`, `idempotencyKey`.
-- **No overfetching** — API routes and server actions consistently use Prisma `select` to return only required fields.
-- **Server-side data caching** — `unstable_cache` is used across products, user profile, addresses, cart, admin users/roles/permissions/orders, and dashboard revenue.
-- **Static asset caching via CDN** — Next.js `Image` component with `remotePatterns` is configured; Vercel/Next.js handles static asset CDN caching automatically.
-- **Minimal middleware overhead** — `proxy.ts` short-circuits `/api` paths and performs lightweight auth/permission checks with a focused route matcher.
-- **Production build scripts** — `build` runs `prisma generate && next build`; `start` runs `next start`.
-- **Parallel server-side data fetching** — Home page, sitemap, and search API use `Promise.all` for concurrent DB queries.
-- **Cache-Control headers on public APIs** — Search API sets `s-maxage=60, stale-while-revalidate=120`.
-- **Consolidated user data fetching** — Replaced duplicate `/api/user/profile` + `/api/user/address` calls with a single `/api/user/me` endpoint; removed duplicate `refresh()` in `AddressList` that was firing alongside `UserDashboard`'s refresh.
-- **Timeouts on external calls** — Added `AbortSignal.timeout(10000)` to SSLCommerz initiate/validate fetches, ImgBB upload fetch, and image delete fetch; existing try/catch already provides graceful degradation.
-- **Fixed N+1 / sequential queries** — `payment/initiate/route.ts` product price lookups batched into 3 parallel `findMany` calls by type; removed sequential `for` loop with individual `findUnique`.
-- **Tiered rate limiting** — Implemented Upstash Ratelimit (`strict` 5/min, `medium` 30/min, `relaxed` 100/min) and applied to payment, order, and cart mutation endpoints.
-- **Database connection pooling active** — `DATABASE_URL` uses Neon pooler with `pgbouncer=true`, `connection_limit=1`, and `pool_timeout=20`.
+IMPORTANT:
+Do NOT fix, refactor, rewrite, or modify anything.
+Do NOT create files.
+Do NOT change dependencies.
+Do NOT run commands that mutate the database.
 
-## Should Be Done Next
+Your first task is to deeply understand and document the current implementation.
 
-- **Enable compression** — `next.config.ts` has no gzip/brotli compression config; enable in Next.js config or at the deployment layer.
-- **Add baseline metrics/logging** — Only one `console.error` exists; add structured logging, response-time tracking, and error-rate monitoring (e.g., Sentry, Datadog, or Vercel Analytics).
-- **Profile and fix slow queries** — No query profiling is in place; add logging for queries >100ms and optimize hot paths (payment initiation, order creation).
-- **Add load testing** — No k6/Artillery/Gatling scripts exist; run small-load tests (10–50 users) before targeting 1k–10k.
-- **Migrate from `unstable_cache` to `cache()`** — `unstable_cache` is used pervasively; plan migration to the stable `cache()` API from `next/cache`.
+==================================================
 
-## Execution Plan: 1k–10k Traffic Readiness
+1. # PRIMARY INVESTIGATION GOAL
 
-### Phase 1: Eliminate Duplicate Requests (Days 1–2) ✅ Completed
+Investigate the complete lifecycle of:
 
-**Goal:** Cut client-side request duplication and reduce per-page requests.
+Authentication
+→ session creation
+→ session persistence
+→ session hydration
+→ AuthProvider
+→ UserDataProvider
+→ role resolution
+→ navbar rendering
+→ CartProvider
+→ cart persistence
+→ store selection
+→ address selection
+→ checkout eligibility
+→ browser refresh
+→ server/client hydration
+→ recovery after refresh
 
-- Audited every `useEffect` + `fetch` pair in client components (`CartProvider`, `AddressList`, `UserDashboard`, `SearchBar`, `Navbar`).
-- Removed redundant `refresh()` calls where parent contexts already fetch data.
-- Consolidated `/api/user/profile` and `/api/user/address` into a single `/api/user/me` endpoint so the client makes one call instead of two.
-- Moved cart state hydration from client-side `fetch("/api/cart")` into a server component boundary where possible, or server action that preloads cart data.
+I am seeing this suspected bug:
 
-### Phase 2: Fix Sequential DB Queries (Days 2–3) ✅ Completed
+1. User signs in.
+2. User adds a product to cart.
+3. User selects/adds a store.
+4. User selects/adds an address.
+5. Checkout button becomes enabled.
+6. User accidentally refreshes the browser.
+7. After refresh, some or all of the following appear missing:
+   - cart
+   - selected store
+   - selected address
+   - checkout eligibility
+   - user state
+8. Navbar initially renders "Sign In".
+9. Shortly afterward it changes to the authenticated user state.
 
-**Goal:** Remove N+1 and sequential database access in hot paths.
+Determine whether this is:
 
-- In `payment/initiate/route.ts`, replaced the sequential `for` loop with 3 parallel `findMany` calls grouped by product type (`dish`, `drink`, `combo`), then validated prices via in-memory maps.
-- Reviewed order creation and cart mutation paths for repeated identical queries; no N+1 found outside payment initiation.
-- Prisma query profiling should be added next to catch >100ms queries during local testing.
+- an actual data-loss bug,
+- a state hydration race,
+- a client/server rendering mismatch,
+- stale context initialization,
+- session hydration timing,
+- incorrect localStorage/sessionStorage handling,
+- cart persistence failure,
+- API timing/race condition,
+- React hydration behavior,
+- loading-state problem,
+- or a combination of these.
 
-### Phase 3: Add Timeouts and Error Boundaries (Days 3–4) ✅ Completed
+Do NOT assume the cause.
 
-**Goal:** Prevent slow external calls from blocking server functions.
+================================================== 2. FIRST: MAP THE ARCHITECTURE
+==================================================
 
-- Wrapped all outbound `fetch` calls (SSLCommerz initiate/validate, ImgBB upload, image delete) with `AbortSignal.timeout(10000)` (15s for ImgBB upload).
-- Verified existing `try/catch` blocks around external calls already provide graceful degradation with user-friendly error messages.
-- Next.js built-in request timeouts cover inbound API route/servlet hangs; no custom middleware wrapper added because platform timeouts plus explicit outbound timeouts are sufficient for the current attack surface.
+Inspect the entire relevant codebase.
 
-### Phase 4: Database Connection Pooling (Days 4–5) ✅ Completed
+Start with:
 
-**Goal:** Prevent connection exhaustion under concurrent load.
+- app/layout.tsx
+- customer layouts
+- protected layouts
+- user layout/page
+- auth layout
+- proxy.ts
+- AuthProvider
+- UserDataProvider
+- CartProvider
+- AppShell
+- Navbar
+- cart components
+- checkout components
+- store selection components
+- address components
+- session/auth utilities
+- NextAuth configuration
+- API routes related to:
+  /api/auth
+  /api/cart
+  /api/cart/item/_
+  /api/cart/validate-store
+  /api/user/_
+  /api/orders
+  /api/payment/\*
+- server actions related to:
+  authentication
+  user data
+  cart
+  address
+  checkout
 
-- Verified `DATABASE_URL` is already using Neon pooler with `pgbouncer=true`, `connection_limit=1`, and `pool_timeout=20`.
-- No code changes required in `src/lib/prisma.ts` because pooling is handled at the datasource level.
+Also inspect:
 
-### Phase 5: Add Edge Caching and Rate Limiting (Days 5–7) ✅ Completed
+- middleware/proxy behavior
+- cookies
+- localStorage
+- sessionStorage
+- URL state
+- React context state
+- server-side session retrieval
+- client-side session retrieval
+- initialSession / session hydration
+- loading states
+- useEffect initialization
+- redirects
 
-**Goal:** Reduce DB load and protect against spikes.
+================================================== 3. BUILD A PROVIDER TREE
+==================================================
 
-- Implemented tiered Upstash Ratelimit (`strict` 5/min, `medium` 30/min, `relaxed` 100/min) in `src/lib/rate-limit.ts`.
-- Applied `strict` rate limiting to `/api/payment/initiate` and `/api/payment/validate`.
-- Applied `strict` rate limiting to `/api/orders` (order creation).
-- Applied `medium` rate limiting to `/api/cart` (POST/DELETE) and `/api/cart/item/[id]` (PATCH/DELETE).
-- Added `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to `.env.example`.
-- Verified public API Cache-Control headers exist on `/api/search` and `/api/search/popular`; product pages use ISR + `unstable_cache` at the data layer.
-- Redis-backed cart/session caching deferred: `unstable_cache` already covers cart reads; Redis can be added later as an additional edge cache layer if needed.
+Document the actual provider hierarchy.
 
-### Phase 6: Enable Compression and Optimize Build (Day 7)
+Example format:
 
-**Goal:** Reduce payload size and ensure production-only bundle.
+Root layout
+├── ThemeProvider
+├── AuthProvider
+├── UserDataProvider
+└── Toaster
+│
+└── Customer layout
+├── AppShell
+└── CartProvider
+└── pages
 
-- Enable gzip/brotli compression in `next.config.ts` or confirm deployment-layer compression is active.
-- Audit `next build` output to confirm no dev-only code or source maps are shipped.
-- Review `reactStrictMode: false` — decide if strict mode should be re-enabled for better render safety.
+Do not assume this structure.
+Verify it from the code.
 
-### Phase 7: Baseline Metrics and Monitoring (Days 8–10)
+For every provider determine:
 
-**Goal:** Establish visibility into performance and errors.
+- where it mounts
+- when it mounts
+- what data it initializes
+- whether initialization is async
+- whether it has loading state
+- whether it reads session
+- whether it reads localStorage
+- whether it makes API calls
+- whether it depends on another provider
+- whether it resets state during hydration
+- whether it runs again after refresh
 
-- Integrate error tracking (Sentry or equivalent) with performance monitoring enabled.
-- Add basic response-time logging on API routes (p95, p99) without adding heavy APM.
-- Set up uptime/health checks and database connection pool monitoring.
+================================================== 4. SESSION LIFECYCLE
+==================================================
 
-### Phase 8: Load Testing (Days 10–14)
+Trace the session from login through page refresh.
 
-**Goal:** Validate the system can handle target traffic.
+Document:
 
-- Write k6 or Artillery scripts simulating 10, 50, 100, 500, and 1k concurrent users.
-- Test critical paths: home page load, product search, cart add, checkout initiation.
-- Identify breaking points, then iterate on pool sizing, cache TTLs, and query optimization based on results.
+LOGIN
+↓
+NextAuth
+↓
+session cookie/token
+↓
+server session
+↓
+client session
+↓
+AuthProvider
+↓
+UserDataProvider
+↓
+Navbar
 
-### Phase 9: Migrate from `unstable_cache` to `cache()` (Ongoing)
+Determine:
 
-**Goal:** Use stable Next.js caching APIs before they become breaking changes.
+- Where is the authoritative session?
+- Is session available during initial server render?
+- Is session passed as initialSession?
+- Does the client initially have null/undefined session?
+- Does useSession() briefly return loading?
+- Does Navbar render based on loading/session?
+- Can Navbar render "Sign In" before session hydration completes?
+- Does the server render authenticated markup while client initially renders anonymous markup?
+- Is there a hydration mismatch?
+- Is there merely a visual flash?
+- Are there multiple sources of truth for authentication?
 
-- Replace `unstable_cache` imports with `cache()` from `next/cache` across all files.
-- Run full regression tests to confirm cache hit rates and revalidation behavior remain correct.
+Explicitly identify every place that decides:
+
+"Is the user authenticated?"
+
+================================================== 5. USER DATA LIFECYCLE
+==================================================
+
+Trace:
+
+session
+→ user ID
+→ user profile
+→ role
+→ managed store
+→ addresses
+
+Determine:
+
+- Where user data is fetched.
+- Whether it happens server-side or client-side.
+- Whether it is fetched on every refresh.
+- Whether UserDataProvider resets to null before fetching.
+- Whether components render using stale/default values.
+- Whether user data depends on session hydration.
+- Whether role resolution happens more than once.
+- Whether address data is persisted in DB or only React state.
+
+================================================== 6. CART LIFECYCLE
+==================================================
+
+Trace the exact lifecycle.
+
+Anonymous user:
+
+product
+→ add to cart
+→ guest cart
+→ cookie/session
+→ database
+
+Authenticated user:
+
+login
+→ user cart
+→ add item
+→ database
+→ CartProvider
+→ UI
+
+Determine:
+
+- What identifies the cart?
+- userId?
+- guest cookie?
+- cart ID?
+- combination?
+
+Inspect:
+
+- GET /api/cart
+- POST /api/cart
+- DELETE /api/cart
+- PATCH /api/cart/item/[id]
+- DELETE /api/cart/item/[id]
+- validate-store
+
+Determine what happens after browser refresh.
+
+Specifically answer:
+
+Does CartProvider:
+
+A. restore cart from DB,
+B. restore cart from localStorage,
+C. restore cart from context only,
+D. restore cart from cookie,
+E. some combination?
+
+Trace the exact sequence.
+
+================================================== 7. STORE SELECTION
+==================================================
+
+Trace exactly where selected store lives.
+
+Determine whether it is:
+
+- database
+- cookie
+- localStorage
+- sessionStorage
+- URL
+- React state
+- CartProvider state
+- checkout state
+
+Then test the conceptual lifecycle:
+
+Select store
+→ checkout enabled
+→ browser refresh
+→ provider remount
+→ state initialization
+→ API request
+→ final store state
+
+Identify if selected store disappears because:
+
+- it was never persisted,
+- persistence exists but isn't restored,
+- restoration occurs after checkout renders,
+- restoration is overwritten by default state,
+- API returns incomplete state,
+- or another provider resets it.
+
+================================================== 8. ADDRESS LIFECYCLE
+==================================================
+
+Do the same for address selection.
+
+Trace:
+
+address creation
+→ address persistence
+→ address selection
+→ checkout state
+→ refresh
+→ restoration
+
+Determine whether the selected address is persisted separately from the address itself.
+
+IMPORTANT DISTINCTION:
+
+"Address exists in DB"
+
+does NOT necessarily mean:
+
+"Selected checkout address survives refresh."
+
+Identify both.
+
+================================================== 9. CHECKOUT BUTTON STATE
+==================================================
+
+Find the exact logic controlling:
+
+"Checkout enabled/disabled"
+
+Document every condition.
+
+For example:
+
+cart exists
+AND
+cart items > 0
+AND
+store selected
+AND
+address selected
+AND
+session exists
+AND
+validation passed
+
+Then determine what happens during refresh:
+
+INITIAL STATE
+↓
+loading
+↓
+session hydration
+↓
+cart loading
+↓
+store loading
+↓
+address loading
+↓
+validation
+↓
+final checkout state
+
+Identify whether the button can temporarily:
+
+- become disabled
+- become enabled incorrectly
+- become disabled permanently
+- show stale state
+
+================================================== 10. NAVBAR FLASH INVESTIGATION
+==================================================
+
+Investigate this exact behavior:
+
+Refresh
+→ Navbar says "Sign In"
+→ shortly afterward
+→ Navbar shows authenticated user
+
+Determine:
+
+1. Is this expected session hydration?
+2. Is server HTML anonymous?
+3. Is client session initially undefined?
+4. Is AuthProvider initializing after mount?
+5. Is UserDataProvider delaying role/user rendering?
+6. Is initialSession actually being used?
+7. Is there a hydration mismatch?
+8. Is there a loading-state bug?
+
+Find the exact component responsible.
+
+Give the precise render sequence.
+
+================================================== 11. SERVER vs CLIENT RENDERING
+==================================================
+
+For all relevant components classify them:
+
+SERVER
+CLIENT
+SERVER → CLIENT boundary
+
+Pay particular attention to:
+
+- Navbar
+- AuthProvider
+- UserDataProvider
+- CartProvider
+- checkout
+- cart
+- profile
+- store selector
+- address selector
+
+Identify any state that is:
+
+server-known but client-unknown.
+
+================================================== 12. REFRESH SIMULATION
+==================================================
+
+Perform a READ-ONLY conceptual trace of this scenario:
+
+SESSION A
+User logged in.
+
+STATE:
+cart = item A
+store = Store 1
+address = Address 1
+
+Then:
+
+F5 / browser refresh
+
+Trace every initialization step.
+
+Create a timeline like:
+
+T0:
+Server request
+
+T1:
+Root layout
+
+T2:
+session retrieval
+
+T3:
+AuthProvider initialization
+
+T4:
+UserDataProvider initialization
+
+T5:
+Customer layout
+
+T6:
+CartProvider initialization
+
+T7:
+GET /api/cart
+
+T8:
+Store state initialization
+
+T9:
+Address state initialization
+
+T10:
+Checkout eligibility calculation
+
+For each step state:
+
+VALUE BEFORE
+VALUE DURING
+VALUE AFTER
+
+================================================== 13. IDENTIFY ROOT CAUSE
+==================================================
+
+Do NOT simply list symptoms.
+
+For every suspected bug classify it as:
+
+A. Real persistence bug
+B. Hydration race
+C. Rendering flash
+D. State initialization bug
+E. API race
+F. Context dependency bug
+G. Session timing issue
+H. Intentional behavior
+I. Unknown — needs runtime instrumentation
+
+For each issue provide:
+
+- exact file
+- component/function
+- relevant code path
+- state transition
+- why it happens
+- severity
+- confidence level
+
+================================================== 14. DO NOT MODIFY CODE
+==================================================
+
+This is an investigation only.
+
+Do not:
+
+- refactor
+- optimize
+- change providers
+- change auth
+- change redirects
+- change APIs
+- change database schema
+- change permissions
+- fix the bug
+
+================================================== 15. FINAL REPORT
+==================================================
+
+Return the report in this exact structure:
+
+# Chaatwala Auth / Session / Cart Flow Audit
+
+## 1. Executive Summary
+
+## 2. Actual Provider Architecture
+
+## 3. Authentication Lifecycle
+
+## 4. Session Hydration Lifecycle
+
+## 5. UserData Lifecycle
+
+## 6. Cart Lifecycle
+
+## 7. Store Selection Lifecycle
+
+## 8. Address Lifecycle
+
+## 9. Checkout Eligibility Lifecycle
+
+## 10. Navbar Rendering Lifecycle
+
+## 11. Browser Refresh Timeline
+
+## 12. Server vs Client Rendering Analysis
+
+## 13. Confirmed Bugs
+
+For each:
+
+- Severity
+- File
+- Function/component
+- Root cause
+- Evidence
+- User impact
+
+## 14. Suspected Bugs
+
+Same format, but clearly mark confidence.
+
+## 15. False Positives / Expected Behavior
+
+## 16. Race Conditions
+
+## 17. State Ownership Problems
+
+## 18. Multiple Sources of Truth
+
+## 19. Recommended Fix Architecture
+
+Do NOT implement it.
+
+## 20. Minimal Fix Plan
+
+Prioritize:
+
+P0
+P1
+P2
+P3
+
+## 21. Test Scenarios
+
+Create explicit manual and automated test cases for:
+
+1. Anonymous → add cart → refresh
+2. Login → existing cart → refresh
+3. Login → add product → refresh
+4. Login → select store → refresh
+5. Login → select address → refresh
+6. Login → cart + store + address → refresh
+7. Logout → refresh
+8. Session expiry → refresh
+9. Multiple tabs
+10. Navbar immediately after refresh
+11. Slow network
+12. Slow session response
+13. Cart API failure
+14. User API failure
+15. Store API failure
+16. Address API failure
+
+For each test specify:
+
+- initial state
+- action
+- expected result
+- actual implementation behavior
+- pass/fail based on code analysis
+
+## 22. FINAL VERDICT
+
+Answer these explicitly:
+
+1. Is the cart actually persistent?
+2. Is store selection persistent?
+3. Is address selection persistent?
+4. Is checkout state persistent or derived?
+5. Is the Navbar flash a hydration issue?
+6. Is there a server/client mismatch?
+7. Is there a race condition?
+8. What is the single biggest root cause?
+9. What should be fixed first?
+10. What should NOT be changed?
