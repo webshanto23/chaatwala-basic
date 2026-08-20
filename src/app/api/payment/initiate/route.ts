@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { initiatePayment } from "@/lib/sslcommerz";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { getUnavailableCartItems } from "@/lib/store-availability";
 
 const BASE_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
@@ -49,10 +50,12 @@ export async function POST(request: Request) {
   }
 
   let storeId: string | null = null;
+  let addressId: string | null = null;
   let shippingAddress: { fullName?: string; line1?: string; city?: string; postalCode?: string; country?: string } | null = null;
   try {
     const body = await request.json();
     storeId = body?.storeId ?? null;
+    addressId = body?.addressId ?? null;
     shippingAddress = body?.shippingAddress ?? null;
   } catch {
     // body not available
@@ -71,50 +74,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Store not found" }, { status: 404 });
   }
 
-  const dishIds = cart.items
-    .filter((item) => item.productType === "dish")
-    .map((item) => item.productId);
-  const drinkIds = cart.items
-    .filter((item) => item.productType === "drink")
-    .map((item) => item.productId);
-  const comboIds = cart.items
-    .filter((item) => item.productType === "combo")
-    .map((item) => item.productId);
+  let addressIdForOrder: string | undefined;
+  if (addressId) {
+    if (!userId) {
+      return NextResponse.json({ error: "Please sign in to use a saved address" }, { status: 401 });
+    }
+    const address = await prisma.address.findFirst({
+      where: { id: addressId, userId },
+      select: { id: true },
+    });
+    if (!address) {
+      return NextResponse.json({ error: "Address not found" }, { status: 404 });
+    }
+    addressIdForOrder = address.id;
+  }
 
-  const [dishes, drinks, combos] = await Promise.all([
-    dishIds.length
-      ? prisma.dish.findMany({
-          where: { id: { in: dishIds }, storeId, isAvailable: true },
-          select: { id: true, name: true },
-        })
-      : Promise.resolve([]),
-    drinkIds.length
-      ? prisma.drink.findMany({
-          where: { id: { in: drinkIds }, storeId, isAvailable: true },
-          select: { id: true, name: true },
-        })
-      : Promise.resolve([]),
-    comboIds.length
-      ? prisma.combo.findMany({
-          where: { id: { in: comboIds }, storeId, isAvailable: true },
-          select: { id: true, name: true },
-        })
-      : Promise.resolve([]),
-  ]);
-
-  const availableIds = new Set([
-    ...dishes.map((d) => d.id),
-    ...drinks.map((d) => d.id),
-    ...combos.map((c) => c.id),
-  ]);
-
-  const unavailableItems = cart.items
-    .filter((item) => !availableIds.has(item.productId))
-    .map((item) => item.name);
+  const unavailableItems = await getUnavailableCartItems(storeId, cart.items);
 
   if (unavailableItems.length > 0) {
     return NextResponse.json(
-      { error: `${unavailableItems.join(", ")} is Out of stock, Please wait or Select Another Store.`, unavailableItems },
+      { error: `${unavailableItems.map((item) => item.name).join(", ")} is Out of stock, Please wait or Select Another Store.`, unavailableItems: unavailableItems.map((item) => item.name) },
       { status: 409 }
     );
   }
@@ -217,6 +196,7 @@ export async function POST(request: Request) {
   const order = await prisma.order.create({
     data: {
       userId: userId ?? undefined,
+      addressId: addressIdForOrder,
       storeId,
       subtotal,
       deliveryFee,

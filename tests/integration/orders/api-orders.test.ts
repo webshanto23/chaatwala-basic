@@ -24,6 +24,9 @@ vi.mock("@/lib/prisma", () => ({
     combo: {
       findMany: vi.fn(),
     },
+    storeInventory: {
+      findMany: vi.fn(),
+    },
     order: {
       findFirst: vi.fn(),
       create: vi.fn(),
@@ -115,6 +118,7 @@ const mockOrder = {
 describe("Orders API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.storeInventory.findMany).mockResolvedValue([] as never);
   });
 
   describe("POST /api/orders", () => {

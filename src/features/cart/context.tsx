@@ -23,13 +23,32 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart, setCart] = useState<{ id: string; items: CartItem[] }>({ id: "", items: [] });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { auth } = useAuth();
-  const isAdmin = auth.role === "admin";
+  const identity = auth.isLoading ? "loading" : `${auth.userId ?? "guest"}:${auth.role ?? "none"}`;
+
+  return (
+    <CartState key={identity} isAdmin={auth.role === "admin"} isSessionLoading={auth.isLoading}>
+      {children}
+    </CartState>
+  );
+}
+
+function CartState({
+  children,
+  isAdmin,
+  isSessionLoading,
+}: {
+  children: React.ReactNode;
+  isAdmin: boolean;
+  isSessionLoading: boolean;
+}) {
+  const [cart, setCart] = useState<{ id: string; items: CartItem[] }>({ id: "", items: [] });
+  const [isLoading, setIsLoading] = useState(() => isSessionLoading || !isAdmin);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
+    if (isSessionLoading) return;
+
     if (isAdmin) {
       setCart({ id: "", items: [] });
       setIsLoading(false);
@@ -63,21 +82,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, isSessionLoading]);
 
   useEffect(() => {
     let cancelled = false;
-    const run = async () => {
+
+    const load = async () => {
       await Promise.resolve();
-      if (!cancelled) {
+      if (!cancelled && !isSessionLoading) {
         await refresh();
       }
     };
-    run();
+
+    void load();
     return () => {
       cancelled = true;
     };
-  }, [refresh]);
+  }, [isSessionLoading, refresh]);
 
   const addItem = useCallback(async (input: AddToCartInput) => {
     if (isAdmin) return;

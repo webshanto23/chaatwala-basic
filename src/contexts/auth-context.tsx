@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useCallback, useMemo, useState } from "react";
+import { createContext, useContext, useCallback, useEffect, useMemo, useState } from "react";
 import { SessionProvider, signIn, signOut, useSession } from "next-auth/react";
 import type { Session } from "next-auth";
 import type { RoleName } from "@/lib/permissions";
@@ -9,6 +9,8 @@ type AuthRole = RoleName | null;
 
 type AuthState = {
   isAuthenticated: boolean;
+  isLoading: boolean;
+  userId: string | null;
   role: AuthRole | null;
   name: string | null;
   permissions: string[];
@@ -40,6 +42,8 @@ function InnerAuthProvider({ children }: { children: React.ReactNode }) {
 
   const auth = useMemo(() => ({
     isAuthenticated: status === "authenticated",
+    isLoading: status === "loading",
+    userId: session?.user?.id ?? null,
     role: (session?.user?.role as AuthRole) ?? null,
     name: session?.user?.name ?? null,
     permissions: (session?.user?.permissions as string[]) ?? [],
@@ -103,17 +107,40 @@ type UserDataContextValue = {
 const UserDataContext = createContext<UserDataContextValue | undefined>(undefined);
 
 export function UserDataProvider({ children }: { children: React.ReactNode }) {
+  const { auth } = useAuth();
+  const identity = auth.isLoading ? "loading" : auth.userId ?? "anonymous";
+
+  return (
+    <UserDataState key={identity} userId={auth.userId} isSessionLoading={auth.isLoading}>
+      {children}
+    </UserDataState>
+  );
+}
+
+function UserDataState({
+  children,
+  userId,
+  isSessionLoading,
+}: {
+  children: React.ReactNode;
+  userId: string | null;
+  isSessionLoading: boolean;
+}) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => isSessionLoading || Boolean(userId));
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
+    if (!userId) return;
+
     setError(null);
     try {
       const res = await fetch("/api/user/me");
       if (!res.ok) {
         if (res.status === 401) {
+          setProfile(null);
+          setAddresses([]);
           setIsLoading(false);
           return;
         }
@@ -133,7 +160,23 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [userId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      await Promise.resolve();
+      if (!cancelled && !isSessionLoading && userId) {
+        await refresh();
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [isSessionLoading, refresh, userId]);
 
   return (
     <UserDataContext.Provider value={{ profile, addresses, isLoading, error, refresh, setProfile, setAddresses }}>

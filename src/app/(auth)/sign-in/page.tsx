@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,7 @@ import { Logo } from "@/components/shared/footer/logo";
 import { XIcon } from "@/components/icons/x-icon";
 import Link from "next/link";
 import { useState } from "react";
+import { getRoleHome, getSafeReturnPath } from "@/lib/auth-redirect";
 
 export default function SignIn() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function SignIn() {
 
   const errorFromUrl = searchParams.get("error");
   const verifiedFromUrl = searchParams.get("verified");
+  const returnPath = getSafeReturnPath(searchParams.get("redirect"));
   const urlError = errorFromUrl ? (errorFromUrl === "CredentialsSignin" ? "Invalid email or password" : "Login failed, please try again") : null;
   const urlVerified = verifiedFromUrl === "true" ? "Email verified successfully! Please sign in." : null;
   const displayError = error ?? urlError;
@@ -39,8 +41,6 @@ export default function SignIn() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    router.replace("/sign-in");
-
     const result = await signIn("credentials", {
       email,
       password,
@@ -53,12 +53,12 @@ export default function SignIn() {
       return;
     }
 
-    setIsLoading(false);
+    const session = await getSession();
+    router.replace(returnPath ?? getRoleHome(session?.user?.role));
   };
 
   const handleOAuthSignIn = async (provider: string) => {
-    router.replace("/sign-in");
-    await signIn(provider);
+    await signIn(provider, { callbackUrl: returnPath ?? "/sign-in" });
   };
 
   return (

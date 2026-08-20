@@ -8,26 +8,26 @@ import Link from "next/link";
 
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams();
-  const tranId = searchParams.get("tran_id") ?? "";
+  const valId = searchParams.get("val_id") ?? "";
   const [order, setOrder] = useState<{
     id: string;
     status: string;
     total: number;
     tranId: string;
   } | null>(null);
-  const [loading, setLoading] = useState(Boolean(!tranId));
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(Boolean(valId));
+  const [error, setError] = useState<string | null>(
+    valId ? null : "Missing payment validation reference. Please contact support if you completed payment.",
+  );
 
   useEffect(() => {
-    if (!tranId) {
-      return;
-    }
+    if (!valId) return;
     const fetchOrder = async () => {
       try {
         const res = await fetch("/api/payment/validate", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ val_id: tranId }),
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ val_id: valId }).toString(),
           cache: "no-store",
         });
         const data = await res.json();
@@ -48,7 +48,7 @@ export default function CheckoutSuccessPage() {
       }
     };
     fetchOrder();
-  }, [tranId]);
+  }, [valId]);
 
   if (loading) {
     return (

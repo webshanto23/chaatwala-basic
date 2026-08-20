@@ -12,6 +12,9 @@ vi.mock("@/lib/prisma", () => ({
     store: {
       findUnique: vi.fn(),
     },
+    address: {
+      findFirst: vi.fn(),
+    },
     dish: {
       findMany: vi.fn(),
     },
@@ -19,6 +22,9 @@ vi.mock("@/lib/prisma", () => ({
       findMany: vi.fn(),
     },
     combo: {
+      findMany: vi.fn(),
+    },
+    storeInventory: {
       findMany: vi.fn(),
     },
     order: {
@@ -105,6 +111,7 @@ const mockOrder = {
 describe("Payment Initiate API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.storeInventory.findMany).mockResolvedValue([] as never);
   });
 
   it("initiates payment with valid cart, store, and body", async () => {
@@ -113,6 +120,7 @@ describe("Payment Initiate API", () => {
     } as any);
     vi.mocked(prisma.cart.findFirst).mockResolvedValue(mockCart as any);
     vi.mocked(prisma.store.findUnique).mockResolvedValue({ id: "store_1" } as any);
+    vi.mocked(prisma.address.findFirst).mockResolvedValue({ id: "address_1" } as any);
     vi.mocked(prisma.dish.findMany).mockResolvedValue([{ id: "dish_1", name: "Test Dish" }] as any);
     vi.mocked(prisma.drink.findMany).mockResolvedValue([] as any);
     vi.mocked(prisma.combo.findMany).mockResolvedValue([] as any);
@@ -124,6 +132,7 @@ describe("Payment Initiate API", () => {
       method: "POST",
       body: JSON.stringify({
         storeId: "store_1",
+        addressId: "address_1",
         shippingAddress: {
           fullName: "Test User",
           line1: "123 Test Street",
@@ -142,6 +151,9 @@ describe("Payment Initiate API", () => {
     expect(data.gatewayUrl).toBe("https://sandbox.sslcommerz.com/gwprocess/v4/test.php");
     expect(data.tranId).toMatch(/^txn_/);
     expect(data.orderId).toBe("order_1");
+    expect(prisma.order.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ addressId: "address_1" }),
+    }));
     expect(initiatePayment).toHaveBeenCalledWith(
       expect.objectContaining({
         tran_id: expect.stringMatching(/^txn_/),
@@ -151,6 +163,22 @@ describe("Payment Initiate API", () => {
         cus_email: "test@example.com",
       })
     );
+  });
+
+  it("rejects a saved address that does not belong to the signed-in user", async () => {
+    vi.mocked(auth).mockResolvedValue({ user: { id: "user_1" } } as any);
+    vi.mocked(prisma.cart.findFirst).mockResolvedValue(mockCart as any);
+    vi.mocked(prisma.store.findUnique).mockResolvedValue({ id: "store_1" } as any);
+    vi.mocked(prisma.address.findFirst).mockResolvedValue(null);
+
+    const response = await POST(new Request("http://localhost/api/payment/initiate", {
+      method: "POST",
+      body: JSON.stringify({ storeId: "store_1", addressId: "address_other" }),
+      headers: { "Content-Type": "application/json" },
+    }));
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "Address not found" });
   });
 
   it("returns 400 when storeId is missing", async () => {

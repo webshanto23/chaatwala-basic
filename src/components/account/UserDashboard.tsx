@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 
@@ -20,10 +20,6 @@ export default function UserDashboard() {
 
   const { data: session } = useSession();
   const { profile, isLoading, refresh } = useUserData();
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
 
   const name = profile?.name ?? session?.user?.name ?? "Ava Carter";
   const email = profile?.email ?? session?.user?.email ?? "ava.carter@example.com";

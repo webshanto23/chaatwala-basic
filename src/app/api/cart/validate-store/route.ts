@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { cookies } from "next/headers";
+import { getUnavailableCartItems } from "@/lib/store-availability";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -37,50 +38,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "storeId is required" }, { status: 400 });
   }
 
-  const dishIds = cart.items
-    .filter((item) => item.productType === "dish")
-    .map((item) => item.productId);
-  const drinkIds = cart.items
-    .filter((item) => item.productType === "drink")
-    .map((item) => item.productId);
-  const comboIds = cart.items
-    .filter((item) => item.productType === "combo")
-    .map((item) => item.productId);
-
-  const [dishes, drinks, combos] = await Promise.all([
-    dishIds.length
-      ? prisma.dish.findMany({
-          where: { id: { in: dishIds }, storeId, isAvailable: true },
-          select: { id: true, name: true },
-        })
-      : Promise.resolve([]),
-    drinkIds.length
-      ? prisma.drink.findMany({
-          where: { id: { in: drinkIds }, storeId, isAvailable: true },
-          select: { id: true, name: true },
-        })
-      : Promise.resolve([]),
-    comboIds.length
-      ? prisma.combo.findMany({
-          where: { id: { in: comboIds }, storeId, isAvailable: true },
-          select: { id: true, name: true },
-        })
-      : Promise.resolve([]),
-  ]);
-
-  const availableIds = new Set([
-    ...dishes.map((d) => d.id),
-    ...drinks.map((d) => d.id),
-    ...combos.map((c) => c.id),
-  ]);
-
-  const unavailableItems = cart.items
-    .filter((item) => !availableIds.has(item.productId))
-    .map((item) => ({
-      productId: item.productId,
-      productType: item.productType,
-      name: item.name,
-    }));
+  const unavailableItems = await getUnavailableCartItems(storeId, cart.items);
 
   return NextResponse.json({
     valid: unavailableItems.length === 0,

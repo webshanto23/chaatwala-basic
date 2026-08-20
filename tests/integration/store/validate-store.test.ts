@@ -19,6 +19,9 @@ vi.mock("@/lib/prisma", () => ({
     combo: {
       findMany: vi.fn(),
     },
+    storeInventory: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
@@ -54,6 +57,7 @@ const mockCart = {
 describe("validate-store API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.storeInventory.findMany).mockResolvedValue([] as never);
   });
 
   it("returns valid when all cart items are available at store", async () => {

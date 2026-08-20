@@ -95,3 +95,23 @@ export async function POST(request: Request) {
 
   return NextResponse.json(result);
 }
+
+export async function GET(request: Request) {
+  const rateLimitId = `ip:${getClientIp(request)}`;
+  const { success } = await checkRateLimit(rateLimitId, "strict");
+  if (!success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const valId = new URL(request.url).searchParams.get("val_id") ?? "";
+  if (!valId) {
+    return NextResponse.json({ error: "val_id is required" }, { status: 400 });
+  }
+
+  const result = await validateOrderPayment(valId);
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: result.status as number });
+  }
+
+  return NextResponse.json(result);
+}

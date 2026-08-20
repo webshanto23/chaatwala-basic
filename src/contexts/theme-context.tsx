@@ -41,14 +41,9 @@ function useMounted() {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const mounted = useMounted();
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>(() => getStoredTheme() ?? "dark");
 
   useEffect(() => {
-    const stored = getStoredTheme();
-    if (stored) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTheme(stored);
-    }
     applyTheme(theme);
     localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);

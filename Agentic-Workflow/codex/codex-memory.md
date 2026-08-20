@@ -53,7 +53,7 @@ Route groups do not affect URLs. Intended shell ownership: customer → `AppShel
 
 ## Authentication and authorization contract
 
-`src/lib/auth.ts` is the NextAuth source: Google, Facebook, and credentials providers; JWT session; session includes `user.id`, `user.role`, and `user.permissions`. New users without a role are assigned `user` on sign-in.
+`src/lib/auth.ts` is the NextAuth source: Google, Facebook, and credentials providers; JWT session; session includes `user.id`, `user.role`, and `user.permissions`. New users without a role are assigned `user` on sign-in. Credentials require a matching password but do not currently gate on `emailVerified`: legacy and seeded credential users have `emailVerified = null`, and the current resend-verification action requires an authenticated session. Do not restore that gate until a migration/rollout policy and unauthenticated resend flow exist.
 
 Keep these concerns distinct:
 
@@ -76,22 +76,22 @@ Root layout calls `await auth()` server-side and renders:
 ```text
 ThemeProvider
 └─ AuthProvider(initialSession=server session)
-   └─ UserDataProvider
-      └─ route content + Toaster
+   └─ route content + Toaster
 ```
 
-Current `AppShell` also nests `ThemeProvider`, `AuthProvider` **without** `initialSession`, and `UserDataProvider` around `CartProvider`. Customer components consume these nearest providers, not the server-seeded root providers. This duplication is a confirmed architectural risk and plausibly produces the authenticated-user navbar flash while the nested `SessionProvider` hydrates. Do not move/fix providers casually: preserve customer/admin/store-manager shell boundaries and validate reload/session behavior.
+The customer layout owns `UserDataProvider`; `AppShell` owns `CartProvider`. Do not add a second theme/auth provider. Both customer state providers are keyed by session identity, so logout/account switches clear prior state before reloading for the new identity.
 
-`UserDataProvider` begins with null profile, empty addresses, and loading true. It exposes `refresh()` for `GET /api/user/me` but does not automatically call it; dependent pages invoke it. Thus user/address data is server-persistent but context state is remounted and reloaded on refresh.
+`UserDataProvider` begins with null profile, empty addresses, and loading true; it automatically fetches `GET /api/user/me` after a stable authenticated session and exposes `refresh()` for explicit updates.
 
 ## Cart, address, store, and checkout ownership
 
 - `Cart`/`CartItem` are database records. Authenticated carts use `userId`; guest carts use the HTTP-only `chaatwala_guest_id` cookie. `CartProvider` starts empty and fetches `GET /api/cart` after mount. Do not add browser storage as a second cart source of truth.
 - Cart item APIs currently resolve the owner before PATCH/DELETE; verify this remains true before relying on historical P0 reports that said otherwise.
 - Addresses are database records owned by `userId`. `GET /api/user/me` returns profile plus addresses. The checkout defaults to the DB default address (or first address); any alternate selection is only local page state and does not persist independently.
-- Checkout/cart pages store `selectedStoreId` in `localStorage`, then restore it only after `/api/stores` returns. Temporary disabled checkout during cart/address/store validation is expected on a refresh; permanent loss requires investigation of provider/API failure paths.
+- Cart/checkout share `useStoreSelection`. It persists the selected store as `chaatwala:selected-store:<userId-or-guest>`, removes the key when cleared or no longer valid, and displays retryable errors for store loading/availability validation. Checkout is blocked while store data/validation is unknown.
 - Checkout eligibility is derived, not persisted: cart nonempty + address + selected store + valid stock + not currently placing payment.
-- Payment initiate accepts `storeId` and shipping-address fields, uses an idempotency key, creates an order, and clears the cart before gateway redirection. Current code must be checked for actual address linkage, validation, provider signature handling, and defaults before any payment work.
+- Payment initiate accepts `storeId`, optional saved `addressId`, and shipping-address fields. A supplied address ID is verified against the authenticated user and persisted on the order; it uses an idempotency key and clears the cart before gateway redirection.
+- SSLCommerz returns `val_id` to the success callback. `checkout/success` must submit that value as `application/x-www-form-urlencoded` to `/api/payment/validate`; do not substitute `tran_id` or send JSON. A callback without `val_id` must render an error, not a perpetual loading state.
 
 ## Database and API rules
 
@@ -108,6 +108,7 @@ Current `AppShell` also nests `ThemeProvider`, `AuthProvider` **without** `initi
 - `src/components/ui` is for base shadcn primitives. Prefer a wrapper/domain component over modifying it.
 - Use `@/` aliases, PascalCase component files/exports, kebab-case utilities, `cn()` for dynamic class composition, CVA for reusable variants, Tailwind tokens/CSS variables, Lucide icons, Sonner toasts, and Radix primitives for accessible interactive controls.
 - No global state library, inline styles, CSS modules, external client API calls, arbitrary hard-coded theme colors, `any`, or `dangerouslySetInnerHTML` without sanitization.
+- `ThemeProvider` initializes once from `localStorage["chaatwala-theme"]`; its effect only applies/persists the current value. Never read storage and call `setTheme` from the `[theme]` effect, which causes a saved opposite theme to toggle forever and surfaces as a NavigationMenu maximum-update-depth error.
 
 ## Performance context
 

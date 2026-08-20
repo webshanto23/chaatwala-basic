@@ -3,7 +3,7 @@ import { Geist, Geist_Mono, Fraunces, Inter } from "next/font/google";
 import { auth } from "@/lib/auth";
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/theme-context";
-import { AuthProvider, UserDataProvider } from "@/contexts/auth-context";
+import { AuthProvider } from "@/contexts/auth-context";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -100,10 +100,8 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <AuthProvider initialSession={session}>
-            <UserDataProvider>
-              {children}
-              <Toaster position="top-right" richColors />
-            </UserDataProvider>
+            {children}
+            <Toaster position="top-right" richColors />
           </AuthProvider>
         </ThemeProvider>
         <script
