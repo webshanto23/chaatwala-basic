@@ -6,14 +6,16 @@ import {
   getSpicyDishes,
 } from "@/features/products/service";
 import { shuffle } from "@/lib/utils";
+import { getHeroSettings } from "@/features/site-settings/service";
 
 export const revalidate = 300;
 
 export default async function Home() {
-  const [popularDishes, popularDrinks, spicyDishes] = await Promise.all([
+  const [popularDishes, popularDrinks, spicyDishes, heroSettings] = await Promise.all([
     getPopularDishes(),
     getPopularDrinks(),
     getSpicyDishes(),
+    getHeroSettings(),
   ]);
 
   const toFoodItem = (
@@ -71,7 +73,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col flex-1 font-sans bg-linear-to-r from-primary/10 via-secondary/10 to-accent/10">
-      <HeroSection />
+      <HeroSection imageUrl={heroSettings.imageUrl} imageAlt={heroSettings.imageAlt} />
       <MostLoved data={mostLoved} />
       <SpicyPicks data={spicy} />
     </div>

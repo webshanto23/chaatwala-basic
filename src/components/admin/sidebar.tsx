@@ -67,15 +67,26 @@ export default function Sidebar() {
         <div>
           <h2 className="mb-6 text-xl font-bold text-primary">Public View</h2>
           <Link
-            href="/"
+            href="/admin/homepage"
             className={cn(
               "block rounded-md px-3 py-2 text-sm transition-colors",
-              pathname === "/"
+              pathname === "/admin/homepage"
                 ? "bg-primary font-medium text-primary-foreground"
                 : "text-foreground hover:bg-muted",
             )}
           >
             Home
+          </Link>
+          <Link
+            href="/admin/about"
+            className={cn(
+              "block rounded-md px-3 py-2 text-sm transition-colors",
+              pathname === "/admin/about"
+                ? "bg-primary font-medium text-primary-foreground"
+                : "text-foreground hover:bg-muted",
+            )}
+          >
+            About
           </Link>
           <Link
             href="/products/dishes"

@@ -9,7 +9,12 @@ import {
   getStoreAvailabilities,
 } from "@/features/stores/service";
 
-export async function HeroSection() {
+type HeroSectionProps = {
+  imageUrl: string | null;
+  imageAlt: string;
+};
+
+export async function HeroSection({ imageUrl, imageAlt }: HeroSectionProps) {
   const [stores, availabilities] = await Promise.all([
     getPublicStoresInfo(),
     getStoreAvailabilities(),
@@ -84,11 +89,13 @@ export async function HeroSection() {
             <div className="isolate overflow-hidden rounded-[2rem] border border-border/60 bg-card/90 shadow-[0_32px_120px_-58px_rgba(251,140,0,0.55)]">
               <div className=" w-full overflow-hidden">
                 <Image
-                  src="/images/banner.jpg"
-                  alt="Delicious street food spread"
+                  src={imageUrl ?? "/images/banner.jpg"}
+                  alt={imageAlt}
                   width={630}
                   height={480}
-                  className="h-full w-full object-fit transition-transform duration-700 hover:scale-105"
+                  sizes="(min-width: 1024px) 40vw, 100vw"
+                  priority
+                  className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                 />
               </div>
 

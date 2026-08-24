@@ -24,6 +24,8 @@ model User {
   orders        Order[]
   managedStore  Store?     @relation("StoreManager")
   passwordResetTokens PasswordResetToken[]
+  heroSettingsUpdated SiteSetting[] @relation("HeroSettingsUpdatedBy")
+  galleryImagesCreated GalleryImage[] @relation("GalleryImageCreatedBy")
   sessionVersion Int       @default(0)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
@@ -295,6 +297,33 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId, productType])
+}
+
+model SiteSetting {
+  id                 String   @id @default("global")
+  heroImageUrl       String?
+  heroImageAlt       String   @default("Delicious street food spread")
+  heroImageDeleteUrl String?
+  updatedById        String?
+  updatedBy          User?    @relation("HeroSettingsUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([updatedById])
+}
+
+model GalleryImage {
+  id             String   @id @default(cuid())
+  imageUrl       String
+  alt            String
+  imageDeleteUrl String?
+  createdById    String?
+  createdBy      User?    @relation("GalleryImageCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([createdById])
+  @@index([createdAt])
 }
 
 model StoreInventory {

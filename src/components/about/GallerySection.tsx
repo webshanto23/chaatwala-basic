@@ -1,12 +1,16 @@
-"use client";
-
 import data from "../../../sitedata.json";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import type { GalleryImage } from "@/features/about-gallery/service";
 
-const galleryImages = data.about.gallery.images;
+const fallbackImages: GalleryImage[] = data.about.gallery.images.map((image) => ({
+  id: String(image.id),
+  src: image.src,
+  alt: image.alt,
+}));
 
-export function GallerySection() {
+export function GallerySection({ images }: { images: GalleryImage[] }) {
+  const galleryImages = images.length > 0 ? images : fallbackImages;
   return (
     <section className="px-4 sm:px-6 lg:px-8 py-12 mx-auto max-w-7xl">
       <div className="mx-auto max-w-7xl rounded-[2rem] border border-border/70 bg-card/95 p-8 shadow-xl shadow-secondary/10">
