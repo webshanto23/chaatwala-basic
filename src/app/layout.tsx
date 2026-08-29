@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces, Inter } from "next/font/google";
-import { auth } from "@/lib/auth";
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { AuthProvider } from "@/contexts/auth-context";
@@ -69,13 +68,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
-
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Restaurant",
@@ -99,7 +96,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <AuthProvider initialSession={session}>
+          <AuthProvider>
             {children}
             <Toaster position="top-right" richColors />
           </AuthProvider>

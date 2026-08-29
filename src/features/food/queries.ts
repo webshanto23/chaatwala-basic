@@ -78,7 +78,11 @@ export async function getFoodCatalog(filters: FoodCatalogFilters = {}) {
 }
 
 export async function getFoodById(id: string, storeId?: string) {
-  const food = await prisma.food.findUnique({ where: { id }, include: catalogInclude });
+  const food = await unstable_cache(
+    () => prisma.food.findUnique({ where: { id }, include: catalogInclude }),
+    ["food", id],
+    { revalidate: 300, tags: ["foods"] },
+  )();
   return food ? toCatalogItem(food, storeId) : null;
 }
 

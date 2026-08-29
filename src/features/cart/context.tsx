@@ -24,10 +24,16 @@ const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { auth } = useAuth();
-  const identity = auth.isLoading ? "loading" : `${auth.userId ?? "guest"}:${auth.role ?? "none"}`;
+  const identity = auth.isLoading
+    ? "loading"
+    : `${auth.userId ?? "guest"}:${auth.workspace ?? "none"}`;
 
   return (
-    <CartState key={identity} isSessionLoading={auth.isLoading}>
+    <CartState
+      key={identity}
+      workspace={auth.workspace}
+      isSessionLoading={auth.isLoading}
+    >
       {children}
     </CartState>
   );
@@ -35,9 +41,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
 function CartState({
   children,
+  workspace,
   isSessionLoading,
 }: {
   children: React.ReactNode;
+  workspace: "customer" | "staff" | null;
   isSessionLoading: boolean;
 }) {
   const [cart, setCart] = useState<{ id: string; items: CartItem[] }>({ id: "", items: [] });
@@ -46,6 +54,12 @@ function CartState({
 
   const refresh = useCallback(async () => {
     if (isSessionLoading) return;
+    if (workspace === "staff") {
+      setCart({ id: "", items: [] });
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
 
     setError(null);
     try {
@@ -75,7 +89,7 @@ function CartState({
     } finally {
       setIsLoading(false);
     }
-  }, [isSessionLoading]);
+  }, [isSessionLoading, workspace]);
 
   useEffect(() => {
     let cancelled = false;

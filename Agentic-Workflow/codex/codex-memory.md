@@ -42,8 +42,8 @@ Last updated: 2026-08-29
 
 ## Customer/staff isolation and APIs
 
-- Customer layout redirects any STAFF workspace session to `/staff` before customer providers mount.
-- Cart no longer contains admin-specific bypass branches.
+- Customer layout owns the customer shell but deliberately does not read the session or redirect. This keeps public customer pages eligible for static/ISR rendering. Protected customer routes still enforce the `customer` workspace on the server; staff routes enforce `staff` on the server.
+- Client customer providers use `auth.workspace` to isolate data: staff sessions do not fetch `/api/cart` or `/api/user/me`, and staff users do not see customer cart controls, floating cart, or home search. They instead receive a Staff Dashboard link.
 - Staff sessions receive 403 from customer cart, checkout, payment initiation, customer orders, profile, addresses, and profile upload APIs.
 - Staff APIs live under `src/app/api/staff/`:
   - `/api/staff/orders/[orderId]` verifies workspace, permission, and assigned-store scope (wildcard permission can access all stores).
@@ -74,6 +74,15 @@ Last updated: 2026-08-29
 - Reuse `components/staff` and existing shadcn primitives; do not introduce a separate dashboard design system.
 - Keep customer URLs unchanged. Do not add legacy redirects; this is a clean development cutover.
 - Read `Agentic-Workflow/codex/todo.md` for the detailed migration checklist and remaining validation tasks.
+
+## Public caching and SSR update (2026-08-29)
+
+- Root layout no longer calls `auth()` or passes an SSR session into `AuthProvider`. The browser resolves session state after hydration, so public routes do not become dynamic merely because a visitor is authenticated.
+- `/` was confirmed as static/ISR by `npm run build` (`○ /`, revalidate 1m). This restores CDN-served homepage HTML; authentication-sensitive route layouts and APIs remain server-authorized.
+- `getFoodById` now follows the existing food catalog cache contract: five-minute `unstable_cache` with the `foods` tag. Food mutations already invalidate that tag.
+- Store mutations now invalidate `stores`, `store-managers`, `store-info`, and `store-availability`, so homepage store details and open/closed state cannot remain stale until TTL expiry.
+- `vercel.json` pins server functions to `sin1`, which is near the configured Singapore Neon database. Static pages remain globally CDN-cached.
+- Validation: `npx tsc --noEmit`, `npm test` (14 tests), and `npm run lint` pass (lint has nine pre-existing warnings). `npm run build` passed with network access; the local sandbox-only attempt cannot download Google Fonts.
 
 ## Customer authentication fix (2026-08-29)
 

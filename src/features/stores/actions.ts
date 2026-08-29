@@ -10,6 +10,13 @@ import { z } from "zod";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
+function revalidateStoreData() {
+  revalidateTag("stores", "default");
+  revalidateTag("store-managers", "default");
+  revalidateTag("store-info", "default");
+  revalidateTag("store-availability", "default");
+}
+
 type Store = {
   id: string;
   name: string;
@@ -169,8 +176,7 @@ export async function createStore(formData: FormData): Promise<{ success: true; 
     metadata: { name: store.name },
   });
 
-  revalidateTag("stores", "default");
-  revalidateTag("store-managers", "default");
+  revalidateStoreData();
 
   return { success: true, store };
 }
@@ -255,8 +261,7 @@ export async function updateStore(id: string, formData: FormData): Promise<{ suc
     metadata: { name: store.name },
   });
 
-  revalidateTag("stores", "default");
-  revalidateTag("store-managers", "default");
+  revalidateStoreData();
 
   return { success: true, store };
 }
@@ -286,8 +291,7 @@ export async function deleteStore(id: string): Promise<{ success: true } | { err
     metadata: { name: store.name },
   });
 
-  revalidateTag("stores", "default");
-  revalidateTag("store-managers", "default");
+  revalidateStoreData();
 
   return { success: true };
 }

@@ -112,10 +112,17 @@ const UserDataContext = createContext<UserDataContextValue | undefined>(undefine
 
 export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const { auth } = useAuth();
-  const identity = auth.isLoading ? "loading" : auth.userId ?? "anonymous";
+  const identity = auth.isLoading
+    ? "loading"
+    : `${auth.userId ?? "anonymous"}:${auth.workspace ?? "none"}`;
 
   return (
-    <UserDataState key={identity} userId={auth.userId} isSessionLoading={auth.isLoading}>
+    <UserDataState
+      key={identity}
+      userId={auth.userId}
+      workspace={auth.workspace}
+      isSessionLoading={auth.isLoading}
+    >
       {children}
     </UserDataState>
   );
@@ -124,19 +131,29 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 function UserDataState({
   children,
   userId,
+  workspace,
   isSessionLoading,
 }: {
   children: React.ReactNode;
   userId: string | null;
+  workspace: Workspace | null;
   isSessionLoading: boolean;
 }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [isLoading, setIsLoading] = useState(() => isSessionLoading || Boolean(userId));
+  const [isLoading, setIsLoading] = useState(
+    () => isSessionLoading || (workspace === "customer" && Boolean(userId)),
+  );
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || workspace !== "customer") {
+      setProfile(null);
+      setAddresses([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
 
     setError(null);
     try {
@@ -164,14 +181,14 @@ function UserDataState({
     } finally {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, [userId, workspace]);
 
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
       await Promise.resolve();
-      if (!cancelled && !isSessionLoading && userId) {
+      if (!cancelled && !isSessionLoading) {
         await refresh();
       }
     };
@@ -180,7 +197,7 @@ function UserDataState({
     return () => {
       cancelled = true;
     };
-  }, [isSessionLoading, refresh, userId]);
+  }, [isSessionLoading, refresh]);
 
   return (
     <UserDataContext.Provider value={{ profile, addresses, isLoading, error, refresh, setProfile, setAddresses }}>

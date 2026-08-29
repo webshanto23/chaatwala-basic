@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
 import data from "../../../sitedata.json";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Menu, LogOut, ShoppingCart, Sun, Moon } from "lucide-react";
 import { Logo } from "@/components/shared/footer/logo";
 import { useAuth } from "@/contexts/auth-context";
-import { usePermissions } from "@/hooks/use-can";
 import { useCart } from "@/features/cart/context";
 import { useTheme } from "@/contexts/theme-context";
 
@@ -23,21 +21,12 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 export default function Navbar() {
   const router = useRouter();
   const { auth, logout } = useAuth();
-  const { role } = usePermissions();
-  const { totalItems, clear } = useCart();
+  const { totalItems } = useCart();
   const isLoggedIn = auth.isAuthenticated;
-  const isAdmin = role === "admin";
-  const isStoreManager = role === "store_manager";
-
-  useEffect(() => {
-    if (isAdmin) {
-      clear().catch(() => {});
-    }
-  }, [isAdmin, clear]);
+  const isStaff = auth.workspace === "staff";
 
   const publicLinks = data.navigation.publicLinks;
   const userLinks = data.navigation.userLinks;
-  const adminLinks = data.navigation.adminLinks;
   const { theme, toggleTheme, mounted } = useTheme();
 
   return (
@@ -55,9 +44,9 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Menu */}
-        <NavigationMenu key={isAdmin ? "admin" : "public"} className="hidden md:flex rounded-full  px-4 py-1">
+        <NavigationMenu key={isStaff ? "staff" : "customer"} className="hidden md:flex rounded-full  px-4 py-1">
           <NavigationMenuList className="gap-2">
-            {!isLoggedIn && publicLinks.map((item) => (
+            {(!isLoggedIn || isStaff) && publicLinks.map((item) => (
               <NavigationMenuItem key={item.href}>
                 <NavigationMenuLink asChild>
                   <Link
@@ -70,7 +59,7 @@ export default function Navbar() {
               </NavigationMenuItem>
             ))}
 
-            {isLoggedIn && !isAdmin && !isStoreManager && (
+            {isLoggedIn && !isStaff && (
               <>
                 {userLinks.map((item) => (
                   <NavigationMenuItem key={item.href}>
@@ -87,47 +76,7 @@ export default function Navbar() {
               </>
             )}
 
-            {isStoreManager && (
-              <>
-                {publicLinks.map((item) => (
-                  <NavigationMenuItem key={item.href}>
-                    <NavigationMenuLink asChild>
-                      <Link
-                        href={item.href}
-                        className="hover:text-primary transition-colors"
-                      >
-                        {item.label}
-                      </Link>
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                ))}
-                <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link
-                      href="/staff"
-                      className="hover:text-primary transition-colors"
-                    >
-                      Staff Dashboard
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              </>
-            )}
-
-            {isAdmin &&
-              adminLinks.map((item) => (
-                <NavigationMenuItem key={item.href}>
-                  <NavigationMenuLink asChild>
-                    <Link
-                      href={item.href}
-                      className="hover:text-primary transition-colors"
-                    >
-                      {item.label}
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              ))}
-            {isAdmin && (
+            {isStaff && (
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link
@@ -157,7 +106,7 @@ export default function Navbar() {
               : <Moon className="h-5 w-5" />}
           </button>
 
-          {!isAdmin && !isStoreManager && (
+          {!isStaff && (
             <Link
               href="/cart"
               className="relative rounded-full p-2 text-foreground transition-colors hover:bg-muted hover:text-primary"
@@ -224,7 +173,7 @@ export default function Navbar() {
                 </div>
 
                 <nav className="flex flex-col gap-1">
-                  {!isLoggedIn && publicLinks.map((item) => (
+                  {(!isLoggedIn || isStaff) && publicLinks.map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
@@ -234,7 +183,7 @@ export default function Navbar() {
                     </Link>
                   ))}
 
-                  {isLoggedIn && !isAdmin && !isStoreManager && userLinks.map((item) => (
+                  {isLoggedIn && !isStaff && userLinks.map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
@@ -244,27 +193,7 @@ export default function Navbar() {
                     </Link>
                   ))}
 
-                  {isStoreManager && (
-                    <>
-                      {publicLinks.map((item) => (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className="rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
-                      <Link
-                        href="/staff"
-                        className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
-                      >
-                        Staff Dashboard
-                      </Link>
-                    </>
-                  )}
-
-                  {isAdmin && (
+                  {isStaff && (
                     <Link
                       href="/staff"
                       className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
@@ -273,15 +202,6 @@ export default function Navbar() {
                     </Link>
                   )}
 
-                  {isAdmin && adminLinks.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
                 </nav>
 
                 <div className="mt-auto flex flex-col gap-2 border-t border-border pt-6">
@@ -297,7 +217,7 @@ export default function Navbar() {
                       : <Moon className="h-4 w-4" />}
                     {mounted ? (theme === "dark" ? "Light Mode" : "Dark Mode") : "Dark Mode"}
                   </button>
-                  {!isAdmin && !isStoreManager && (
+                  {!isStaff && (
                     <Link
                       href="/cart"
                       className="flex items-center gap-2 rounded-md px-2 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
