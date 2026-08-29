@@ -17,7 +17,7 @@
 */
 
 import { auth } from "@/lib/auth";
-import { can, canAny, type Permission, type RoleName } from "@/lib/permissions";
+import { can, canAny, SUPER_ADMIN_SYSTEM_KEY, type Permission, type RoleName, type Workspace } from "@/lib/permissions";
 import { NextResponse } from "next/server";
 import type { Session } from "next-auth";
 
@@ -32,7 +32,7 @@ type RoleCheckInput = {
 export async function authorize(input: PermissionCheckInput) {
   const session = await auth();
 
-  if (!session?.user) {
+  if (!session?.user || !session.user.isActive) {
     return { authorized: false as const, session: null };
   }
 
@@ -62,6 +62,27 @@ export function getUserRole(session: Session | null): RoleName | null {
     return null;
   }
   return session.user.role as RoleName;
+}
+
+export function getUserWorkspace(session: Session | null): Workspace | null {
+  if (!session?.user?.workspace || !session.user.isActive) return null;
+  return session.user.workspace;
+}
+
+export async function requireWorkspace(workspace: Workspace) {
+  const session = await auth();
+  if (!session?.user || !session.user.isActive || session.user.workspace !== workspace) {
+    return { authorized: false as const, session: null };
+  }
+  return { authorized: true as const, session };
+}
+
+export async function requireSuperAdmin() {
+  const session = await auth();
+  if (!session?.user || !session.user.isActive || session.user.systemRoleKey !== SUPER_ADMIN_SYSTEM_KEY) {
+    return { authorized: false as const, session: null };
+  }
+  return { authorized: true as const, session };
 }
 
 export async function authorizeRole(input: RoleCheckInput) {

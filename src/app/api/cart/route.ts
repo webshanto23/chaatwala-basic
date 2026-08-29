@@ -75,6 +75,7 @@ function serializeCart(cart: Awaited<ReturnType<typeof getOrCreateCart>>) {
 
 export async function DELETE(request: Request) {
   const session = await auth();
+  if (session?.user.workspace === "staff") return NextResponse.json({ error: "Customer cart access only" }, { status: 403 });
   const rateLimitId = session?.user?.id ?? `ip:${getClientIp(new Request("http://localhost"))}`;
   const { success } = await checkRateLimit(rateLimitId, "medium");
   if (!success) {
@@ -93,6 +94,7 @@ export async function DELETE(request: Request) {
 
 export async function GET(request: Request) {
   const session = await auth();
+  if (session?.user.workspace === "staff") return NextResponse.json({ error: "Customer cart access only" }, { status: 403 });
   const userId = session?.user?.id ?? null;
   const guestId = userId ? null : await getGuestId();
 
@@ -113,6 +115,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await auth();
+    if (session?.user.workspace === "staff") return NextResponse.json({ error: "Customer cart access only" }, { status: 403 });
     const rateLimitId = session?.user?.id ?? `ip:${getClientIp(request)}`;
     const { success } = await checkRateLimit(rateLimitId, "medium");
     if (!success) {
@@ -130,12 +133,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "productId and productType are required" }, { status: 400 });
     }
 
-    const validTypes = new Set(["dish", "drink", "combo"]);
+    const validTypes = new Set(["food"]);
     if (!validTypes.has(productType)) {
       return NextResponse.json({ error: "Invalid productType" }, { status: 400 });
     }
 
-    const product = await findProduct(productType as "dish" | "drink" | "combo", productId);
+    const product = await findProduct(productId);
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }

@@ -18,7 +18,7 @@ import { Logo } from "@/components/shared/footer/logo";
 import { XIcon } from "@/components/icons/x-icon";
 import Link from "next/link";
 import { useState } from "react";
-import { getRoleHome, getSafeReturnPath } from "@/lib/auth-redirect";
+import { getSafeReturnPath, getWorkspaceHome } from "@/lib/auth-redirect";
 
 export default function SignIn() {
   const router = useRouter();
@@ -41,7 +41,7 @@ export default function SignIn() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    const result = await signIn("credentials", {
+    const result = await signIn("customer-credentials", {
       email,
       password,
       redirect: false,
@@ -54,7 +54,7 @@ export default function SignIn() {
     }
 
     const session = await getSession();
-    router.replace(returnPath ?? getRoleHome(session?.user?.role));
+    router.replace(returnPath ?? getWorkspaceHome(session?.user?.workspace));
   };
 
   const handleOAuthSignIn = async (provider: string) => {

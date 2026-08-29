@@ -5,8 +5,8 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
-import { signInSchema } from "@/lib/validations/auth";
-import type { RoleName } from "@/lib/permissions";
+import { customerSignInSchema, staffSignInSchema } from "@/lib/validations/auth";
+import type { RoleName, Workspace } from "@/lib/permissions";
 
 type UserRole = RoleName;
 export type { UserRole as AuthRole };
@@ -18,6 +18,10 @@ declare module "next-auth" {
     user: {
       id: string;
       role: UserRole;
+      staffRoleId: string | null;
+      workspace: Workspace;
+      systemRoleKey: string | null;
+      isActive: boolean;
       permissions: Permission[];
       name: string | null;
       email: string | null;
@@ -30,16 +34,20 @@ declare module "@auth/core/jwt" {
   interface JWT {
     id: string;
     role: UserRole;
+    staffRoleId: string | null;
+    workspace: Workspace;
+    systemRoleKey: string | null;
+    isActive: boolean;
     permissions: Permission[];
     sessionVersion: number;
   }
 }
 
-async function loadUserPermissions(userId: string) {
+async function loadUserAuthorization(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
-      role: {
+      staffRole: {
         include: {
           permissions: {
             include: {
@@ -51,14 +59,59 @@ async function loadUserPermissions(userId: string) {
     },
   });
 
-  if (!user || !user.role) {
-    return { role: "user" as UserRole, permissions: [] as Permission[] };
+  if (!user) {
+    return {
+      role: "customer" as UserRole,
+      staffRoleId: null,
+      workspace: "customer" as Workspace,
+      systemRoleKey: null,
+      isActive: false,
+      permissions: [] as Permission[],
+    };
   }
 
-  const roleName = user.role.name as UserRole;
-  const permissions = user.role.permissions.map((rp) => rp.permission.name) as Permission[];
+  if (!user.staffRole) {
+    return {
+      role: "customer" as UserRole,
+      staffRoleId: null,
+      workspace: "customer" as Workspace,
+      systemRoleKey: null,
+      isActive: user.isActive,
+      permissions: [] as Permission[],
+    };
+  }
 
-  return { role: roleName, permissions };
+  const roleName = user.staffRole.name as UserRole;
+  const permissions = user.staffRole.permissions.map((rp) => rp.permission.name) as Permission[];
+
+  return {
+    role: roleName,
+    staffRoleId: user.staffRole.id,
+    workspace: "staff" as const,
+    systemRoleKey: user.staffRole.systemKey,
+    isActive: user.isActive,
+    permissions,
+  };
+}
+
+async function authorizeCustomerCredentials(credentials: Record<string, unknown>) {
+  const validated = customerSignInSchema.parse(credentials);
+  const user = await prisma.user.findUnique({
+    where: { email: validated.email.toLowerCase() },
+    include: { staffRole: { select: { id: true } } },
+  });
+  if (!user || !user.password || !user.isActive || user.staffRole) return null;
+  return (await bcrypt.compare(validated.password, user.password)) ? user : null;
+}
+
+async function authorizeStaffCredentials(credentials: Record<string, unknown>) {
+  const validated = staffSignInSchema.parse(credentials);
+  const user = await prisma.user.findUnique({
+    where: { username: validated.username },
+    include: { staffRole: { select: { workspace: true } } },
+  });
+  if (!user || !user.password || !user.isActive || user.staffRole?.workspace !== "STAFF") return null;
+  return (await bcrypt.compare(validated.password, user.password)) ? user : null;
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -79,37 +132,52 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
     }),
     Credentials({
-      id: "credentials",
-      name: "Credentials",
+      id: "customer-credentials",
+      name: "Customer credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials) return null;
-
-        const validated = signInSchema.parse(credentials);
-
-        const user = await prisma.user.findUnique({
-          where: { email: validated.email },
-        });
-
-        if (!user || !user.password) return null;
-
-        const passwordMatch = await bcrypt.compare(validated.password, user.password);
-
-        if (!passwordMatch) return null;
-
-        return user;
+        return authorizeCustomerCredentials(credentials);
+      },
+    }),
+    Credentials({
+      id: "staff-credentials",
+      name: "Staff credentials",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials) return null;
+        return authorizeStaffCredentials(credentials);
       },
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (!account || account.provider === "customer-credentials" || account.provider === "staff-credentials") {
+        return true;
+      }
+
+      const existing = await prisma.user.findUnique({
+        where: { id: user.id },
+        include: { staffRole: { select: { workspace: true } } },
+      });
+      return existing?.staffRole?.workspace !== "STAFF";
+    },
     async jwt({ token, user }) {
       if (user?.id) {
         token.id = user.id;
-        const { role, permissions } = await loadUserPermissions(user.id);
+        const authorization = await loadUserAuthorization(user.id);
+        const { role, staffRoleId, workspace, systemRoleKey, isActive, permissions } = authorization;
         token.role = role;
+        token.staffRoleId = staffRoleId;
+        token.workspace = workspace;
+        token.systemRoleKey = systemRoleKey;
+        token.isActive = isActive;
         token.permissions = permissions;
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
@@ -126,8 +194,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const tokenVersion = (token.sessionVersion as number) ?? 0;
 
         if (dbVersion !== tokenVersion) {
-          const { role, permissions } = await loadUserPermissions(token.id as string);
+          const { role, staffRoleId, workspace, systemRoleKey, isActive, permissions } = await loadUserAuthorization(token.id as string);
           token.role = role;
+          token.staffRoleId = staffRoleId;
+          token.workspace = workspace;
+          token.systemRoleKey = systemRoleKey;
+          token.isActive = isActive;
           token.permissions = permissions;
           token.sessionVersion = dbVersion;
         }
@@ -139,30 +211,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as UserRole;
+        session.user.staffRoleId = (token.staffRoleId as string | null) ?? null;
+        session.user.workspace = (token.workspace as Workspace) ?? "customer";
+        session.user.systemRoleKey = (token.systemRoleKey as string | null) ?? null;
+        session.user.isActive = Boolean(token.isActive);
         session.user.permissions = (token.permissions as Permission[]) ?? [];
       }
       return session;
-    },
-  },
-  events: {
-    async signIn({ user }) {
-      if (!user.id) return;
-      const existing = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { roleId: true },
-      });
-      if (!existing?.roleId) {
-        const userRole = await prisma.role.findUnique({
-          where: { name: "user" },
-          select: { id: true },
-        });
-        if (userRole) {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { roleId: userRole.id },
-          });
-        }
-      }
     },
   },
 });

@@ -18,22 +18,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/products/dishes`,
+      url: `${baseUrl}/products`,
       lastModified: new Date(),
       changeFrequency: "hourly" as const,
       priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/products/drinks`,
-      lastModified: new Date(),
-      changeFrequency: "hourly" as const,
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/products/combos`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
     },
     {
       url: `${baseUrl}/terms-and-conditions`,
@@ -56,31 +44,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const [dishes, drinks, combos] = await Promise.all([
-      prisma.dish.findMany({ select: { id: true, updatedAt: true } }),
-      prisma.drink.findMany({ select: { id: true, updatedAt: true } }),
-      prisma.combo.findMany({ select: { id: true, updatedAt: true } }),
-    ]);
+    const foods = await prisma.food.findMany({
+      where: { isAvailable: true },
+      select: { id: true, updatedAt: true, kind: true },
+    });
 
     const productPages: MetadataRoute.Sitemap = [
-      ...dishes.map((dish) => ({
-        url: `${baseUrl}/products/dishes/${dish.id}`,
-        lastModified: dish.updatedAt,
-        changeFrequency: "daily" as const,
-        priority: 0.7,
-      })),
-      ...drinks.map((drink) => ({
-        url: `${baseUrl}/products/drinks/${drink.id}`,
-        lastModified: drink.updatedAt,
-        changeFrequency: "daily" as const,
-        priority: 0.7,
-      })),
-      ...combos.map((combo) => ({
-        url: `${baseUrl}/products/combos/${combo.id}`,
-        lastModified: combo.updatedAt,
-        changeFrequency: "weekly" as const,
-        priority: 0.6,
-      })),
+      ...foods.map((food) => {
+        return {
+          url: `${baseUrl}/products/${food.id}`,
+          lastModified: food.updatedAt,
+          changeFrequency: food.kind === "COMBO" ? "weekly" as const : "daily" as const,
+          priority: food.kind === "COMBO" ? 0.6 : 0.7,
+        };
+      }),
     ];
 
     return [...staticPages, ...productPages];

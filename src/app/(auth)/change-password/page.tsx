@@ -10,6 +10,7 @@ import { Lock } from "lucide-react";
 import { DecorIcon } from "@/components/ui/decor-icon";
 import { Logo } from "@/components/shared/footer/logo";
 import { changePassword } from "@/app/actions/password";
+import { getWorkspaceHome } from "@/lib/auth-redirect";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -21,12 +22,7 @@ export default function ChangePasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const getTargetDashboard = () => {
-    const role = session?.user?.role;
-    if (role === "admin") return "/admin/dashboard";
-    if (role === "store_manager") return "/store-manager/dashboard";
-    return "/profile/dashboard";
-  };
+  const getTargetDashboard = () => getWorkspaceHome(session?.user?.workspace);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

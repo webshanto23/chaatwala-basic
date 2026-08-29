@@ -23,15 +23,19 @@ export default function CheckoutSuccessPage() {
   useEffect(() => {
     if (!valId) return;
     const fetchOrder = async () => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12_000);
       try {
         const res = await fetch("/api/payment/validate", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams({ val_id: valId }).toString(),
           cache: "no-store",
+          signal: controller.signal,
         });
         const data = await res.json();
         if (res.ok && data.status === "VALID") {
+          sessionStorage.removeItem("chaatwala:pending-order");
           setOrder({
             id: "",
             status: "paid",
@@ -42,8 +46,9 @@ export default function CheckoutSuccessPage() {
           setError(data.error ?? "Payment validation failed");
         }
       } catch {
-        setError("Failed to validate payment");
+        setError("Payment validation timed out. Please refresh shortly to check the final status.");
       } finally {
+        clearTimeout(timeout);
         setLoading(false);
       }
     };

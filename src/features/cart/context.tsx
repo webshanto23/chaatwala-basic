@@ -27,7 +27,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const identity = auth.isLoading ? "loading" : `${auth.userId ?? "guest"}:${auth.role ?? "none"}`;
 
   return (
-    <CartState key={identity} isAdmin={auth.role === "admin"} isSessionLoading={auth.isLoading}>
+    <CartState key={identity} isSessionLoading={auth.isLoading}>
       {children}
     </CartState>
   );
@@ -35,25 +35,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
 function CartState({
   children,
-  isAdmin,
   isSessionLoading,
 }: {
   children: React.ReactNode;
-  isAdmin: boolean;
   isSessionLoading: boolean;
 }) {
   const [cart, setCart] = useState<{ id: string; items: CartItem[] }>({ id: "", items: [] });
-  const [isLoading, setIsLoading] = useState(() => isSessionLoading || !isAdmin);
+  const [isLoading, setIsLoading] = useState(() => isSessionLoading);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (isSessionLoading) return;
 
-    if (isAdmin) {
-      setCart({ id: "", items: [] });
-      setIsLoading(false);
-      return;
-    }
     setError(null);
     try {
       const res = await fetch("/api/cart");
@@ -82,7 +75,7 @@ function CartState({
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin, isSessionLoading]);
+  }, [isSessionLoading]);
 
   useEffect(() => {
     let cancelled = false;
@@ -101,7 +94,6 @@ function CartState({
   }, [isSessionLoading, refresh]);
 
   const addItem = useCallback(async (input: AddToCartInput) => {
-    if (isAdmin) return;
     setError(null);
     const res = await fetch("/api/cart", {
       method: "POST",
@@ -142,10 +134,9 @@ function CartState({
         updatedAt: new Date(item.updatedAt),
       })),
     });
-  }, [isAdmin]);
+  }, []);
 
   const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
-    if (isAdmin) return;
     setError(null);
     const res = await fetch(`/api/cart/item/${itemId}`, {
       method: "PATCH",
@@ -163,10 +154,9 @@ function CartState({
         item.id === itemId ? { ...item, ...data.item, createdAt: new Date(data.item.createdAt), updatedAt: new Date(data.item.updatedAt) } : item
       ),
     }));
-  }, [isAdmin]);
+  }, []);
 
   const removeItem = useCallback(async (itemId: string) => {
-    if (isAdmin) return;
     setError(null);
     const res = await fetch(`/api/cart/item/${itemId}`, { method: "DELETE" });
     if (!res.ok) {
@@ -196,10 +186,9 @@ function CartState({
     } else {
       setCart((prev) => ({ ...prev, items: prev.items.filter((item) => item.id !== itemId) }));
     }
-  }, [isAdmin]);
+  }, []);
 
   const clear = useCallback(async () => {
-    if (isAdmin) return;
     setError(null);
     const res = await fetch("/api/cart", { method: "DELETE" });
     if (!res.ok) {
@@ -225,7 +214,7 @@ function CartState({
         updatedAt: new Date(item.updatedAt),
       })),
     });
-  }, [isAdmin]);
+  }, []);
 
   const totalItems = useMemo(
     () => cart.items.reduce((sum, item) => sum + item.quantity, 0),

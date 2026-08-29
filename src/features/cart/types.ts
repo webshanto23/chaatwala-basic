@@ -1,4 +1,4 @@
-export type ProductType = "dish" | "drink" | "combo";
+export type ProductType = "food";
 
 export interface CartItem {
   id: string;

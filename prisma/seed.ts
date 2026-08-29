@@ -1,8 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import {
   ALL_PERMISSIONS,
-  ROLE_PERMISSIONS,
-  type RoleName,
+  SEED_ROLE_PERMISSIONS,
+  SUPER_ADMIN_SYSTEM_KEY,
 } from "../src/lib/permissions";
 
 const prisma = new PrismaClient();
@@ -23,6 +23,8 @@ const PERMISSION_DESCRIPTIONS: Record<string, string> = {
   "food:create": "Create food items",
   "food:update": "Update food items",
   "food:delete": "Delete food items",
+  "food-category:manage": "Manage food categories",
+  "food-tag:manage": "Manage food tags",
   "admin:create": "Promote a user to admin",
   "admin:delete": "Revoke admin from a user",
   "role:manage": "Manage role permissions",
@@ -32,6 +34,9 @@ const PERMISSION_DESCRIPTIONS: Record<string, string> = {
   "store:create": "Create stores",
   "store:update": "Update stores",
   "store:delete": "Delete stores",
+  "staff:manage": "Create and manage staff accounts",
+  "permission:manage": "Manage the permission catalogue",
+  "store:assign": "Assign staff to stores",
 };
 
 async function upsertPermissions() {
@@ -45,15 +50,26 @@ async function upsertPermissions() {
 }
 
 async function upsertRoles() {
-  const roleNames = Object.keys(ROLE_PERMISSIONS) as RoleName[];
+  const roleNames = Object.keys(SEED_ROLE_PERMISSIONS);
   for (const roleName of roleNames) {
+    const isSuperAdmin = roleName === SUPER_ADMIN_SYSTEM_KEY;
     const role = await prisma.role.upsert({
       where: { name: roleName },
-      update: {},
-      create: { name: roleName, description: `${roleName} role` },
+      update: {
+        workspace: "STAFF",
+        isSystem: isSuperAdmin,
+        systemKey: isSuperAdmin ? SUPER_ADMIN_SYSTEM_KEY : null,
+      },
+      create: {
+        name: roleName,
+        description: `${roleName} role`,
+        workspace: "STAFF",
+        isSystem: isSuperAdmin,
+        systemKey: isSuperAdmin ? SUPER_ADMIN_SYSTEM_KEY : null,
+      },
     });
 
-    const desired = ROLE_PERMISSIONS[roleName];
+    const desired = SEED_ROLE_PERMISSIONS[roleName];
     const current = await prisma.rolePermission.findMany({
       where: { roleId: role.id },
       include: { permission: true },
@@ -73,55 +89,52 @@ async function upsertRoles() {
   }
 }
 
-async function assignDefaultRoleToUsersWithoutOne() {
-  const userRole = await prisma.role.findUnique({ where: { name: "user" } });
-  if (!userRole) return;
+async function bootstrapSuperAdmin() {
+  const username = process.env.SUPER_ADMIN_USERNAME?.trim().toLowerCase();
+  const password = process.env.SUPER_ADMIN_PASSWORD?.trim();
+  if (!username || !password) return;
 
-  const usersWithoutRole = await prisma.user.findMany({ where: { roleId: null } });
-  for (const u of usersWithoutRole) {
-    await prisma.user.update({ where: { id: u.id }, data: { roleId: userRole.id } });
-  }
-}
+  const role = await prisma.role.findUnique({ where: { systemKey: SUPER_ADMIN_SYSTEM_KEY } });
+  if (!role) return;
 
-async function bootstrapAdmin() {
-  const adminEmail = process.env.ADMIN_EMAIL?.trim();
-  if (!adminEmail) return;
-
-  const adminRole = await prisma.role.findUnique({ where: { name: "admin" } });
-  if (!adminRole) return;
-
-  const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
+  const existing = await prisma.user.findUnique({ where: { username } });
 
   if (existing) {
-    if (existing.roleId !== adminRole.id) {
-      await prisma.user.update({ where: { id: existing.id }, data: { roleId: adminRole.id } });
-      console.log(`Promoted existing user ${adminEmail} to admin`);
+    if (existing.staffRoleId !== role.id || !existing.isActive) {
+      await prisma.user.update({ where: { id: existing.id }, data: { staffRoleId: role.id, isActive: true } });
+      console.log(`Updated Super Admin ${username}`);
     }
     return;
   }
 
-  const password = process.env.ADMIN_PASSWORD?.trim();
-  const hashedPassword = password
-    ? await import("bcrypt").then((b) => b.default.hash(password, 12))
-    : null;
+  const hashedPassword = await import("bcrypt").then((b) => b.default.hash(password, 12));
 
   await prisma.user.create({
     data: {
-      name: "Admin",
-      email: adminEmail,
+      name: "Super Admin",
+      username,
       password: hashedPassword,
-      roleId: adminRole.id,
+      staffRoleId: role.id,
     },
   });
 
-  console.log(`Created admin user ${adminEmail}`);
+  console.log(`Created Super Admin ${username}`);
+}
+
+async function upsertFoodTaxonomy() {
+  for (const name of ["Dish", "Drink", "Dessert", "Snack"]) {
+    await prisma.foodCategory.upsert({ where: { slug: name.toLowerCase() }, update: { name }, create: { name, slug: name.toLowerCase() } });
+  }
+  for (const name of ["Popular", "New", "Spicy"]) {
+    await prisma.foodTag.upsert({ where: { slug: name.toLowerCase() }, update: { name }, create: { name, slug: name.toLowerCase() } });
+  }
 }
 
 async function main() {
   await upsertPermissions();
   await upsertRoles();
-  await assignDefaultRoleToUsersWithoutOne();
-  await bootstrapAdmin();
+  await bootstrapSuperAdmin();
+  await upsertFoodTaxonomy();
   console.log(" completed");
 }
 

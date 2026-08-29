@@ -99,12 +99,12 @@ export async function addToCart(input: { productId: string; productType: string;
       data: { quantity: existing.quantity + (input.quantity ?? 1) },
     });
   } else {
-    const validTypes: ProductType[] = ["dish", "drink", "combo"];
+    const validTypes: ProductType[] = ["food"];
     if (!validTypes.includes(input.productType as ProductType)) {
       throw new Error("Invalid productType");
     }
 
-    const product = await findProduct(input.productType as ProductType, input.productId);
+    const product = await findProduct(input.productId);
     if (!product) {
       throw new Error("Product not found");
     }

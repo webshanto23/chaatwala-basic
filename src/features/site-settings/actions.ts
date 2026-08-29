@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
-import { requireRole } from "@/lib/authorize";
+import { requireSuperAdmin } from "@/lib/authorize";
 import { uploadImage } from "@/lib/image-upload";
 import { logAction } from "@/app/actions/audit";
 import { isSiteSettingsTableMissing } from "./service";
@@ -25,7 +25,7 @@ async function deleteStoredImage(deleteUrl: string | null | undefined, context: 
 }
 
 export async function updateHeroSettings(formData: FormData): Promise<{ success: true } | { error: string }> {
-  const { authorized, session } = await requireRole("admin");
+  const { authorized, session } = await requireSuperAdmin();
   if (!authorized || !session?.user) return { error: "Forbidden" };
 
   const actingUser = await prisma.user.findUnique({
@@ -101,6 +101,7 @@ export async function updateHeroSettings(formData: FormData): Promise<{ success:
   });
 
   revalidatePath("/");
+  revalidatePath("/staff/content/homepage");
   revalidateTag("site-settings", "default");
 
   if (uploadedImage && existing?.heroImageDeleteUrl) {

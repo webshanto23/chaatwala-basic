@@ -15,24 +15,11 @@ export async function proxy(request: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET,
     });
     if (token) {
-      const role = token.role as string | undefined;
-      if (role === "admin") {
-        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-      }
-      if (role === "store_manager") {
-        return NextResponse.redirect(new URL("/store-manager/dashboard", request.url));
-      }
+      const workspace = token.workspace as string | undefined;
+      if (workspace === "staff") return NextResponse.redirect(new URL("/staff", request.url));
       return NextResponse.redirect(new URL("/profile/dashboard", request.url));
     }
     return NextResponse.next();
-  }
-
-  if (pathname === "/admin") {
-    return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-  }
-
-  if (pathname === "/store-manager") {
-    return NextResponse.redirect(new URL("/store-manager/dashboard", request.url));
   }
 
   return NextResponse.next();

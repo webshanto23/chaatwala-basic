@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
-    include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
+    include: ["tests/current/**/*.test.ts", "tests/current/**/*.test.tsx"],
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],

@@ -1,4 +1,4 @@
-import type { RoleName } from "@/lib/permissions";
+import type { RoleName, Workspace } from "@/lib/permissions";
 
 export function getSafeReturnPath(value: string | null): string | null {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -9,7 +9,10 @@ export function getSafeReturnPath(value: string | null): string | null {
 }
 
 export function getRoleHome(role: RoleName | null | undefined): string {
-  if (role === "admin") return "/admin/dashboard";
-  if (role === "store_manager") return "/store-manager/dashboard";
+  if (role === "super_admin") return "/staff";
   return "/profile/dashboard";
+}
+
+export function getWorkspaceHome(workspace: Workspace | null | undefined): string {
+  return workspace === "staff" ? "/staff" : "/profile/dashboard";
 }

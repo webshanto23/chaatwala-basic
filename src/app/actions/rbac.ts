@@ -1,6 +1,6 @@
 "use server";
 
-import { authorize, requirePermission, requireRole } from "@/lib/authorize";
+import { authorize, requirePermission, requireRole, requireWorkspace } from "@/lib/authorize";
 import { unstable_cache, revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { logAction } from "./audit";
@@ -18,7 +18,7 @@ export async function getUsers(filters?: { limit?: number; cursor?: string }) {
     unstable_cache(
       async () => {
         return prisma.user.findMany({
-          select: { id: true, name: true, email: true, roleId: true, createdAt: true },
+          select: { id: true, name: true, email: true, staffRoleId: true, createdAt: true },
           orderBy: { createdAt: "desc" },
           take,
           ...(cursor ? { skip: 1, cursor } : {}),
@@ -41,19 +41,6 @@ export async function getUsers(filters?: { limit?: number; cursor?: string }) {
   return { users, roles, nextCursor };
 }
 
-export async function getDishes() {
-  const { authorized } = await authorize({ permissions: ["food:view"] });
-  if (!authorized) {
-    return { error: "Forbidden" };
-  }
-
-  const dishes = await prisma.dish.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-
-  return { dishes };
-}
-
 export async function updateUserRole(formData: FormData) {
   const { authorized, session } = await requirePermission("user:updateRole");
   if (!authorized || !session?.user) return { error: "Forbidden" };
@@ -66,14 +53,14 @@ export async function updateUserRole(formData: FormData) {
   }
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) return { error: "User not found" };
+  if (!user?.staffRoleId) return { error: "Only staff accounts can be assigned a staff role" };
 
   const newRole = await prisma.role.findUnique({ where: { id: roleId } });
-  if (!newRole) return { error: "Role not found" };
+  if (!newRole || newRole.workspace !== "STAFF") return { error: "Staff role not found" };
 
   await prisma.user.update({
     where: { id: userId },
-    data: { roleId },
+    data: { staffRoleId: roleId },
   });
 
   await prisma.user.update({
@@ -86,7 +73,7 @@ export async function updateUserRole(formData: FormData) {
     action: "USER_ROLE_UPDATE",
     entity: "User",
     entityId: userId,
-    metadata: { oldRoleId: user.roleId, newRoleId: roleId, newRoleName: newRole.name },
+    metadata: { oldRoleId: user.staffRoleId, newRoleId: roleId, newRoleName: newRole.name },
   });
 
   revalidateTag("users", "default");
@@ -181,7 +168,7 @@ export async function assignPermissionToRole(formData: FormData) {
   });
 
   await prisma.user.updateMany({
-    where: { roleId },
+    where: { staffRoleId: roleId },
     data: { sessionVersion: { increment: 1 } },
   });
 
@@ -211,7 +198,7 @@ export async function removePermissionFromRole(formData: FormData) {
   });
 
   await prisma.user.updateMany({
-    where: { roleId },
+    where: { staffRoleId: roleId },
     data: { sessionVersion: { increment: 1 } },
   });
 
@@ -230,17 +217,21 @@ export async function removePermissionFromRole(formData: FormData) {
 }
 
 export async function getOrders(filters?: { status?: string; limit?: number; cursor?: string }) {
-  const { authorized: roleAuthorized } = await requireRole("admin");
+  const { authorized: roleAuthorized } = await requireWorkspace("staff");
   if (!roleAuthorized) {
     return { error: "Forbidden" };
   }
 
-  const { authorized } = await authorize({ permissions: ["order:view"] });
-  if (!authorized) {
+  const { authorized, session } = await requirePermission("order:view");
+  if (!authorized || !session?.user) {
     return { error: "Forbidden" };
   }
 
   const where: Record<string, unknown> = {};
+  if (!session.user.permissions.includes("*")) {
+    const storeAccess = await prisma.staffStoreAccess.findMany({ where: { userId: session.user.id }, select: { storeId: true } });
+    where.storeId = { in: storeAccess.map((access) => access.storeId) };
+  }
   if (filters?.status) where.status = filters.status;
 
   const take = filters?.limit ?? 50;

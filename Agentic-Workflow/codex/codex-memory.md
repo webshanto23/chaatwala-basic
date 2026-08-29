@@ -1,150 +1,99 @@
-# Codex Session Memory — Chaatwala Basic
+# Chaatwala Codebase Memory
 
-Last consolidated: 2026-08-20  
-Use: persistent working context for future tasks. Re-inspect the relevant current source, schema, tests, and Next.js 16 documentation before editing; this memory speeds up orientation but does not override them.
+Last updated: 2026-08-29
 
-## Authority and operating rules
+## Current architecture
 
-1. **Current code and route architecture are authoritative.** `Agentic-Workflow/Memory/*` contains useful history and audit results, but may be stale. Verify every historical finding against source before acting.
-2. Keep tasks bounded. Do not combine an auth refactor, authorization redesign, performance work, UI redesign, migration, and deployment change into one uncontrolled task.
-3. Default process: understand → plan → inspect → implement → test → review → summarize. Discovery is read-only.
-4. Before a Next.js code change, read the relevant guide in `node_modules/next/dist/docs/`; this project is Next.js 16.2.9 and conventions may differ from older versions.
-5. Preserve URLs, role boundaries, API contracts, and existing user changes unless the task explicitly changes them. Prefer the smallest safe diff.
+- Next.js 16, React 19, TypeScript, Prisma/PostgreSQL, Tailwind, shadcn/ui.
+- The application now has two workspace applications only:
+  - Customer: `src/app/(customer)/` owns `AppShell`, `CartProvider`, storefront, checkout, payment, address and profile UI.
+  - Staff: `src/app/(staff)/staff/` owns the unified `/staff/*` dashboard shell.
+- Auth pages are under `src/app/(auth)/`; customer sign-in is `/sign-in`, staff sign-in is `/staff/sign-in`.
+- The legacy `src/app/(admin)`, `src/app/store-manager`, `src/components/admin`, and `src/components/store-manager` directories were physically removed. Do not recreate them.
+- Shared staff dashboard UI is now in `src/components/staff/`; staff screen clients are in `src/features/staff-ui/`.
 
-## Technology and structure
+## RBAC and identity
 
-- Next.js 16.2.9 App Router, React 19.2.4, strict TypeScript.
-- PostgreSQL + Prisma 6.19.3; all DB access uses `@/lib/prisma`; no raw SQL or other ORM.
-- NextAuth v5 beta with JWT sessions and Prisma adapter.
-- Custom RBAC; Zod v4 validation; Tailwind v4, shadcn/radix-nova, Radix UI, Lucide, Sonner.
-- SSLCommerz payments and ImageBB/sharp image handling.
-- Tests: Vitest, Testing Library, jsdom, MSW.
+- Role identity comes from `session.user.role`, but authorization is based on database role identity and permissions.
+- `Role` is staff-only in practice. `workspace` remains as a compatibility enum but all new roles default to `STAFF`; no customer role records exist.
+- `super_admin` is a protected system role identified by `systemKey === "super_admin"`; it is the only staff control-plane authority.
+- User model supports customer email authentication and staff username authentication:
+  - Customer: email/password and OAuth; `staffRoleId` is always `null`.
+  - Staff: username/password with a non-null `staffRoleId`; no invite flow.
+- `User` has `username`, nullable contact `email`, `isActive`, `sessionVersion`, and nullable `staffRoleId`. There is no customer role assignment.
+- `StaffStoreAccess` is the many-to-many staff/store relation. It supports multiple stores and one optional primary store. Older `Store.managerId` remains transitional data only; do not use it for new work.
+- Session/JWT includes derived role name, nullable `staffRoleId`, workspace, permissions, active status, session version, and system role key. Roleless accounts derive the customer role in `src/lib/auth.ts`.
+- Important helpers in `src/lib/authorize.ts`: `requireWorkspace`, `requirePermission`, `requireSuperAdmin`, `authorize`, and `unauthorizedResponse`.
+- Permissions are code-owned in `src/lib/permissions.ts`; roles receive permission records from the database. Do not add route folders for new roles.
 
-```text
-src/app          App Router pages, layouts, APIs, cross-cutting actions
-src/features     domain services/actions/types/context
-src/components   UI primitives, shared UI, domain components
-src/lib          Prisma, auth/authz, validation, payments, utilities
-prisma           schema, migrations, seed
-tests            unit, integration, component tests
-Agentic-Workflow project guidance and historical memory
-```
+## Staff routes and UI
 
-New feature modules belong under `src/features/[feature]` and normally have actions, queries, types, and (only when needed) context. Feature mutations live in feature actions; cross-cutting actions belong in `src/app/actions`. API handlers live in `src/app/api/**/route.ts` and use `NextResponse`.
+- `/staff` is the adaptive staff dashboard. Navigation comes from `src/features/staff-navigation/registry.ts` and is filtered by session permissions.
+- Super Admin-only: `/staff/access/staff`, `/staff/access/roles`, `/staff/access/permissions`, `/staff/content/homepage`, `/staff/content/about`.
+- Permission-protected staff capability routes:
+  - products: `/staff/catalog/products/*`
+  - orders: `/staff/operations/orders`
+  - inventory: `/staff/operations/inventory`
+  - stores: `/staff/stores`
+  - audit: `/staff/audit`
+  - personal security: `/staff/settings` → `/change-password`
+- `src/features/access-control/actions.ts` implements staff creation, enable/disable, role/store reassignment, Super Admin password reset, role creation/editing, and permission assignment/removal. Mutations audit, invalidate affected sessions, revalidate staff data, and rate limit control-plane calls.
+- Store managers are dynamic staff, not a fixed role: `/staff/stores` only offers active non-system staff who already have matching `StaffStoreAccess` for that exact store. New stores are created without a manager; assign staff access first, then select the manager while editing the store.
 
-## Route and shell topology
+## Customer/staff isolation and APIs
 
-```text
-src/app/
-├─ layout.tsx                       global providers/infrastructure
-├─ (customer)/                      public storefront, cart, checkout, profile
-│  ├─ (public)/
-│  ├─ (protected)/                  cart, checkout, orders; server role guard
-│  ├─ (user)/                       profile; server role guard
-│  └─ checkout/                     payment result pages
-├─ (admin)/admin/*                  AdminShell; no customer cart/shell
-├─ (auth)/*                         minimal auth pages/shell
-└─ store-manager/*                  StoreManagerShell; no customer cart/shell
-```
+- Customer layout redirects any STAFF workspace session to `/staff` before customer providers mount.
+- Cart no longer contains admin-specific bypass branches.
+- Staff sessions receive 403 from customer cart, checkout, payment initiation, customer orders, profile, addresses, and profile upload APIs.
+- Staff APIs live under `src/app/api/staff/`:
+  - `/api/staff/orders/[orderId]` verifies workspace, permission, and assigned-store scope (wildcard permission can access all stores).
+  - `/api/staff/users/[userId]` requires staff workspace + `user:view`.
+- `getOrders` in `src/app/actions/rbac.ts` scopes non-wildcard staff to their `StaffStoreAccess` store IDs.
+- `src/features/store-manager/actions.ts` is now a transitional filename only; it uses `requireWorkspace("staff")` and resolves the primary `StaffStoreAccess` record rather than legacy fixed roles. Rename it only in a focused mechanical cleanup.
 
-Route groups do not affect URLs. Intended shell ownership: customer → `AppShell` + `CartProvider`; admin → `AdminShell`; store manager → `StoreManagerShell`; auth → minimal layout. Never place customer cart/search UI into admin or store-manager areas.
+## Prisma and seed state
 
-`src/proxy.ts` handles limited path redirects (not general API protection). Each protected page, server action, and route handler must provide its own appropriate authentication/authorization.
+- Applied migration: `prisma/migrations/20260829063135_staff_workspace_foundation/`.
+- Applied catalog migration: `prisma/migrations/20260829073035_unified_food_catalog/`, followed by `20260829075230_remove_legacy_product_models/`. `Food`, taxonomy, bundle items, and generic store availability are canonical; legacy dish/drink/combo models were removed.
+- Applied migration: `prisma/migrations/20260829090000_separate_customer_from_staff_roles/`. It renames `User.roleId` to `User.staffRoleId`, clears legacy customer role links, deletes customer role records, and defaults new roles to `STAFF`.
+- Development database was intentionally reset and seeded during this migration; user explicitly authorized it as non-production.
+- Seed creates the protected super-admin role and permission assignments only. Super Admin account bootstrap reads `SUPER_ADMIN_USERNAME` and `SUPER_ADMIN_PASSWORD` from environment variables and hashes the password. Never commit credentials.
+- Last checked Prisma migration status: up to date.
 
-## Authentication and authorization contract
+## Validation and known debt
 
-`src/lib/auth.ts` is the NextAuth source: Google, Facebook, and credentials providers; JWT session; session includes `user.id`, `user.role`, and `user.permissions`. New users without a role are assigned `user` on sign-in. Credentials require a matching password but do not currently gate on `emailVerified`: legacy and seeded credential users have `emailVerified = null`, and the current resend-verification action requires an authenticated session. Do not restore that gate until a migration/rollout policy and unauthenticated resend flow exist.
+- `npm run build` passed after physical legacy-folder cleanup. Build route manifest contains `/staff/*` and no `/admin/*`, `/store-manager/*`, `/api/admin/*`, or `/api/store-manager/*` routes.
+- `git diff --check` passed before the latest memory update; rerun after any edits.
+- `npm test` currently fails: many fixtures/mocks still assert retired `admin`/`store_manager` roles or omit `requireWorkspace`/`requireSuperAdmin`; one cart integration suite has a NextAuth/Vitest resolver problem for `next/headers`. Do not weaken production authorization to satisfy these tests—migrate test fixtures instead.
+- Browser request tracing and the full authorization matrix are still required for final acceptance.
 
-Keep these concerns distinct:
+## Working rules
 
-```text
-role            who/which application area: user | admin | store_manager
-permission      allowed capability: food:update, order:view, store:update, etc.
-resource scope  which record: user ownership or managedStore ownership
-```
+- Preserve customer/staff shell isolation. Root layout must remain global providers only.
+- Every protected mutation/API must authenticate, authorize workspace/permission, check store or ownership scope, validate input, mutate, then revalidate caches.
+- Reuse `components/staff` and existing shadcn primitives; do not introduce a separate dashboard design system.
+- Keep customer URLs unchanged. Do not add legacy redirects; this is a clean development cutover.
+- Read `Agentic-Workflow/codex/todo.md` for the detailed migration checklist and remaining validation tasks.
 
-- Determine role only with `session.user.role` (or `getUserRole`). Never infer it from `admin:access`, `store:view`, or another permission.
-- Server routes/actions should follow: `auth()` → role check → permission check → ownership/store-scope check → Zod validation → mutation.
-- Hidden UI and client-side permission hooks are not security controls.
-- Keep one redirect owner per route boundary. Avoid proxy/page/layout redirect chains and cross-redirects between admin and store-manager areas.
-- Use `authorize`, `requirePermission`, `authorizeRole`, and `requireRole` from `@/lib/authorize`; do not create ad-hoc authorization logic.
+## Customer authentication fix (2026-08-29)
 
-## Current auth/session/provider behavior
+- Public registration no longer looks up or writes a default role. Password reset intentionally only updates the customer password and session version.
+- Customer credentials and OAuth reject staff accounts and allow active accounts without `staffRoleId`. This fixes public sign-in for newly registered and password-reset customers.
+- Staff credentials require an active account with a `STAFF` role. Staff management queries/actions consistently use `staffRole` / `staffRoleId`.
+- Development DB verification after the migration and seed: 2 active password customers had no staff role, 1 staff account existed, and 0 customer role records remained. `npm run build` passed.
 
-Root layout calls `await auth()` server-side and renders:
+## Payment-flow reliability update (2026-08-29)
 
-```text
-ThemeProvider
-└─ AuthProvider(initialSession=server session)
-   └─ route content + Toaster
-```
+- The cart is now review-only: it routes customers to `/checkout`; store/address choice and payment initiation live only in checkout.
+- `PaymentAttempt` is canonical for gateway transactions. An order may have multiple retry attempts, each with its own unique transaction and validation IDs. Migration: `20260829100000_add_payment_attempts` (applied to the development database).
+- `/api/payment/initiate` is customer-only and validates the saved address, open store, canonical food price, and availability. It creates a pending order without clearing the cart, then creates a pending attempt. A gateway-initiation failure marks only that attempt failed and returns the order ID so a retry remains attached to that order.
+- `/api/payment/validate` verifies SSLCommerz server-side, checks the exact amount against the attempt, marks the order paid only after validation, and then removes only the ordered quantities from the customer cart. `/api/payment/status` exposes owned attempt status; `/api/payment/outcome` records authenticated customer fail/cancel results.
+- Payment callbacks require `PAYMENT_PUBLIC_URL`: a publicly reachable HTTPS base URL. Do not use `NEXTAUTH_URL` when it is localhost. Configure this to a deployed domain or HTTPS tunnel before live/sandbox gateway testing. Never place gateway secrets in source control.
+- Validation: touched payment, checkout, cart, and stores files pass ESLint and `git diff --check`. `npm run build` reached the Next font stage but cannot complete in this environment because Google Fonts cannot be downloaded; project-wide TypeScript still contains stale legacy test fixtures/imports from the earlier architecture migration.
+# Unified food catalog migration update (2026-08-29)
 
-The customer layout owns `UserDataProvider`; `AppShell` owns `CartProvider`. Do not add a second theme/auth provider. Both customer state providers are keyed by session identity, so logout/account switches clear prior state before reloading for the new identity.
-
-`UserDataProvider` begins with null profile, empty addresses, and loading true; it automatically fetches `GET /api/user/me` after a stable authenticated session and exposes `refresh()` for explicit updates.
-
-## Cart, address, store, and checkout ownership
-
-- `Cart`/`CartItem` are database records. Authenticated carts use `userId`; guest carts use the HTTP-only `chaatwala_guest_id` cookie. `CartProvider` starts empty and fetches `GET /api/cart` after mount. Do not add browser storage as a second cart source of truth.
-- Cart item APIs currently resolve the owner before PATCH/DELETE; verify this remains true before relying on historical P0 reports that said otherwise.
-- Addresses are database records owned by `userId`. `GET /api/user/me` returns profile plus addresses. The checkout defaults to the DB default address (or first address); any alternate selection is only local page state and does not persist independently.
-- Cart/checkout share `useStoreSelection`. It persists the selected store as `chaatwala:selected-store:<userId-or-guest>`, removes the key when cleared or no longer valid, and displays retryable errors for store loading/availability validation. Checkout is blocked while store data/validation is unknown.
-- Checkout eligibility is derived, not persisted: cart nonempty + address + selected store + valid stock + not currently placing payment.
-- Payment initiate accepts `storeId`, optional saved `addressId`, and shipping-address fields. A supplied address ID is verified against the authenticated user and persisted on the order; it uses an idempotency key and clears the cart before gateway redirection.
-- SSLCommerz returns `val_id` to the success callback. `checkout/success` must submit that value as `application/x-www-form-urlencoded` to `/api/payment/validate`; do not substitute `tran_id` or send JSON. A callback without `val_id` must render an error, not a perpetual loading state.
-
-## Database and API rules
-
-- Prisma models use `cuid()` IDs, timestamps, camelCase fields, and `Decimal` money. Convert Decimal to `Number` only at API/UI boundaries.
-- Use `findUnique` for genuinely unique lookups, `findFirst` for non-unique conditions, explicit ordering for deterministic lists, `select` for lean return shapes, and `include` to prevent N+1 queries.
-- Schema change → generate a Prisma migration; never hand-edit a migration or instantiate `PrismaClient` outside `@/lib/prisma`.
-- Validate every external input with Zod before write side effects. `safeParse` is preferable for structured API 400 responses; actions may use `parse` when throwing is appropriate.
-- Return serialized plain JSON, not raw Prisma model values or errors. Sensitive mutations should produce audit logs where the existing feature pattern supports it.
-
-## UI and styling rules
-
-- Server component by default; client component only for interaction. Prefer server page/layout → feature/service → Prisma → props → client leaf.
-- Avoid client `useEffect` fetching when equivalent data is already available server-side; do not add APIs merely to transfer server data to the client.
-- `src/components/ui` is for base shadcn primitives. Prefer a wrapper/domain component over modifying it.
-- Use `@/` aliases, PascalCase component files/exports, kebab-case utilities, `cn()` for dynamic class composition, CVA for reusable variants, Tailwind tokens/CSS variables, Lucide icons, Sonner toasts, and Radix primitives for accessible interactive controls.
-- No global state library, inline styles, CSS modules, external client API calls, arbitrary hard-coded theme colors, `any`, or `dangerouslySetInnerHTML` without sanitization.
-- `ThemeProvider` initializes once from `localStorage["chaatwala-theme"]`; its effect only applies/persists the current value. Never read storage and call `setTheme` from the `[theme]` effect, which causes a saved opposite theme to toggle forever and surfaces as a NavigationMenu maximum-update-depth error.
-
-## Performance context
-
-Measure before optimizing: production build, route timing, browser requests, bundle size, DB query count, cache behavior, and UX metrics where relevant. Historical observations are not permanent facts:
-
-- root `auth()` makes pages dynamic, so `unstable_cache` is the practical read-cache layer;
-- related products was previously uncached;
-- search issues multiple `ILIKE` queries;
-- a Neon configuration previously had `connection_limit=1`, serializing otherwise parallel Prisma calls;
-- customer bundle was relatively large.
-
-Keep catalog reads cached, cache repeated read-heavy services, and use dynamic imports only for non-critical interactivity. Never change caching/connection settings without fresh measurements. A performance report must state before/after request count, DB queries, server time, client JS, cache-freshness tradeoffs, and complexity.
-
-## Security items requiring source verification
-
-Historical security findings are leads, not facts. Before changing, inspect source and test these explicitly:
-
-1. Cart item PATCH/DELETE authentication and authenticated/guest ownership.
-2. Upload route authentication, validation, size/type limits, and rate limiting.
-3. Payment callback provider authentication/signature validation and idempotency (provider callbacks must not be protected with an ordinary browser-session requirement).
-4. Whether store-manager routes are store-manager-only or may legitimately admit admins; enforce managed-store scope on data access.
-5. Sign-in redirect competition; authenticated change-password authorization.
-
-For protected APIs, check: anonymous → 401/403; wrong role → 403; right role/wrong resource → 403/404; right role/right resource → success; malformed input → 400/422; repeat mutations → rate limit/idempotency behavior.
-
-## Implementation and validation protocol
-
-Before editing, inspect `package.json`, relevant route/layout, auth helpers, feature service/actions, API endpoint, Prisma schema where data is involved, targeted tests, and relevant audits. Make a plan containing:
-
-```text
-Goal; current behavior; root cause; files; security impact;
-performance impact; implementation plan; validation plan.
-```
-
-After implementation, inspect `git diff --check`, `git diff --stat`, and `git diff`. Run the smallest relevant commands that exist in `package.json` (`npm test`, `npm run lint`, `npm run build`; there is currently no `typecheck` script). For security work, add direct endpoint tests. For schema changes, run Prisma generation/migration steps appropriate to the request.
-
-For cart/checkout/auth changes, explicitly test sign-in, add product, select store, add/select address, checkout eligibility, browser refresh, logout/login, wrong-role access, slow network/session, and API failure. Confirm admin/store-manager do not request cart/search and no repeated `/api/user/me` requests appear.
-
-Finish work with: completed items, changed files, validation, known limitations, and one bounded next recommended task. Use focused commits only; never mix security fixes with cosmetic work.
+- Prisma migration `20260829073035_unified_food_catalog` is applied and seeded. It adds Food, taxonomy joins, combo bundle items, and generic per-store availability while retaining legacy product tables during the cutover.
+- Canonical staff catalog: `/staff/catalog/foods`; former staff product subroutes were deleted. `Food` actions require staff workspace plus the appropriate `food:*` or taxonomy capability, validate 2–3 unique standard components, calculate prices on the server, audit changes, and clean up uploaded images.
+- Customer catalogue is `/products`, with server-rendered `?category=<FoodCategory.slug>` filtering and a responsive category control (desktop shadcn/Radix Tabs, mobile Sheet). Product details are `/products/[id]`; legacy dish/drink/combo routes and components were deleted with no redirects. New cart items use `productType: "food"`; cart creation, order availability validation, and payment recalculation use the canonical Food calculation.
+- Generic primary-store inventory is at `/staff/operations/inventory` and writes FoodStoreAvailability. The old StoreInventory feature is still present only as unused legacy source and must be removed in the final cleanup.
+- Validation during this increment: `npx tsc --noEmit` was run; the new unified-food files have no TypeScript errors. The project-wide command still reports known stale legacy test/fixture errors. Final build is intentionally deferred by the food migration plan.

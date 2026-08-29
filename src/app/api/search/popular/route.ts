@@ -1,27 +1,7 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { getFoodCatalog } from "@/features/food/queries";
 
 export async function GET() {
-  const [popularDishes, popularDrinks] = await Promise.all([
-    prisma.dish.findMany({
-      where: { tag: "popular", isAvailable: true },
-      select: { name: true },
-    }),
-    prisma.drink.findMany({
-      where: { tag: "popular", isAvailable: true },
-      select: { name: true },
-    }),
-  ]);
-
-  const tags = [
-    ...popularDishes.map((d) => d.name),
-    ...popularDrinks.map((d) => d.name),
-  ];
-
-  return new NextResponse(JSON.stringify({ tags }), {
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "s-maxage=300, stale-while-revalidate=600",
-    },
-  });
+  const { foods } = await getFoodCatalog({ tag: "popular", limit: 20 });
+  return NextResponse.json({ tags: foods.map((food) => food.name) }, { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=600" } });
 }

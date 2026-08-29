@@ -6,6 +6,7 @@ import { revalidateTag } from "next/cache";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
+  if (session?.user?.workspace === "staff") return NextResponse.json({ error: "Customer address access only" }, { status: 403 });
   const userId = session?.user?.id;
 
   if (!userId) {
@@ -56,6 +57,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
+  if (session?.user?.workspace === "staff") return NextResponse.json({ error: "Customer address access only" }, { status: 403 });
   const userId = session?.user?.id;
 
   if (!userId) {

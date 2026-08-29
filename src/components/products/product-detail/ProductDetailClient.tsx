@@ -65,19 +65,12 @@ export default function ProductDetailClient({
   const price = product.discountPrice ?? product.price;
   const description = product.description || "No description available.";
 
-  const categoryHref =
-    product.type === "dish"
-      ? "/products/dishes"
-      : product.type === "drink"
-        ? "/products/drinks"
-        : "/products/combos";
-
   const comboItems = product.type === "combo" && product.items && product.items.length > 0 ? product.items : null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
       <Button asChild variant="ghost" className="mb-6">
-        <Link href={categoryHref}>← Back to menu</Link>
+        <Link href="/products">← Back to menu</Link>
       </Button>
 
       <div className="grid gap-8 md:grid-cols-2">
@@ -146,7 +139,7 @@ export default function ProductDetailClient({
           <Button
             className="mt-4 w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90 md:w-auto"
             onClick={() =>
-              addItem({ productId: product.id, productType: product.type, quantity: 1 })
+              addItem({ productId: product.id, productType: "food", quantity: 1 })
             }
             disabled={disableCart || !product.isAvailable}
           >
@@ -161,12 +154,12 @@ export default function ProductDetailClient({
           <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {relatedProducts.map((item) => {
               const itemPrice = item.discountPrice ?? item.price;
-              const itemOriginal = product.type === "combo" ? item.originalPrice ?? item.price : item.price;
+              const itemOriginal = item.originalPrice ?? item.price;
               const itemHasDiscount = itemOriginal > itemPrice;
 
               return (
                 <Card key={item.id} className="rounded-[2rem] border-0 bg-card shadow-lg shadow-secondary/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
-                  <Link href={`/products/${product.type === "dish" ? "dishes" : product.type === "drink" ? "drinks" : "combos"}/${item.id}`}>
+                  <Link href={`/products/${item.id}`}>
                     <CardContent className="p-4 space-y-3">
                       <div className="aspect-video w-full overflow-hidden rounded-[1.5rem] bg-muted/30">
                         <ProductImage

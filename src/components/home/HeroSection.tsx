@@ -63,7 +63,7 @@ export async function HeroSection({ imageUrl, imageAlt }: HeroSectionProps) {
                 variant="secondary"
                 className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card text-foreground shadow-lg hover:bg-card/80"
               >
-                <Link href="/products/dishes">Explore Menu</Link>
+                <Link href="/products">Explore Menu</Link>
               </Button>
             </div>
 

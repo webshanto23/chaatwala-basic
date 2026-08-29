@@ -6,6 +6,7 @@ import { getUnavailableCartItems } from "@/lib/store-availability";
 
 export async function POST(request: Request) {
   const session = await auth();
+  if (session?.user?.workspace === "staff") return NextResponse.json({ error: "Customer cart access only" }, { status: 403 });
   const userId = session?.user?.id ?? null;
 
   let guestId: string | null = null;

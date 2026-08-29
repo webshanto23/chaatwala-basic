@@ -16,7 +16,7 @@ type ProductCardProps = {
   rating?: number;
   tag?: ProductTag;
   customBadge?: string;
-  productType: "dish" | "drink";
+  productType: "food";
   className?: string;
   href?: string;
 };

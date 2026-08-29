@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const session = await auth();
+  if (session?.user?.workspace === "staff") return NextResponse.json({ error: "Customer profile access only" }, { status: 403 });
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

@@ -3,7 +3,7 @@
 import { createContext, useContext, useCallback, useEffect, useMemo, useState } from "react";
 import { SessionProvider, signIn, signOut, useSession } from "next-auth/react";
 import type { Session } from "next-auth";
-import type { RoleName } from "@/lib/permissions";
+import type { RoleName, Workspace } from "@/lib/permissions";
 
 type AuthRole = RoleName | null;
 
@@ -12,6 +12,8 @@ type AuthState = {
   isLoading: boolean;
   userId: string | null;
   role: AuthRole | null;
+  workspace: Workspace | null;
+  systemRoleKey: string | null;
   name: string | null;
   permissions: string[];
 };
@@ -45,12 +47,14 @@ function InnerAuthProvider({ children }: { children: React.ReactNode }) {
     isLoading: status === "loading",
     userId: session?.user?.id ?? null,
     role: (session?.user?.role as AuthRole) ?? null,
+    workspace: (session?.user?.workspace as Workspace) ?? null,
+    systemRoleKey: session?.user?.systemRoleKey ?? null,
     name: session?.user?.name ?? null,
     permissions: (session?.user?.permissions as string[]) ?? [],
   }), [status, session]);
 
   const login = useCallback(async (email: string, password: string) => {
-    await signIn("credentials", {
+    await signIn("customer-credentials", {
       email,
       password,
       redirect: false,

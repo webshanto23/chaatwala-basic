@@ -112,7 +112,7 @@ export function OrdersList({ orders, loading, error, onRetry }: { orders: Order[
               Your orders will appear here once you place one.
             </p>
             <Button asChild>
-              <Link href="/products/dishes">Browse Products</Link>
+              <Link href="/products">Browse Products</Link>
             </Button>
           </CardContent>
         </Card>

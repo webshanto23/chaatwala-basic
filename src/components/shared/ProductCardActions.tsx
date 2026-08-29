@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 type ProductCardActionsProps = {
   id: string;
-  productType: "dish" | "drink";
+  productType: "food";
 };
 
 export function ProductCardActions({ id, productType }: ProductCardActionsProps) {

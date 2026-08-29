@@ -35,14 +35,7 @@ export default function SignUp() {
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      const role = session.user.role;
-      if (role === "admin") {
-        router.replace("/admin/dashboard");
-      } else if (role === "store_manager") {
-        router.replace("/store-manager/dashboard");
-      } else {
-        router.replace("/profile/dashboard");
-      }
+      router.replace(session.user.workspace === "staff" ? "/staff" : "/profile/dashboard");
     }
   }, [status, session, router]);
 

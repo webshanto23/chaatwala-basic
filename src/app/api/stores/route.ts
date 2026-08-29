@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 
 export async function GET() {
   const stores = await prisma.store.findMany({
+    where: { isOpen: true },
     select: {
       id: true,
       name: true,

@@ -1,10 +1,11 @@
 "use server";
 
-import { authorize, requireRole, requirePermission } from "@/lib/authorize";
+import { authorize, requireWorkspace, requirePermission } from "@/lib/authorize";
 import { unstable_cache, revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { logAction } from "@/app/actions/audit";
 import { uploadImage } from "@/lib/image-upload";
+import { z } from "zod";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -17,14 +18,14 @@ type Store = {
   imageUrl: string | null;
   imageDeleteUrl: string | null;
   managerId: string | null;
-  manager: { id: string; name: string | null; email: string } | null;
+  manager: { id: string; name: string | null; username: string | null; email: string | null } | null;
   createdAt: Date;
 };
 
-type Manager = { id: string; name: string | null; email: string };
+type Manager = { id: string; name: string | null; username: string | null; email: string | null; storeIds: string[] };
 
 export async function getStores(): Promise<{ stores: Store[] } | { error: string }> {
-  const { authorized: roleAuthorized } = await requireRole("admin");
+  const { authorized: roleAuthorized } = await requireWorkspace("staff");
   if (!roleAuthorized) return { error: "Forbidden" };
 
   const { authorized } = await authorize({ permissions: ["store:view"] });
@@ -40,7 +41,7 @@ export async function getStores(): Promise<{ stores: Store[] } | { error: string
           address: true,
           imageUrl: true,
           managerId: true,
-          manager: { select: { id: true, name: true, email: true } },
+          manager: { select: { id: true, name: true, username: true, email: true } },
           createdAt: true,
         },
         orderBy: { createdAt: "desc" },
@@ -59,14 +60,14 @@ export async function getStores(): Promise<{ stores: Store[] } | { error: string
       imageUrl: s.imageUrl,
       imageDeleteUrl: null,
       managerId: s.managerId,
-      manager: s.manager ? { id: s.manager.id, name: s.manager.name, email: s.manager.email } : null,
+      manager: s.manager ? { id: s.manager.id, name: s.manager.name, username: s.manager.username, email: s.manager.email } : null,
       createdAt: s.createdAt,
     })),
   };
 }
 
 export async function getStoreManagers(): Promise<{ managers: Manager[] } | { error: string }> {
-  const { authorized: roleAuthorized } = await requireRole("admin");
+  const { authorized: roleAuthorized } = await requireWorkspace("staff");
   if (!roleAuthorized) return { error: "Forbidden", managers: [] };
 
   const { authorized } = await authorize({ permissions: ["store:view"] });
@@ -74,13 +75,15 @@ export async function getStoreManagers(): Promise<{ managers: Manager[] } | { er
 
   const managers = await unstable_cache(
     async () => {
-      const storeManagerRole = await prisma.role.findUnique({ where: { name: "store_manager" } });
-      if (!storeManagerRole) return [];
       return prisma.user.findMany({
-        where: { roleId: storeManagerRole.id },
-        select: { id: true, name: true, email: true },
+        where: {
+          isActive: true,
+          staffRole: { workspace: "STAFF", isSystem: false },
+          storeAccess: { some: {} },
+        },
+        select: { id: true, name: true, username: true, email: true, storeAccess: { select: { storeId: true } } },
         orderBy: { name: "asc" },
-      });
+      }).then((staff) => staff.map(({ storeAccess, ...member }) => ({ ...member, storeIds: storeAccess.map(({ storeId }) => storeId) })));
     },
     ["admin-store-managers"],
     { revalidate: 120, tags: ["store-managers"] }
@@ -89,9 +92,24 @@ export async function getStoreManagers(): Promise<{ managers: Manager[] } | { er
   return { managers };
 }
 
+async function isEligibleStoreManager(userId: string, storeId: string) {
+  return Boolean(await prisma.user.findFirst({
+    where: {
+      id: userId,
+      isActive: true,
+      staffRole: { workspace: "STAFF", isSystem: false },
+      storeAccess: { some: { storeId } },
+    },
+    select: { id: true },
+  }));
+}
+
 export async function createStore(formData: FormData): Promise<{ success: true; store: Store } | { error: string }> {
   const { authorized, session } = await requirePermission("store:create");
   if (!authorized || !session?.user) return { error: "Forbidden" };
+
+  const managerId = String(formData.get("managerId") ?? "").trim();
+  if (managerId) return { error: "Assign a manager after creating the store and granting store access" };
 
   const file = formData.get("image") as File | null;
   if (!file || !(file instanceof File) || file.size === 0) {
@@ -107,8 +125,6 @@ export async function createStore(formData: FormData): Promise<{ success: true; 
   const name = formData.get("name") as string;
   const phone = formData.get("phone") as string;
   const address = formData.get("address") as string;
-  const managerId = formData.get("managerId") as string | null;
-
   if (!name || !phone || !address) {
     return { error: "Name, phone, and address are required" };
   }
@@ -124,7 +140,6 @@ export async function createStore(formData: FormData): Promise<{ success: true; 
         address,
         imageUrl,
         imageDeleteUrl,
-        managerId: managerId || undefined,
       },
       select: {
         id: true,
@@ -134,7 +149,7 @@ export async function createStore(formData: FormData): Promise<{ success: true; 
         imageUrl: true,
         imageDeleteUrl: true,
         managerId: true,
-        manager: { select: { id: true, name: true, email: true } },
+        manager: { select: { id: true, name: true, username: true, email: true } },
         createdAt: true,
       },
     });
@@ -167,6 +182,14 @@ export async function updateStore(id: string, formData: FormData): Promise<{ suc
   const existing = await prisma.store.findUnique({ where: { id } });
   if (!existing) return { error: "Store not found" };
 
+  const name = formData.get("name") as string;
+  const phone = formData.get("phone") as string;
+  const address = formData.get("address") as string;
+  const managerId = String(formData.get("managerId") ?? "").trim() || null;
+  if (!name || !phone || !address) return { error: "Name, phone, and address are required" };
+  if (managerId && !z.string().cuid().safeParse(managerId).success) return { error: "Invalid store manager" };
+  if (managerId && !(await isEligibleStoreManager(managerId, id))) return { error: "Select an active staff member assigned to this store" };
+
   const file = formData.get("image") as File | null;
   let imageUrl = existing.imageUrl;
   let imageDeleteUrl = existing.imageDeleteUrl;
@@ -192,15 +215,6 @@ export async function updateStore(id: string, formData: FormData): Promise<{ suc
     }
   }
 
-  const name = formData.get("name") as string;
-  const phone = formData.get("phone") as string;
-  const address = formData.get("address") as string;
-  const managerId = formData.get("managerId") as string | null;
-
-  if (!name || !phone || !address) {
-    return { error: "Name, phone, and address are required" };
-  }
-
   let store: Store;
   try {
     store = await prisma.store.update({
@@ -211,7 +225,7 @@ export async function updateStore(id: string, formData: FormData): Promise<{ suc
         address,
         imageUrl,
         imageDeleteUrl,
-        managerId: managerId || undefined,
+        managerId,
       },
       select: {
         id: true,
@@ -221,7 +235,7 @@ export async function updateStore(id: string, formData: FormData): Promise<{ suc
         imageUrl: true,
         imageDeleteUrl: true,
         managerId: true,
-        manager: { select: { id: true, name: true, email: true } },
+        manager: { select: { id: true, name: true, username: true, email: true } },
         createdAt: true,
       },
     });
@@ -273,6 +287,7 @@ export async function deleteStore(id: string): Promise<{ success: true } | { err
   });
 
   revalidateTag("stores", "default");
+  revalidateTag("store-managers", "default");
 
   return { success: true };
 }

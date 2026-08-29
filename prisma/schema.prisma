@@ -8,37 +8,48 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(cuid())
-  name          String?
-  email         String     @unique
-  password      String?
-  image         String?
-  emailVerified DateTime?
-  roleId        String?
-  role          Role?      @relation(fields: [roleId], references: [id])
-  accounts      Account[]
-  sessions      Session[]
-  auditLogs     AuditLog[]
-  carts         Cart[]
-  addresses     Address[]
-  orders        Order[]
-  managedStore  Store?     @relation("StoreManager")
-  passwordResetTokens PasswordResetToken[]
-  heroSettingsUpdated SiteSetting[] @relation("HeroSettingsUpdatedBy")
-  galleryImagesCreated GalleryImage[] @relation("GalleryImageCreatedBy")
-  sessionVersion Int       @default(0)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id                   String               @id @default(cuid())
+  name                 String?
+  email                String?              @unique
+  username             String?              @unique
+  password             String?
+  image                String?
+  emailVerified        DateTime?
+  isActive             Boolean              @default(true)
+  staffRoleId          String?
+  staffRole            Role?                @relation(fields: [staffRoleId], references: [id])
+  accounts             Account[]
+  sessions             Session[]
+  auditLogs            AuditLog[]
+  carts                Cart[]
+  addresses            Address[]
+  orders               Order[]
+  managedStore         Store?               @relation("StoreManager")
+  storeAccess          StaffStoreAccess[]
+  passwordResetTokens  PasswordResetToken[]
+  heroSettingsUpdated  SiteSetting[]        @relation("HeroSettingsUpdatedBy")
+  galleryImagesCreated GalleryImage[]       @relation("GalleryImageCreatedBy")
+  sessionVersion       Int                  @default(0)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
 }
 
 model Role {
   id          String           @id @default(cuid())
   name        String           @unique
+  systemKey   String?          @unique
+  workspace   RoleWorkspace    @default(STAFF)
+  isSystem    Boolean          @default(false)
   description String?
   permissions RolePermission[]
-  users       User[]
+  staffUsers  User[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+}
+
+enum RoleWorkspace {
+  CUSTOMER
+  STAFF
 }
 
 model Permission {
@@ -121,50 +132,6 @@ model AuditLog {
   @@index([createdAt])
 }
 
-model Dish {
-  id             String   @id @default(cuid())
-  name           String
-  slug           String   @unique
-  price          Decimal
-  discountPrice  Decimal?
-  description    String?
-  isAvailable    Boolean  @default(true)
-  tag            String?
-  imageUrl       String?
-  imageDeleteUrl String?
-  storeId        String?
-  store          Store?   @relation(fields: [storeId], references: [id], onDelete: SetNull)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@index([slug])
-  @@index([tag])
-  @@index([createdAt])
-  @@index([storeId])
-}
-
-model Drink {
-  id             String   @id @default(cuid())
-  name           String
-  slug           String   @unique
-  price          Decimal
-  discountPrice  Decimal?
-  description    String?
-  isAvailable    Boolean  @default(true)
-  tag            String?
-  imageUrl       String?
-  imageDeleteUrl String?
-  storeId        String?
-  store          Store?   @relation(fields: [storeId], references: [id], onDelete: SetNull)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@index([slug])
-  @@index([tag])
-  @@index([createdAt])
-  @@index([storeId])
-}
-
 model Cart {
   id        String     @id @default(cuid())
   userId    String?
@@ -195,44 +162,129 @@ model CartItem {
   @@index([productId, productType])
 }
 
-model Combo {
-  id             String   @id @default(cuid())
-  name           String
-  slug           String   @unique
-  items          String[]
-  price          Decimal
-  originalPrice  Decimal
-  imageUrl       String?
-  imageDeleteUrl String?
-  isAvailable    Boolean  @default(true)
-  storeId        String?
-  store          Store?   @relation(fields: [storeId], references: [id], onDelete: SetNull)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+enum FoodKind {
+  STANDARD
+  COMBO
+}
 
-  @@index([slug])
-  @@index([storeId])
+model Food {
+  id                String                   @id @default(cuid())
+  name              String
+  slug              String                   @unique
+  kind              FoodKind                 @default(STANDARD)
+  basePrice         Decimal                  @default(0)
+  discountPercent   Decimal                  @default(0)
+  description       String?
+  isAvailable       Boolean                  @default(true)
+  imageUrl          String?
+  imageDeleteUrl    String?
+  categories        FoodCategoryAssignment[]
+  tags              FoodTagAssignment[]
+  bundleItems       FoodBundleItem[]         @relation("BundleFood")
+  componentOf       FoodBundleItem[]         @relation("ComponentFood")
+  storeAvailability FoodStoreAvailability[]
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+
+  @@index([kind, isAvailable])
+  @@index([createdAt])
+}
+
+model FoodCategory {
+  id        String                   @id @default(cuid())
+  name      String                   @unique
+  slug      String                   @unique
+  foods     FoodCategoryAssignment[]
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime                 @updatedAt
+}
+
+model FoodTag {
+  id        String              @id @default(cuid())
+  name      String              @unique
+  slug      String              @unique
+  foods     FoodTagAssignment[]
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+}
+
+model FoodCategoryAssignment {
+  foodId     String
+  categoryId String
+  food       Food         @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  category   FoodCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([foodId, categoryId])
+  @@index([categoryId, foodId])
+}
+
+model FoodTagAssignment {
+  foodId String
+  tagId  String
+  food   Food    @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  tag    FoodTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([foodId, tagId])
+  @@index([tagId, foodId])
+}
+
+model FoodBundleItem {
+  bundleFoodId    String
+  componentFoodId String
+  quantity        Int    @default(1)
+  bundleFood      Food   @relation("BundleFood", fields: [bundleFoodId], references: [id], onDelete: Cascade)
+  componentFood   Food   @relation("ComponentFood", fields: [componentFoodId], references: [id], onDelete: Restrict)
+
+  @@id([bundleFoodId, componentFoodId])
+  @@index([componentFoodId])
+}
+
+model FoodStoreAvailability {
+  foodId      String
+  storeId     String
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  food        Food     @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@id([foodId, storeId])
+  @@index([storeId, foodId])
 }
 
 model Store {
-  id             String     @id @default(cuid())
-  name           String
-  phone          String
-  address        String
-  imageUrl       String?
-  imageDeleteUrl String?
-  managerId      String?    @unique
-  manager        User?      @relation("StoreManager", fields: [managerId], references: [id], onDelete: SetNull)
-  dishes         Dish[]
-  drinks         Drink[]
-  combos         Combo[]
-  orders         Order[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  isOpen         Boolean    @default(true)
+  id               String                  @id @default(cuid())
+  name             String
+  phone            String
+  address          String
+  imageUrl         String?
+  imageDeleteUrl   String?
+  managerId        String?                 @unique
+  manager          User?                   @relation("StoreManager", fields: [managerId], references: [id], onDelete: SetNull)
+  staffAccess      StaffStoreAccess[]
+  foodAvailability FoodStoreAvailability[]
+  orders           Order[]
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  isOpen           Boolean                 @default(true)
 
   @@index([managerId])
   @@index([createdAt])
+}
+
+model StaffStoreAccess {
+  userId    String
+  storeId   String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, storeId])
+  @@index([storeId])
+  @@index([userId, isPrimary])
 }
 
 model Address {
@@ -274,6 +326,7 @@ model Order {
   sslHash        String?
   paymentMethod  String?
   items          OrderItem[]
+  paymentAttempts PaymentAttempt[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -281,6 +334,32 @@ model Order {
   @@index([status])
   @@index([createdAt])
   @@index([storeId])
+}
+
+enum PaymentAttemptStatus {
+  PENDING
+  VALID
+  FAILED
+  CANCELLED
+}
+
+model PaymentAttempt {
+  id           String               @id @default(cuid())
+  orderId      String
+  order        Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  gateway      String               @default("sslcommerz")
+  transactionId String               @unique
+  validationId String?              @unique
+  amount       Decimal
+  status       PaymentAttemptStatus @default(PENDING)
+  failureReason String?
+  initiatedAt  DateTime             @default(now())
+  validatedAt  DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@index([orderId, createdAt])
+  @@index([status])
 }
 
 model OrderItem {
@@ -324,18 +403,4 @@ model GalleryImage {
 
   @@index([createdById])
   @@index([createdAt])
-}
-
-model StoreInventory {
-  id          String   @id @default(cuid())
-  storeId     String
-  productType String   @db.Text
-  productId   String
-  isAvailable Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([storeId, productType, productId])
-  @@index([storeId])
-  @@index([productId])
 }

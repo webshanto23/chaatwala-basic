@@ -1,296 +1,88 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { initiatePayment } from "@/lib/sslcommerz";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getUnavailableCartItems } from "@/lib/store-availability";
+import { getCalculatedFood } from "@/features/food/service";
 
-const BASE_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+const DELIVERY_FEE = 50;
 
-async function getCartWithProducts(userId: string | null, guestId: string | null) {
-  if (userId) {
-    const cart = await prisma.cart.findFirst({
-      where: { userId },
-      include: { items: true },
-    });
-    return cart;
-  }
-  if (guestId) {
-    const cart = await prisma.cart.findUnique({
-      where: { guestId },
-      include: { items: true },
-    });
-    return cart;
-  }
-  return null;
+function getPaymentPublicUrl() {
+  const value = process.env.PAYMENT_PUBLIC_URL;
+  if (!value) throw new Error("PAYMENT_PUBLIC_URL is not configured");
+  const url = new URL(value);
+  if (url.protocol !== "https:" || ["localhost", "127.0.0.1", "::1"].includes(url.hostname)) throw new Error("PAYMENT_PUBLIC_URL must be a publicly reachable HTTPS URL");
+  return url.origin;
 }
 
 export async function POST(request: Request) {
   const session = await auth();
-  const userId = session?.user?.id ?? null;
+  if (!session?.user || session.user.workspace !== "customer") return NextResponse.json({ error: "Please sign in to checkout" }, { status: 401 });
+  const rate = await checkRateLimit(`payment:${session.user.id}:${getClientIp(request)}`, "strict");
+  if (!rate.success) return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
 
-  const rateLimitId = userId ?? `ip:${getClientIp(request)}`;
-  const { success } = await checkRateLimit(rateLimitId, "strict");
-  if (!success) {
-    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
-  }
+  let body: { storeId?: string; addressId?: string; orderId?: string };
+  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid checkout request" }, { status: 400 }); }
+  if (!body.storeId || !body.addressId) return NextResponse.json({ error: "storeId and addressId are required" }, { status: 400 });
 
-  let guestId: string | null = null;
-  if (!userId) {
-    const cookieStore = await cookies();
-    guestId = cookieStore.get("chaatwala_guest_id")?.value ?? null;
-  }
+  let publicUrl: string;
+  try { publicUrl = getPaymentPublicUrl(); } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Payment callback configuration is invalid" }, { status: 503 }); }
 
-  const cart = await getCartWithProducts(userId, guestId);
-
-  if (!cart || cart.items.length === 0) {
-    return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
-  }
-
-  let storeId: string | null = null;
-  let addressId: string | null = null;
-  let shippingAddress: { fullName?: string; line1?: string; city?: string; postalCode?: string; country?: string } | null = null;
-  try {
-    const body = await request.json();
-    storeId = body?.storeId ?? null;
-    addressId = body?.addressId ?? null;
-    shippingAddress = body?.shippingAddress ?? null;
-  } catch {
-    // body not available
-  }
-
-  if (!storeId) {
-    return NextResponse.json({ error: "storeId is required" }, { status: 400 });
-  }
-
-  const store = await prisma.store.findUnique({
-    where: { id: storeId },
-    select: { id: true },
-  });
-
-  if (!store) {
-    return NextResponse.json({ error: "Store not found" }, { status: 404 });
-  }
-
-  let addressIdForOrder: string | undefined;
-  if (addressId) {
-    if (!userId) {
-      return NextResponse.json({ error: "Please sign in to use a saved address" }, { status: 401 });
-    }
-    const address = await prisma.address.findFirst({
-      where: { id: addressId, userId },
-      select: { id: true },
-    });
-    if (!address) {
-      return NextResponse.json({ error: "Address not found" }, { status: 404 });
-    }
-    addressIdForOrder = address.id;
-  }
-
-  const unavailableItems = await getUnavailableCartItems(storeId, cart.items);
-
-  if (unavailableItems.length > 0) {
-    return NextResponse.json(
-      { error: `${unavailableItems.map((item) => item.name).join(", ")} is Out of stock, Please wait or Select Another Store.`, unavailableItems: unavailableItems.map((item) => item.name) },
-      { status: 409 }
-    );
-  }
-
-  const priceDishIds = cart.items
-    .filter((item) => item.productType === "dish")
-    .map((item) => item.productId);
-  const priceDrinkIds = cart.items
-    .filter((item) => item.productType === "drink")
-    .map((item) => item.productId);
-  const priceComboIds = cart.items
-    .filter((item) => item.productType === "combo")
-    .map((item) => item.productId);
-
-  const [priceDishes, priceDrinks, priceCombos] = await Promise.all([
-    priceDishIds.length
-      ? prisma.dish.findMany({
-          where: { id: { in: priceDishIds } },
-          select: { id: true, price: true, discountPrice: true, imageUrl: true },
-        })
-      : Promise.resolve([]),
-    priceDrinkIds.length
-      ? prisma.drink.findMany({
-          where: { id: { in: priceDrinkIds } },
-          select: { id: true, price: true, discountPrice: true, imageUrl: true },
-        })
-      : Promise.resolve([]),
-    priceComboIds.length
-      ? prisma.combo.findMany({
-          where: { id: { in: priceComboIds } },
-          select: { id: true, price: true, imageUrl: true },
-        })
-      : Promise.resolve([]),
+  const [store, address] = await Promise.all([
+    prisma.store.findFirst({ where: { id: body.storeId, isOpen: true }, select: { id: true } }),
+    prisma.address.findFirst({ where: { id: body.addressId, userId: session.user.id }, select: { id: true, fullName: true, phone: true, line1: true, city: true, postalCode: true, country: true } }),
   ]);
+  if (!store) return NextResponse.json({ error: "Store is unavailable" }, { status: 409 });
+  if (!address) return NextResponse.json({ error: "Address not found" }, { status: 404 });
 
-  const dishMap = new Map(priceDishes.map((d) => [d.id, d]));
-  const drinkMap = new Map(priceDrinks.map((d) => [d.id, d]));
-  const comboMap = new Map(priceCombos.map((c) => [c.id, c]));
-
-  const cachedPrices = new Map<string, { price: number; name: string; imageUrl: string | null }>();
-
-  for (const item of cart.items) {
-    let dbProduct: { price: unknown; discountPrice?: unknown; imageUrl: string | null } | undefined;
-    if (item.productType === "dish") {
-      dbProduct = dishMap.get(item.productId);
-    } else if (item.productType === "drink") {
-      dbProduct = drinkMap.get(item.productId);
-    } else if (item.productType === "combo") {
-      dbProduct = comboMap.get(item.productId);
+  let order: { id: string; total: { toString(): string }; items: { productId: string; productType: string; name: string; price: { toString(): string }; quantity: number }[] };
+  if (body.orderId) {
+    const existing = await prisma.order.findFirst({ where: { id: body.orderId, userId: session.user.id, paymentStatus: { not: "paid" } }, include: { items: true } });
+    if (!existing) return NextResponse.json({ error: "Pending order not found" }, { status: 404 });
+    if (existing.storeId !== store.id || existing.addressId !== address.id) return NextResponse.json({ error: "Checkout details no longer match the pending order" }, { status: 409 });
+    order = existing;
+  } else {
+    const cart = await prisma.cart.findFirst({ where: { userId: session.user.id }, include: { items: true } });
+    if (!cart?.items.length) return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+    const unavailable = await getUnavailableCartItems(store.id, cart.items);
+    if (unavailable.length) return NextResponse.json({ error: `${unavailable.map((item) => item.name).join(", ")} is unavailable at this store` }, { status: 409 });
+    const foods = await Promise.all(cart.items.map((item) => getCalculatedFood(item.productId, store.id)));
+    for (const [index, item] of cart.items.entries()) {
+      const food = foods[index];
+      if (!food || !food.isAvailable || Math.abs(food.finalPrice - Number(item.price)) > 0.01) return NextResponse.json({ error: `Price or availability changed for ${item.name}. Please refresh your cart.` }, { status: 409 });
     }
-
-    if (!dbProduct) {
-      return NextResponse.json(
-        { error: `Product not found: ${item.productId}` },
-        { status: 404 }
-      );
-    }
-
-    const effectiveDbPrice =
-      (item.productType === "dish" || item.productType === "drink") && dbProduct.discountPrice
-        ? Number(dbProduct.discountPrice)
-        : Number(dbProduct.price);
-    const numericCartPrice = Number(item.price);
-    if (Math.abs(effectiveDbPrice - numericCartPrice) > 0.01) {
-      return NextResponse.json(
-        { error: `Price mismatch for ${item.name}. Please refresh your cart.` },
-        { status: 400 }
-      );
-    }
-    cachedPrices.set(item.id, {
-      price: effectiveDbPrice,
-      name: item.name,
-      imageUrl: dbProduct.imageUrl,
-    });
-  }
-
-  const subtotal = cart.items.reduce(
-    (sum, item) => sum + Number(item.price) * item.quantity,
-    0
-  );
-  const deliveryFee = 50;
-  const total = subtotal + deliveryFee;
-
-  const tranId = `txn_${crypto.randomUUID()}`;
-
-  const idempotencyKey = request.headers.get("idempotency-key") ?? crypto.randomUUID();
-
-  const existingOrder = await prisma.order.findFirst({
-    where: { idempotencyKey },
-  });
-  if (existingOrder) {
-    return NextResponse.json({
-      orderId: existingOrder.id,
-      tranId: existingOrder.sslTxnId,
-      gatewayUrl: existingOrder.sslTxnId ? `${BASE_URL}/checkout/success?tran_id=${existingOrder.sslTxnId}` : null,
-      message: "Order already exists",
-    });
-  }
-
-  const order = await prisma.order.create({
-    data: {
-      userId: userId ?? undefined,
-      addressId: addressIdForOrder,
-      storeId,
-      subtotal,
-      deliveryFee,
-      total,
-      idempotencyKey,
-      paymentStatus: "pending",
-      sslTxnId: tranId,
-      sslAmount: total,
-      items: {
-        create: cart.items.map((item) => ({
-          productId: item.productId,
-          productType: item.productType,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          imageUrl: item.imageUrl,
-        })),
+    const subtotal = cart.items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+    order = await prisma.order.create({
+      data: {
+        userId: session.user.id, addressId: address.id, storeId: store.id, subtotal, deliveryFee: DELIVERY_FEE, total: subtotal + DELIVERY_FEE,
+        paymentStatus: "pending", status: "pending",
+        items: { create: cart.items.map((item) => ({ productId: item.productId, productType: item.productType, name: item.name, price: item.price, quantity: item.quantity, imageUrl: item.imageUrl })) },
       },
-    },
-    include: { items: true },
-  });
-
-  await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
-
-  revalidateTag("orders", "default");
-  revalidateTag("user-orders", "default");
-
-  const cusName = session?.user?.name ?? "Guest";
-  const cusEmail = session?.user?.email ?? "guest@example.com";
-  const cusPhone = "01700000000";
-
-  let shipFullName = cusName;
-  let shipLine1 = "";
-  let shipCity = "";
-  let shipPostcode = "";
-  let shipCountry = "BD";
-
-  if (shippingAddress) {
-    shipFullName = shippingAddress.fullName ?? cusName;
-    shipLine1 = shippingAddress.line1 ?? "";
-    shipCity = shippingAddress.city ?? "";
-    shipPostcode = shippingAddress.postalCode ?? "";
-    shipCountry = shippingAddress.country ?? "BD";
+      include: { items: true },
+    });
   }
 
-  const productNames = cart.items.map((item) => item.name).join(", ");
-  const productCategory = cart.items.map((item) => item.productType).join(", ");
+  const transactionId = `txn_${crypto.randomUUID()}`;
+  const amount = Number(order.total);
+  const attempt = await prisma.$transaction(async (tx) => {
+    const created = await tx.paymentAttempt.create({ data: { orderId: order.id, transactionId, amount, status: "PENDING" } });
+    await tx.order.update({ where: { id: order.id }, data: { sslTxnId: transactionId, sslAmount: amount, paymentStatus: "pending" } });
+    return created;
+  });
 
   try {
-    const gatewayResponse = await initiatePayment({
-      tran_id: tranId,
-      total_amount: total,
-      currency: "BDT",
-      success_url: `${BASE_URL}/checkout/success`,
-      fail_url: `${BASE_URL}/checkout/fail`,
-      cancel_url: `${BASE_URL}/checkout/cancel`,
-      ipn_url: `${BASE_URL}/api/payment/validate`,
-      shipping_method: "Courier",
-      product_name: productNames,
-      product_category: productCategory,
-      product_profile: "general",
-      cus_name: cusName,
-      cus_email: cusEmail,
-      cus_phone: cusPhone,
-      cus_add1: shipLine1,
-      cus_city: shipCity,
-      cus_state: "",
-      cus_postcode: shipPostcode,
-      cus_country: shipCountry,
-      ship_name: shipFullName,
-      ship_add1: shipLine1,
-      ship_city: shipCity,
-      ship_state: "",
-      ship_postcode: shipPostcode,
-      ship_country: shipCountry,
-      value_a: order.id,
-      value_b: userId ?? "",
+    const gateway = await initiatePayment({
+      tran_id: transactionId, total_amount: amount, currency: "BDT",
+      success_url: `${publicUrl}/checkout/success`, fail_url: `${publicUrl}/checkout/fail`, cancel_url: `${publicUrl}/checkout/cancel`, ipn_url: `${publicUrl}/api/payment/validate`,
+      shipping_method: "Courier", product_name: order.items.map((item) => item.name).join(", "), product_category: "food", product_profile: "general",
+      cus_name: session.user.name ?? address.fullName, cus_email: session.user.email ?? "customer@example.com", cus_phone: address.phone,
+      cus_add1: address.line1, cus_city: address.city, cus_state: "", cus_postcode: address.postalCode, cus_country: address.country ?? "BD",
+      ship_name: address.fullName, ship_add1: address.line1, ship_city: address.city, ship_state: "", ship_postcode: address.postalCode, ship_country: address.country ?? "BD", value_a: order.id,
     });
-
-    return NextResponse.json({
-      gatewayUrl: gatewayResponse.GatewayPageURL,
-      tranId: tranId,
-      orderId: order.id,
-    });
-  } catch (err) {
-    await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        status: "payment_failed",
-        paymentStatus: "failed",
-      },
-    });
-
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ error: `Payment initiation failed: ${message}` }, { status: 500 });
+    return NextResponse.json({ gatewayUrl: gateway.GatewayPageURL, orderId: order.id, tranId: attempt.transactionId });
+  } catch (error) {
+    await prisma.paymentAttempt.update({ where: { id: attempt.id }, data: { status: "FAILED", failureReason: error instanceof Error ? error.message : "Payment initiation failed" } });
+    return NextResponse.json({ error: "Payment initiation failed. Your cart is still available to retry.", orderId: order.id }, { status: 502 });
   }
 }

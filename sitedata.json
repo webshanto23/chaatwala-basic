@@ -1,184 +1,11 @@
 {
-  "site": {
-    "name": "Chaatwala",
-    "theme": "food"
-  },
-  "home": {
-    "mostLoved": [
-      {
-        "id": 1,
-        "name": "Pani Puri",
-        "price": 120,
-        "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b",
-        "rating": 4.9,
-        "tag": "popular"
-      },
-      {
-        "id": 2,
-        "name": "Bhel Puri",
-        "price": 100,
-        "image": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092",
-        "rating": 4.8,
-        "tag": "spicy"
-      },
-      {
-        "id": 3,
-        "name": "Dahi Puri",
-        "price": 150,
-        "image": "https://images.unsplash.com/photo-1601050690597-df0568f70950",
-        "rating": 4.7,
-        "tag": "new"
-      },
-      {
-        "id": 4,
-        "name": "Aloo Tikki",
-        "price": 80,
-        "image": "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a",
-        "rating": 4.6,
-        "tag": null
-      }
-    ],
-    "spicyPicks": [
-      {
-        "id": 5,
-        "name": "Fire Noodles",
-        "price": 180,
-        "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
-        "rating": 4.8,
-        "tag": "spicy"
-      },
-      {
-        "id": 6,
-        "name": "Extra Spicy Wings",
-        "price": 220,
-        "image": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092",
-        "rating": 4.7,
-        "tag": "spicy"
-      },
-      {
-        "id": 7,
-        "name": "Hot Bharta",
-        "price": 160,
-        "image": "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f",
-        "rating": 4.6,
-        "tag": "spicy"
-      },
-      {
-        "id": 8,
-        "name": "Hot Bharta",
-        "price": 160,
-        "image": "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f",
-        "rating": 4.6,
-        "tag": "spicy"
-      }
-    ],
-    "featuredPicks": {
-      "all": {
-        "title": "Explore our favorites",
-        "description": "Browse chaat, drinks, and combo deals in one place.",
-        "items": [
-          {
-            "name": "Pani Puri",
-            "detail": "Crispy shells with tangy water",
-            "price": "120"
-          },
-          {
-            "name": "Mango Lassi",
-            "detail": "Sweet and refreshing",
-            "price": "90"
-          },
-          {
-            "name": "Chaat Lover Combo",
-            "detail": "A complete snack bundle",
-            "price": "299"
-          }
-        ]
-      },
-      "chaat": {
-        "title": "Chaat favorites",
-        "description": "Crispy, spicy, and tangy bites made for sharing.",
-        "items": [
-          {
-            "name": "Pani Puri",
-            "detail": "Crispy shells filled with spiced potato and tamarind water",
-            "price": "120"
-          },
-          {
-            "name": "Bhel Puri",
-            "detail": "Crunchy puffed rice with fresh chutneys",
-            "price": "100"
-          },
-          {
-            "name": "Dahi Puri",
-            "detail": "Soft puris topped with yogurt and sev",
-            "price": "150"
-          }
-        ]
-      },
-      "drinks": {
-        "title": "Refreshing drinks",
-        "description": "Cool beverages to pair with your favorite bites.",
-        "items": [
-          {
-            "name": "Mango Lassi",
-            "detail": "Creamy yogurt drink with mango",
-            "price": "90"
-          },
-          {
-            "name": "Masala Soda",
-            "detail": "Sparkling soda with spices",
-            "price": "70"
-          },
-          {
-            "name": "Lemon Mint Cooler",
-            "detail": "Fresh citrus with mint",
-            "price": "80"
-          }
-        ]
-      },
-      "combos": {
-        "title": "Best value combos",
-        "description": "Bundle your favorite snacks and drinks for a better deal.",
-        "items": [
-          {
-            "name": "Chaat Lover Combo",
-            "detail": "Pani puri, bhel puri, and dahi puri",
-            "price": "299"
-          },
-          {
-            "name": "Meal Deal",
-            "detail": "Biryani, raita, and salad",
-            "price": "349"
-          },
-          {
-            "name": "Snack Pack",
-            "detail": "A lighter option for quick cravings",
-            "price": "199"
-          }
-        ]
-      },
-      "desserts": {
-        "title": "Desserts",
-        "description": "Desserts are coming soon. Stay tuned for sweet updates.",
-        "items": []
-      }
-    }
-  },
   "about": {
     "contact": {
       "heading": "Get in touch",
       "description": "Have a question, feedback, or want to collaborate? We would love to hear from you.",
       "contactItems": [
-        {
-          "title": "Call Us Today!",
-          "value": "+8801335100511",
-          "icon": "Phone"
-        },
-        {
-          "title": "Send an Email",
-          "value": "mail@chaatwala.com",
-          "icon": "Mail"
-        }
+        { "title": "Call Us Today!", "value": "+8801335100511", "icon": "Phone" },
+        { "title": "Send an Email", "value": "mail@chaatwala.com", "icon": "Mail" }
       ],
       "formHeading": "Send a message",
       "formDescription": "Fill out the form below and our team will get back to you shortly."
@@ -187,586 +14,84 @@
       "heading": "Frequently Asked Questions",
       "description": "Everything you need to know about Chaatwala. Can't find the answer? Contact our customer support team.",
       "questions": [
-        {
-          "id": "item-1",
-          "title": "What is Chaatwala?",
-          "content": "Chaatwala is your one-stop destination for authentic Indian street food, bringing the flavors of chaat, biryani, and traditional snacks right to your doorstep."
-        },
-        {
-          "id": "item-2",
-          "title": "How do I place an order?",
-          "content": "Browse our menu, select your favorite dishes, add them to cart, and checkout. We'll deliver fresh, hot food within 30 minutes!"
-        },
-        {
-          "id": "item-3",
-          "title": "What are your delivery hours?",
-          "content": "We deliver daily from 11:00 AM to 11:00 PM. Order anytime during these hours for fresh, delicious food."
-        },
-        {
-          "id": "item-4",
-          "title": "Do you offer vegetarian options?",
-          "content": "Yes! We have a wide variety of vegetarian chaats, snacks, and main dishes. Look for the vegetarian badge on menu items."
-        },
-        {
-          "id": "item-5",
-          "title": "Can I customize my order?",
-          "content": "Absolutely! You can add special instructions for spice level, ingredients, and preparation during checkout."
-        },
-        {
-          "id": "item-6",
-          "title": "What payment methods do you accept?",
-          "content": "We accept all major credit/debit cards, mobile payment, and cash on delivery for your convenience."
-        },
-        {
-          "id": "item-7",
-          "title": "How do I track my order?",
-          "content": "Once your order is confirmed, you can track its status in real-time from your dashboard or the order tracking page."
-        }
+        { "id": "item-1", "title": "What is Chaatwala?", "content": "Chaatwala is your one-stop destination for authentic Indian street food, bringing the flavors of chaat, biryani, and traditional snacks right to your doorstep." },
+        { "id": "item-2", "title": "How do I place an order?", "content": "Browse our menu, select your favorite dishes, add them to cart, and checkout. We'll deliver fresh, hot food within 30 minutes!" },
+        { "id": "item-3", "title": "What are your delivery hours?", "content": "We deliver daily from 11:00 AM to 11:00 PM. Order anytime during these hours for fresh, delicious food." },
+        { "id": "item-4", "title": "Do you offer vegetarian options?", "content": "Yes! We have a wide variety of vegetarian chaats, snacks, and main dishes. Look for the vegetarian badge on menu items." },
+        { "id": "item-5", "title": "Can I customize my order?", "content": "Absolutely! You can add special instructions for spice level, ingredients, and preparation during checkout." },
+        { "id": "item-6", "title": "What payment methods do you accept?", "content": "We accept all major credit/debit cards, mobile payment, and cash on delivery for your convenience." },
+        { "id": "item-7", "title": "How do I track my order?", "content": "Once your order is confirmed, you can track its status in real-time from your dashboard or the order tracking page." }
       ]
     },
     "gallery": {
       "heading": "Our Achievements so Far",
       "description": "A glimpse of our journey and the milestones we have reached. From humble beginnings to becoming a beloved name in the community, our gallery showcases the moments that define us.",
       "images": [
-        {
-          "id": 1,
-          "src": "/images/gallery-1.jpg",
-          "alt": "Pani Puri"
-        },
-        {
-          "id": 2,
-          "src": "/images/gallery-2.jpg",
-          "alt": "Burger"
-        },
-        {
-          "id": 3,
-          "src": "/images/gallery-3.jpg",
-          "alt": "Chicken"
-        },
-        {
-          "id": 4,
-          "src": "/images/gallery-4.jpg",
-          "alt": "Fried Rice"
-        },
-        {
-          "id": 5,
-          "src": "/images/gallery-5.jpg",
-          "alt": "Kachori"
-        },
-        {
-          "id": 6,
-          "src": "/images/gallery-6.jpg",
-          "alt": "Chaat"
-        }
+        { "id": 1, "src": "/images/gallery-1.jpg", "alt": "Pani Puri" },
+        { "id": 2, "src": "/images/gallery-2.jpg", "alt": "Burger" },
+        { "id": 3, "src": "/images/gallery-3.jpg", "alt": "Chicken" },
+        { "id": 4, "src": "/images/gallery-4.jpg", "alt": "Fried Rice" },
+        { "id": 5, "src": "/images/gallery-5.jpg", "alt": "Kachori" },
+        { "id": 6, "src": "/images/gallery-6.jpg", "alt": "Chaat" }
       ]
-    }
-  },
-  "products": {
-    "productMenu": [
-      {
-        "title": "Dishes",
-        "href": "/products/dishes",
-        "description": "Delicious street snacks and chaats."
-      },
-      {
-        "title": "Drinks",
-        "href": "/products/drinks",
-        "description": "Refreshing beverages and juices."
-      },
-      {
-        "title": "Combos",
-        "href": "/products/combos",
-        "description": "Best value combo meals."
-      }
-    ],
-    "productPageCategories": [
-      {
-        "href": "/products/combos",
-        "label": "Combos"
-      },
-      {
-        "href": "/products/dishes",
-        "label": "Dishes"
-      },
-      {
-        "href": "/products/drinks",
-        "label": "Drinks"
-      }
-    ],
-    "categories": [
-      {
-        "id": "all",
-        "label": "All"
-      },
-      {
-        "id": "chaat",
-        "label": "Chaat"
-      },
-      {
-        "id": "drinks",
-        "label": "Drinks"
-      },
-      {
-        "id": "combos",
-        "label": "Combos"
-      },
-      {
-        "id": "desserts",
-        "label": "Desserts"
-      }
-    ],
-    "combos": [
-      {
-        "id": 1,
-        "name": "Chaat Lover Combo",
-        "items": ["Pani Puri", "Bhel Puri", "Dahi Puri"],
-        "price": 299,
-        "originalPrice": 399,
-        "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b"
-      },
-      {
-        "id": 2,
-        "name": "Meal Deal",
-        "items": ["Chicken Biryani", "Raita", "Salad"],
-        "price": 349,
-        "originalPrice": 449,
-        "image": "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f"
-      },
-      {
-        "id": 3,
-        "name": "Snack Pack",
-        "items": ["Singara Chaat", "Aloo Tikki", "Thums Up"],
-        "price": 199,
-        "originalPrice": 249,
-        "image": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092"
-      },
-      {
-        "id": 4,
-        "name": "Family Feast",
-        "items": ["Veg Biryani", "Paneer Tikka", "Naan", "Raita"],
-        "price": 599,
-        "originalPrice": 799,
-        "image": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092"
-      }
-    ],
-    "popularDishes": [
-      {
-        "id": 1,
-        "name": "Chicken Biryani",
-        "price": 250,
-        "image": "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f"
-      },
-      {
-        "id": 2,
-        "name": "Beef Burger",
-        "price": 180,
-        "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd"
-      },
-      {
-        "id": 3,
-        "name": "Grilled Chicken",
-        "price": 220,
-        "image": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092"
-      },
-      {
-        "id": 4,
-        "name": "Fried Rice",
-        "price": 200,
-        "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b"
-      }
-    ],
-    "allDishes": [
-      {
-        "id": 1,
-        "name": "Raj Kachori",
-        "price": 200,
-        "image": "https://images.unsplash.com/photo-1601050690597-df0568f70950"
-      },
-      {
-        "id": 2,
-        "name": "Chole Bhature",
-        "price": 300,
-        "image": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092"
-      },
-      {
-        "id": 3,
-        "name": "Gol Gappe",
-        "price": 100,
-        "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b"
-      },
-      {
-        "id": 4,
-        "name": "Singara Chaat",
-        "price": 150,
-        "image": "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a"
-      },
-      {
-        "id": 5,
-        "name": "Pav Bhaji",
-        "price": 250,
-        "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b"
-      },
-      {
-        "id": 6,
-        "name": "Dahi Puri",
-        "price": 180,
-        "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b"
-      }
-    ],
-    "specialOffer": {
-      "name": "Kacchi Biryani",
-      "price": 199,
-      "oldPrice": 299,
-      "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b"
     }
   },
   "navigation": {
     "publicLinks": [
-      {
-        "href": "/",
-        "label": "Home"
-      },
-      {
-        "href": "/products/dishes",
-        "label": "Menu"
-      },
-      {
-        "href": "/about",
-        "label": "About"
-      }
+      { "href": "/", "label": "Home" },
+      { "href": "/products", "label": "Menu" },
+      { "href": "/about", "label": "About" }
     ],
     "userLinks": [
-      {
-        "href": "/",
-        "label": "Home"
-      },
-      {
-        "href": "/products/dishes",
-        "label": "Menu"
-      },
-      {
-        "href": "/profile/dashboard",
-        "label": "Profile"
-      },
-      {
-        "href": "/orders",
-        "label": "Orders"
-      }
-    ],
-    "productMenu": [
-      {
-        "title": "Dishes",
-        "href": "/products/dishes",
-        "description": "Delicious street snacks and chaats."
-      },
-      {
-        "title": "Drinks",
-        "href": "/products/drinks",
-        "description": "Refreshing beverages and juices."
-      },
-      {
-        "title": "Combos",
-        "href": "/products/combos",
-        "description": "Best value combo meals."
-      }
-    ],
-    "footerNavLinks": [
-      {
-        "href": "/about",
-        "label": "About"
-      },
-      {
-        "href": "/terms-and-conditions",
-        "label": "Terms & Conditions"
-      },
-      {
-        "href": "/license",
-        "label": "License"
-      },
-      {
-        "href": "/privacy-policy",
-        "label": "Privacy Policy"
-      }
-    ],
-    "footerSocialLinks": [
-      {
-        "href": "#",
-        "label": "X",
-        "icon": "X"
-      },
-      {
-        "href": "#",
-        "label": "Github",
-        "icon": "Github"
-      }
-    ],
-    "adminSidebarLinks": [
-      {
-        "name": "Dashboard",
-        "href": "/admin/dashboard"
-      },
-      {
-        "name": "Users",
-        "href": "/admin/users"
-      },
-      {
-        "name": "Roles",
-        "href": "/admin/roles"
-      },
-      {
-        "name": "Store",
-        "href": "/admin/stores"
-      },
-      {
-        "name": "Audit Logs",
-        "href": "/admin/audit"
-      },
-      {
-        "name": "Dishes",
-        "href": "/admin/products/dishes"
-      },
-      {
-        "name": "Drinks",
-        "href": "/admin/products/drinks"
-      },
-      {
-        "name": "Combos",
-        "href": "/admin/products/combos"
-      },
-      {
-        "name": "Orders",
-        "href": "/admin/orders"
-      }
+      { "href": "/", "label": "Home" },
+      { "href": "/products", "label": "Menu" },
+      { "href": "/profile/dashboard", "label": "Profile" },
+      { "href": "/orders", "label": "Orders" }
     ],
     "adminLinks": [
-      {
-        "href": "/",
-        "label": "Home"
-      },
-      {
-        "href": "/about",
-        "label": "About"
-      },
-      {
-        "href": "/products/dishes",
-        "label": "Products"
-      }
+      { "href": "/", "label": "Home" },
+      { "href": "/about", "label": "About" },
+      { "href": "/products", "label": "Products" }
+    ],
+    "footerNavLinks": [
+      { "href": "/about", "label": "About" },
+      { "href": "/terms-and-conditions", "label": "Terms & Conditions" },
+      { "href": "/license", "label": "License" },
+      { "href": "/privacy-policy", "label": "Privacy Policy" }
     ]
   },
   "account": {
     "settings": [
-      {
-        "label": "Edit Profile",
-        "description": "Update your name, details, and contact info",
-        "icon": "UserRound"
-      },
-      {
-        "label": "Change Password",
-        "description": "Refresh your sign-in credentials",
-        "icon": "KeyRound"
-      }
+      { "label": "Edit Profile", "description": "Update your name, details, and contact info", "icon": "UserRound" },
+      { "label": "Change Password", "description": "Refresh your sign-in credentials", "icon": "KeyRound" }
     ]
-  },
-  "admin": {
-    "dashboardStats": {
-      "users": 1240,
-      "visitors": 5421,
-      "dishes": 86,
-      "drinks": 34,
-      "combos": 12,
-      "orders": 920,
-      "deliveries": 870,
-      "earnings": 12500,
-      "todayRevenue": 540,
-      "avgOrder": 13.5,
-      "topItem": "Pani Puri"
-    },
-    "tables": {
-      "dishes": [
-        {
-          "name": "Pani Puri",
-          "price": "120",
-          "category": "Snacks"
-        },
-        {
-          "name": "Bhel Puri",
-          "price": "100",
-          "category": "Snacks"
-        }
-      ],
-      "drinks": [
-        {
-          "name": "Lassi",
-          "price": "80",
-          "size": "Medium"
-        },
-        {
-          "name": "Cold Coffee",
-          "price": "120",
-          "size": "Large"
-        }
-      ],
-      "users": [
-        {
-          "name": "John Doe",
-          "email": "john@mail.com",
-          "role": "Admin"
-        },
-        {
-          "name": "Jane Smith",
-          "email": "jane@mail.com",
-          "role": "User"
-        }
-      ],
-      "combos": [
-        {
-          "name": "Snack Combo",
-          "items": "Pani Puri + Lassi",
-          "price": "180"
-        },
-        {
-          "name": "Mega Combo",
-          "items": "Bhel + Coffee",
-          "price": "200"
-        }
-      ]
-    }
   },
   "homeSections": {
     "metrics": [
-      {
-        "value": "10K+",
-        "label": "Happy Customers",
-        "color": "text-primary"
-      },
-      {
-        "value": "86",
-        "label": "Unique Dishes",
-        "color": "text-secondary"
-      },
-      {
-        "value": "4.8\u2605",
-        "label": "Satisfaction",
-        "color": "text-accent"
-      },
-      {
-        "value": "15+",
-        "label": "Years Experience",
-        "color": "text-primary"
-      }
+      { "value": "10K+", "label": "Happy Customers", "color": "text-primary" },
+      { "value": "86", "label": "Unique Dishes", "color": "text-secondary" },
+      { "value": "4.8★", "label": "Satisfaction", "color": "text-accent" },
+      { "value": "15+", "label": "Years Experience", "color": "text-primary" }
     ],
     "whyChaatwala": {
-      "eyebrow": "Why Choose Us",
-      "heading": "Why Chaatwala?",
-      "description": "We bring you the authentic flavors of Indian street food with uncompromising quality",
       "features": [
-        {
-          "title": "Fresh Ingredients",
-          "description": "Locally sourced, seasonal produce",
-          "color": "text-primary",
-          "icon": "Leaf"
-        },
-        {
-          "title": "Authentic Taste",
-          "description": "Traditional recipes from the streets",
-          "color": "text-secondary",
-          "icon": "Flame"
-        },
-        {
-          "title": "Fast Delivery",
-          "description": "30 min or less guaranteed",
-          "color": "text-accent",
-          "icon": "Clock"
-        },
-        {
-          "title": "Hygienic Prep",
-          "description": "Contactless, safe packaging",
-          "color": "text-primary",
-          "icon": "Shield"
-        }
+        { "title": "Fresh Ingredients", "description": "Locally sourced, seasonal produce", "color": "text-primary", "icon": "Leaf" },
+        { "title": "Authentic Taste", "description": "Traditional recipes from the streets", "color": "text-secondary", "icon": "Flame" },
+        { "title": "Fast Delivery", "description": "30 min or less guaranteed", "color": "text-accent", "icon": "Clock" },
+        { "title": "Hygienic Prep", "description": "Contactless, safe packaging", "color": "text-primary", "icon": "Shield" }
       ]
     }
   },
   "shared": {
     "brandLogos": [
-      {
-        "src": "https://storage.efferd.com/logo/nvidia-wordmark.svg",
-        "alt": "Nvidia Logo"
-      },
-      {
-        "src": "https://storage.efferd.com/logo/supabase-wordmark.svg",
-        "alt": "Supabase Logo"
-      },
-      {
-        "src": "https://storage.efferd.com/logo/openai-wordmark.svg",
-        "alt": "OpenAI Logo"
-      },
-      {
-        "src": "https://storage.efferd.com/logo/turso-wordmark.svg",
-        "alt": "Turso Logo"
-      },
-      {
-        "src": "https://storage.efferd.com/logo/vercel-wordmark.svg",
-        "alt": "Vercel Logo"
-      },
-      {
-        "src": "https://storage.efferd.com/logo/github-wordmark.svg",
-        "alt": "GitHub Logo"
-      },
-      {
-        "src": "https://storage.efferd.com/logo/claude-wordmark.svg",
-        "alt": "Claude AI Logo"
-      },
-      {
-        "src": "https://storage.efferd.com/logo/clerk-wordmark.svg",
-        "alt": "Clerk Logo"
-      }
-    ]
-  },
-  "search": {
-    "items": [
-      {
-        "label": "Pani Puri",
-        "description": "Crispy chaat bites",
-        "href": "/products/dishes",
-        "category": "Chaat"
-      },
-      {
-        "label": "Bhel Puri",
-        "description": "Crunchy puffed rice snack",
-        "href": "/products/dishes",
-        "category": "Chaat"
-      },
-      {
-        "label": "Dahi Puri",
-        "description": "Yogurt-topped street snack",
-        "href": "/products/dishes",
-        "category": "Chaat"
-      },
-      {
-        "label": "Mango Lassi",
-        "description": "Refreshing mango drink",
-        "href": "/products/drinks",
-        "category": "Drinks"
-      },
-      {
-        "label": "Masala Soda",
-        "description": "Spiced fizzy drink",
-        "href": "/products/drinks",
-        "category": "Drinks"
-      },
-      {
-        "label": "Chaat Lover Combo",
-        "description": "Best-value snack combo",
-        "href": "/products/combos",
-        "category": "Combos"
-      },
-      {
-        "label": "Meal Deal",
-        "description": "Biryani and sides bundle",
-        "href": "/products/combos",
-        "category": "Combos"
-      }
+      { "src": "https://storage.efferd.com/logo/nvidia-wordmark.svg", "alt": "Nvidia Logo" },
+      { "src": "https://storage.efferd.com/logo/supabase-wordmark.svg", "alt": "Supabase Logo" },
+      { "src": "https://storage.efferd.com/logo/openai-wordmark.svg", "alt": "OpenAI Logo" },
+      { "src": "https://storage.efferd.com/logo/turso-wordmark.svg", "alt": "Turso Logo" },
+      { "src": "https://storage.efferd.com/logo/vercel-wordmark.svg", "alt": "Vercel Logo" },
+      { "src": "https://storage.efferd.com/logo/github-wordmark.svg", "alt": "GitHub Logo" },
+      { "src": "https://storage.efferd.com/logo/claude-wordmark.svg", "alt": "Claude AI Logo" },
+      { "src": "https://storage.efferd.com/logo/clerk-wordmark.svg", "alt": "Clerk Logo" }
     ]
   }
 }

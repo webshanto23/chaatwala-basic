@@ -14,9 +14,10 @@ async function getGuestIdFromCookie() {
 
 async function resolveCartOwner() {
   const session = await auth();
+  if (session?.user.workspace === "staff") return { session, userId: null, guestId: null, staffDenied: true };
   const userId = session?.user?.id ?? null;
   const guestId = userId ? null : await getGuestIdFromCookie();
-  return { session, userId, guestId };
+  return { session, userId, guestId, staffDenied: false };
 }
 
 async function getCartIdForOwner(userId: string | null, guestId: string | null, itemId: string) {
@@ -69,7 +70,8 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId, guestId } = await resolveCartOwner();
+  const { userId, guestId, staffDenied } = await resolveCartOwner();
+  if (staffDenied) return NextResponse.json({ error: "Customer cart access only" }, { status: 403 });
 
   if (!userId && !guestId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -107,7 +109,8 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId, guestId } = await resolveCartOwner();
+  const { userId, guestId, staffDenied } = await resolveCartOwner();
+  if (staffDenied) return NextResponse.json({ error: "Customer cart access only" }, { status: 403 });
 
   if (!userId && !guestId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

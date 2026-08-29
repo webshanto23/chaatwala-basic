@@ -1,35 +1,19 @@
 import { HeroSection } from "@/components/home/HeroSection";
 import { MostLoved, SpicyPicks } from "@/components/home/SignatureFromDb";
-import {
-  getPopularDishes,
-  getPopularDrinks,
-  getSpicyDishes,
-} from "@/features/products/service";
+import { getFoodCatalog, type FoodCatalogItem } from "@/features/food/queries";
 import { shuffle } from "@/lib/utils";
 import { getHeroSettings } from "@/features/site-settings/service";
 
 export const revalidate = 300;
 
 export default async function Home() {
-  const [popularDishes, popularDrinks, spicyDishes, heroSettings] = await Promise.all([
-    getPopularDishes(),
-    getPopularDrinks(),
-    getSpicyDishes(),
+  const [popularCatalog, spicyCatalog, heroSettings] = await Promise.all([
+    getFoodCatalog({ tag: "popular", limit: 24 }),
+    getFoodCatalog({ tag: "spicy", limit: 24 }),
     getHeroSettings(),
   ]);
 
-  const toFoodItem = (
-    d: {
-      id: string;
-      name: string;
-      price: number | unknown;
-      discountPrice: number | unknown | null;
-      imageUrl: string | null;
-      description: string | null;
-      tag: string | null;
-    },
-    type: "dish" | "drink",
-  ): {
+  const toFoodItem = (food: FoodCatalogItem): {
     id: string;
     name: string;
     price: number;
@@ -38,38 +22,32 @@ export default async function Home() {
     image: string;
     detail: string;
     rating: number;
-    type: "dish" | "drink";
     tag?: "spicy" | "popular" | "new";
   } => {
-    const basePrice = Number(d.price);
-    const discount = d.discountPrice !== null && d.discountPrice !== undefined ? Number(d.discountPrice) : null;
+    const basePrice = food.basePrice;
+    const discount = food.finalPrice < food.basePrice ? food.finalPrice : null;
     return {
-      id: d.id,
-      name: d.name,
+      id: food.id,
+      name: food.name,
       price: discount ?? basePrice,
       originalPrice: basePrice,
       discountPrice: discount,
-      image: d.imageUrl ?? "",
-      detail: d.description ?? "",
+      image: food.imageUrl ?? "",
+      detail: food.description ?? (food.kind === "COMBO" ? food.componentFoodNames.join(", ") : ""),
       rating: 4.8,
-      type,
       tag:
-        d.tag === "popular"
+        food.tags.some((tag) => tag.slug === "popular")
           ? "popular"
-          : d.tag === "spicy"
+          : food.tags.some((tag) => tag.slug === "spicy")
             ? "spicy"
-            : d.tag === "new"
+            : food.tags.some((tag) => tag.slug === "new")
               ? "new"
               : undefined,
     };
   };
 
-  const mostLoved = shuffle([
-    ...popularDishes.map((d) => toFoodItem(d, "dish")),
-    ...popularDrinks.map((d) => toFoodItem(d, "drink")),
-  ]);
-
-  const spicy = shuffle(spicyDishes.map((d) => toFoodItem(d, "dish")));
+  const mostLoved = shuffle(popularCatalog.foods.map(toFoodItem));
+  const spicy = shuffle(spicyCatalog.foods.map(toFoodItem));
 
   return (
     <div className="flex flex-col flex-1 font-sans bg-linear-to-r from-primary/10 via-secondary/10 to-accent/10">

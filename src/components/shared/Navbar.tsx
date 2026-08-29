@@ -104,10 +104,10 @@ export default function Navbar() {
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
                     <Link
-                      href="/store-manager/dashboard"
+                      href="/staff"
                       className="hover:text-primary transition-colors"
                     >
-                      Store Manager Dashboard
+                      Staff Dashboard
                     </Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
@@ -131,10 +131,10 @@ export default function Navbar() {
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link
-                    href="/admin/dashboard"
+                    href="/staff"
                     className="hover:text-primary transition-colors"
                   >
-                    Admin Dashboard
+                    Staff Dashboard
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
@@ -256,20 +256,20 @@ export default function Navbar() {
                         </Link>
                       ))}
                       <Link
-                        href="/store-manager/dashboard"
+                        href="/staff"
                         className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
                       >
-                        Store Manager Dashboard
+                        Staff Dashboard
                       </Link>
                     </>
                   )}
 
                   {isAdmin && (
                     <Link
-                      href="/admin/dashboard"
+                      href="/staff"
                       className="rounded-full px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary"
                     >
-                      Admin Dashboard
+                      Staff Dashboard
                     </Link>
                   )}
 

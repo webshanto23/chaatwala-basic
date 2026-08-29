@@ -1,24 +1,16 @@
 import { auth } from "@/lib/auth";
-import { getUserRole } from "@/lib/authorize";
+import { getWorkspaceHome } from "@/lib/auth-redirect";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default async function AccessDeniedPage() {
   const session = await auth();
-  const role = getUserRole(session);
-
   let dashboardHref = "/";
   let dashboardLabel = "Go to Home";
 
-  if (role === "admin") {
-    dashboardHref = "/admin/dashboard";
-    dashboardLabel = "Go to Admin Dashboard";
-  } else if (role === "store_manager") {
-    dashboardHref = "/store-manager/dashboard";
-    dashboardLabel = "Go to Store Manager Dashboard";
-  } else if (session?.user) {
-    dashboardHref = "/profile/dashboard";
-    dashboardLabel = "Go to Profile";
+  if (session?.user) {
+    dashboardHref = getWorkspaceHome(session.user.workspace);
+    dashboardLabel = session.user.workspace === "staff" ? "Go to Staff Dashboard" : "Go to Profile";
   }
 
   return (

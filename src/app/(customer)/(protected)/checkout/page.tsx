@@ -33,6 +33,9 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [addressModalOpen, setAddressModalOpen] = useState(false)
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(() =>
+    typeof window === "undefined" ? null : sessionStorage.getItem("chaatwala:pending-order"),
+  )
   const {
     stores, selectedStoreId, selectStore, storesError, isLoadingStores, retryStores,
     storeInvalid, unavailableItems, validationError, isValidatingStore,
@@ -85,34 +88,32 @@ export default function CheckoutPage() {
     setIsPlacing(true)
     setError(null)
     try {
-      const idempotencyKey = crypto.randomUUID()
       const res = await fetch("/api/payment/initiate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Idempotency-Key": idempotencyKey,
         },
         body: JSON.stringify({
           storeId: selectedStoreId,
           addressId: address.id,
-          shippingAddress: {
-            fullName: address.fullName,
-            phone: address.phone,
-            line1: address.line1,
-            line2: address.line2,
-            city: address.city,
-            postalCode: address.postalCode,
-            country: address.country,
-          },
+          ...(pendingOrderId ? { orderId: pendingOrderId } : {}),
         }),
       })
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
+        if (data.orderId) {
+          sessionStorage.setItem("chaatwala:pending-order", data.orderId)
+          setPendingOrderId(data.orderId)
+        }
         throw new Error(data.error || "Failed to initiate payment")
       }
 
       const data = await res.json()
+      if (data.orderId) {
+        sessionStorage.setItem("chaatwala:pending-order", data.orderId)
+        setPendingOrderId(data.orderId)
+      }
       if (data.gatewayUrl) {
         window.location.href = data.gatewayUrl
       } else {

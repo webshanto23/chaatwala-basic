@@ -19,17 +19,11 @@ export async function registerUser(formData: FormData) {
 
   const hashedPassword = await bcrypt.hash(validated.password, 12);
 
-  const userRole = await prisma.role.findUnique({
-    where: { name: "user" },
-    select: { id: true },
-  });
-
   const user = await prisma.user.create({
     data: {
       name: validated.name,
-      email: validated.email,
+      email: validated.email.toLowerCase(),
       password: hashedPassword,
-      roleId: userRole?.id,
     },
   });
 
@@ -39,13 +33,13 @@ export async function registerUser(formData: FormData) {
 
   await prisma.verificationToken.create({
     data: {
-      identifier: user.email,
+      identifier: validated.email.toLowerCase(),
       token: hashedToken,
       expires,
     },
   });
 
-  await sendVerificationEmail(user.email, token);
+  await sendVerificationEmail(validated.email.toLowerCase(), token);
 
   return { success: true, user: { id: user.id, email: user.email, name: user.name } };
 }

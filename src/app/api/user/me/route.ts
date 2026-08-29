@@ -5,6 +5,7 @@ import { unstable_cache } from "next/cache";
 
 export async function GET() {
   const session = await auth();
+  if (session?.user?.workspace === "staff") return NextResponse.json({ error: "Customer profile access only" }, { status: 403 });
   const userId = session?.user?.id;
 
   if (!userId) {

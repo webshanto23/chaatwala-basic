@@ -1,686 +1,132 @@
-# Implement Admin-Managed Homepage Hero Image
+# Architecture Evolution Plan — Customer, Staff, and RBAC
 
-You are working on the **Chaatwala** production codebase.
+Status: planning only. Do not implement until the architecture decisions are finalized.
 
-Implement a production-ready system where the **homepage Hero Section image can ONLY be uploaded/replaced by an authorized ADMIN from the Admin Dashboard**.
+## Decisions made
 
-Do not blindly implement based on assumptions. First inspect the existing codebase, database schema, authentication/RBAC implementation, image-upload system, homepage Hero component, admin architecture, caching/revalidation strategy, and existing tests. Reuse the existing patterns wherever possible.
+- Keep one role per user.
+- Keep two application layouts: a customer layout and a staff layout. Auth remains a minimal third boundary, not a dashboard application.
+- Separate application areas by workspace, not by every individual role:
+  - `customer`: storefront, cart, checkout, payments, addresses, customer orders/profile.
+  - `staff`: all operational tools for admin, store manager, super admin, and future staff roles.
+- Keep customer, staff, and auth route shells isolated. The root layout must contain global-only infrastructure.
+- Use permissions for capabilities inside a workspace. Keep role/workspace identity separate from permissions and keep store/data scope separate from both.
+- Use a single canonical `/staff/*` workspace with permission-filtered, code-owned navigation. Do not implement database-configured arbitrary menu URLs.
+- This is a development-phase clean break: remove legacy `/admin/*` and `/store-manager/*` routes after their capabilities move to `/staff/*`; do not add redirects.
+- Add a protected `super_admin` staff role. Only Super Admin manages direct staff creation, roles, role permissions, store assignments, and other control-plane operations.
+- Public credential registration and OAuth create customer accounts only. Super Admin creates staff accounts directly with username/password credentials.
+- Do not silently promote/convert a customer into staff. Reject staff creation when an identity conflicts with an existing customer account in v1.
+- Keep all authorization server-side for pages, server actions, and APIs. Navigation visibility is never a security control.
+- Start staff roles fresh: seed only the protected `super_admin` system role; Super Admin creates all ordinary staff roles and staff users. Keep a seeded customer role for public customer registration.
 
-The project already has ongoing architecture/security/performance work, so **do not introduce a parallel architecture or duplicate functionality**.
-
----
-
-## 1. First: Audit the Existing Implementation
-
-Before changing anything, inspect:
-
-- Homepage route and Hero component
-- Existing admin routes/layout
-- Existing admin permission/RBAC system
-- Existing `ADMIN`, `STORE_MANAGER`, and `USER` authorization rules
-- Existing image upload implementation
-- Existing ImageBB integration, if still present
-- Existing image compression/optimization utilities
-- Existing Prisma schema
-- Existing settings/configuration models
-- Existing server actions
-- Existing API routes
-- Existing cache/revalidation utilities
-- Existing tests
-- Existing `SiteSetting`, `Settings`, `Hero`, `Banner`, or equivalent models/components if any
-
-Search the entire repository before creating new files.
-
-### Important
-
-Do NOT create a second image-upload mechanism if the project already has a reusable upload service.
-
-Do NOT create duplicate authentication or permission logic.
-
-Do NOT move unrelated code.
-
-Do NOT modify the existing homepage design unnecessarily.
-
----
-
-# 2. Functional Requirement
-
-The homepage currently contains a Hero Section with a large visual image.
-
-That image must become **admin-managed**.
-
-The final flow should be:
+## Target route/provider topology
 
 ```text
-ADMIN DASHBOARD
-      ↓
-Hero Settings
-      ↓
-Upload / Replace Hero Image
-      ↓
-Existing Image Upload / Storage Service
-      ↓
-Database
-      ↓
-Homepage Server Component
-      ↓
-Hero Image
+src/app/
+├─ layout.tsx                       global providers only
+├─ (customer)/                      customer-only application shell
+│  ├─ (public)/                     storefront/public content
+│  ├─ (protected)/                  cart, checkout, orders
+│  ├─ (user)/                       profile, addresses
+│  └─ checkout/                     payment result routes
+├─ (staff)/staff/*                  unified staff workspace
+│  ├─ dashboard
+│  ├─ catalog/products
+│  ├─ stores
+│  ├─ operations/orders
+│  ├─ operations/inventory
+│  ├─ content/homepage
+│  ├─ content/about
+│  ├─ access/staff
+│  ├─ access/roles
+│  ├─ access/permissions
+│  ├─ audit
+│  └─ settings
+└─ (auth)/                          customer registration/sign-in and staff sign-in
 ```
 
-Regular users must never be able to modify the Hero image.
-
-Store managers must also NOT be able to modify it unless the existing permission system explicitly defines them as having this capability.
-
-For this feature, the default required role is:
-
-```text
-ADMIN
-```
-
----
-
-# 3. Database Design
-
-Inspect the existing schema first.
-
-If there is already a suitable global/site settings model, reuse it.
-
-If there is no suitable model, create a minimal settings model rather than creating an unnecessary `HeroImages` table.
-
-Prefer a singleton/global settings record.
-
-Possible fields:
-
-```text
-heroImageUrl
-heroImageAlt
-imageDeleteUrl / imageDeleteKey
-updatedBy
-updatedAt
-```
-
-Use the project's existing naming conventions.
-
-Do not blindly copy the above schema if the existing database architecture has a better equivalent.
-
-### Important
-
-There should normally be **one current Hero image**, not an ever-growing collection of Hero records.
-
-If the existing image storage system provides a deletion URL/key, retain it so the previous image can be cleaned up safely after a successful replacement.
-
----
-
-# 4. Admin UI
-
-Add Hero management to the existing Admin Dashboard using the project's current admin navigation and UI conventions.
-
-Prefer a route such as:
-
-```text
-/admin/settings/hero
-```
-
-but first inspect the current admin structure and use the existing appropriate location if one already exists.
-
-The UI should provide:
-
-### Current Hero Image
-
-- Current image preview
-- Upload/replace control
-- Image validation feedback
-- Upload progress/loading state if supported by the existing architecture
-- Save/update action
-- Alt text field
-- Success/error feedback
-
-Example conceptual UI:
-
-```text
-Hero Section
-────────────────────────────────
-
-Current Hero Image
-
-[ image preview ]
-
-[ Replace Image ]
-
-Alt Text
-[ Chaatwala street food ]
-
-[ Save Changes ]
-```
-
-Use the existing shadcn/UI/Tailwind components and styling conventions.
-
-Do not redesign the entire Admin Dashboard.
-
----
-
-# 5. Image Upload
-
-Reuse the existing project image pipeline.
-
-If the project currently uses:
-
-- ImageBB
-- Sharp
-- an existing `uploadImage()` helper
-- an existing image service
-- an existing delete-image mechanism
-
-then integrate with that implementation.
-
-Do not create a second upload abstraction unless the existing one genuinely cannot support this use case.
-
-Validate:
-
-- MIME type
-- file extension where appropriate
-- maximum file size
-- successful upload response
-- valid returned URL
-
-Use the project's existing image compression rules if available.
-
-If Sharp/compression is already used, preserve that pipeline.
-
----
-
-# 6. Safe Image Replacement
-
-The replacement process must be safe.
-
-Correct sequence:
-
-```text
-Validate new image
-      ↓
-Upload new image
-      ↓
-Confirm successful upload
-      ↓
-Update database
-      ↓
-Revalidate homepage
-      ↓
-Delete old image
-```
-
-Do NOT delete the old image before the new image has successfully uploaded and the database has successfully updated.
-
-If the new upload fails:
-
-```text
-Old image remains active
-```
-
-If the database update fails:
-
-```text
-Do not remove the old image
-```
-
-Avoid leaving the homepage without a valid Hero image.
-
-Handle cleanup failures safely and log them appropriately according to the project's existing logging strategy.
-
----
-
-# 7. Authorization — CRITICAL
-
-Authorization must be enforced **server-side**.
-
-Do NOT rely on:
-
-- hiding the Admin UI
-- frontend route protection alone
-- client-side role checks
-- disabled buttons
-- middleware alone
-
-The server action/API responsible for changing the Hero image must independently verify:
-
-```text
-Authenticated user?
-        ↓
-ADMIN?
-        ↓
-Allowed to modify Hero?
-        ↓
-Perform mutation
-```
-
-Expected behavior:
-
-```text
-Unauthenticated → 401 / existing equivalent
-Authenticated non-admin → 403 / existing equivalent
-ADMIN → allowed
-```
-
-Use the project's existing authorization/permission utilities.
-
-Do not create another independent RBAC implementation.
-
-This is especially important because the project has already undergone permission/security auditing.
-
----
-
-# 8. Homepage Rendering
-
-The homepage should remain **server-driven**.
-
-Do NOT implement:
-
-```tsx
-useEffect(() => {
-  fetch("/api/hero");
-}, []);
-```
-
-Do NOT add a client-side request just to retrieve the Hero image.
-
-Do NOT create an API round trip from the homepage to retrieve data that can already be queried directly on the server.
-
-Follow the project's existing architecture:
-
-```text
-app/
-    routing + server rendering
-
-features/
-    business logic/data access
-
-components/
-    presentation
-
-lib/
-    shared infrastructure
-```
-
-If the Hero is currently a Client Component, keep it client-side only if genuinely necessary. Otherwise make the data retrieval happen in the Server Component and pass the image URL into the presentation component.
-
-Conceptually:
-
-```tsx
-const settings = await getSiteSettings();
-
-return (
-  <Hero imageUrl={settings.heroImageUrl} imageAlt={settings.heroImageAlt} />
-);
-```
-
-Adapt this to the actual project architecture.
-
----
-
-# 9. Performance / Request-Reduction Requirement
-
-The project has previously suffered from excessive client-side fetching and request duplication.
-
-Therefore:
-
-### DO
-
-- fetch Hero settings on the server
-- reuse existing cached data functions
-- use React `cache()` if appropriate
-- use Next.js revalidation if appropriate
-- revalidate only when the Hero changes
-
-### DO NOT
-
-- fetch Hero data in `useEffect`
-- create unnecessary REST calls
-- fetch the same settings multiple times from separate components
-- introduce React Query/SWR solely for this feature
-- add polling
-- add unnecessary client state
-
-The goal is:
-
-```text
-Homepage
-    ↓
-Server-side settings retrieval
-    ↓
-Hero
-```
-
-not:
-
-```text
-Homepage
-    ↓
-Client JS
-    ↓
-API
-    ↓
-Database
-    ↓
-Hero
-```
-
----
-
-# 10. Cache / Revalidation
-
-Inspect the existing caching strategy.
-
-When an ADMIN successfully updates the Hero image, invalidate the relevant homepage cache using the project's existing strategy.
-
-For example, if appropriate:
-
-```ts
-revalidatePath("/");
-```
-
-If the project already uses tagged caching, use the existing tag instead.
-
-Do not introduce a second caching strategy.
-
-The new image should become visible on the homepage after the successful admin update without requiring unnecessary application-wide cache invalidation.
-
----
-
-# 11. Hero Image Fallback
-
-The homepage must not break if:
-
-- no Hero image exists
-- database value is null
-- an old record is missing
-- an upload is temporarily unavailable
-
-Implement a sensible fallback using the project's existing asset strategy.
-
-However, do NOT hard-code the uploaded screenshot as a permanent database-independent replacement if the requirement is for the image to be admin-managed.
-
-The fallback should be clearly treated as a fallback.
-
----
-
-# 12. Admin dashbaord
-
-There is a Home: /home route in admin sidebar that renders the homepage in public view. create a page with existing page layout and colors that renders the homepage settings page. change the route to /admin/homepage
-place the hero Image upload system there.
-
-# 13. Image Optimization
-
-Because the Hero image is likely an LCP candidate, inspect the existing Next.js image implementation.
-
-Use the project's existing image optimization approach.
-
-If appropriate:
-
-- `next/image`
-- correct responsive sizing
-- correct `sizes`
-- appropriate dimensions/aspect ratio
-- priority/preload behavior only if the Hero is actually the LCP image
-- avoid layout shift
-- avoid unnecessarily huge source images
-
-Do not blindly add `priority` everywhere.
-
-The Hero image should have stable dimensions/aspect ratio to avoid CLS.
-
----
-
-# 14. Validation
-
-Add validation for:
-
-### File
-
-- accepted image types
-- maximum file size
-- malformed upload
-- empty file
-- invalid upload response
-
-### Authorization
-
-Test:
-
-```text
-Unauthenticated
-Non-admin
-Store manager
-Admin
-```
-
-### Mutation
-
-Test:
-
-```text
-Successful upload
-Upload failure
-Database update failure
-Old-image cleanup failure
-```
-
-### Rendering
-
-Test:
-
-```text
-Hero exists
-Hero missing
-Hero replaced
-Fallback behavior
-```
-
----
-
-# 15. Tests
-
-Inspect the existing test framework first.
-
-The project currently has an established testing setup, so use the existing framework and conventions.
-
-Add focused tests rather than creating a new test framework.
-
-At minimum cover:
-
-```text
-✓ ADMIN can update Hero image
-✓ USER cannot update Hero image
-✓ STORE_MANAGER cannot update Hero image
-✓ unauthenticated user cannot update Hero image
-✓ invalid image is rejected
-✓ failed upload does not destroy existing Hero
-✓ homepage uses stored Hero image
-✓ homepage fallback works when no image exists
-✓ successful update triggers required cache/path revalidation
-```
-
-Do not break existing tests.
-
----
-
-# 16. Migration / Seed
-
-If a new database model or field is required:
-
-- create the proper Prisma migration
-- update Prisma client usage
-- follow existing migration conventions
-- create/initialize the singleton settings record if necessary
-
-Do not manually edit the production database.
-
-If the project uses a seed mechanism for global settings, integrate with it appropriately.
-
----
-
-# 17. Security Review After Implementation
-
-After implementation, explicitly inspect the mutation endpoint/server action for:
-
-- IDOR
-- missing authentication
-- missing role verification
-- unauthorized file replacement
-- unsafe file types
-- oversized uploads
-- malicious filenames
-- leaking storage credentials
-- client-controlled `updatedBy`
-- client-controlled ownership
-- bypassing the Admin UI
-
-Never trust `userId`, `role`, or permission information supplied by the browser.
-
-Use the authenticated server-side identity.
-
----
-
-# 18. Do Not Over-Engineer
-
-This is an admin-managed Hero image, not a full CMS.
-
-Do NOT add:
-
-- version history
-- image galleries
-- scheduled banners
-- drag-and-drop page builders
-- multiple Hero campaigns
-- Redis
-- a new API layer
-- a new state management library
-- microservices
-
-unless the existing project already requires them.
-
-Keep the implementation small, secure, testable, and consistent with the current Chaatwala architecture.
-
----
-
-# 19. Required Workflow
-
-Follow this workflow exactly:
-
-### Phase 1 — Inspect
-
-Analyze the existing codebase and identify:
-
-- current homepage Hero implementation
-- current admin structure
-- current RBAC
-- current image upload service
-- current database settings structure
-- current caching/revalidation
-- current testing patterns
-
-### Phase 2 — Plan
-
-Before editing, produce a short implementation plan listing:
-
-```text
-Files to create
-Files to modify
-Files to delete, if any
-Database changes
-Authorization changes
-Tests to add
-```
-
-Do not modify unrelated files.
-
-### Phase 3 — Implement
-
-Implement the feature using existing project patterns.
-
-### Phase 4 — Validate
-
-Run the relevant:
-
-```bash
-npm run lint
-npm run typecheck
-npm test
-npm run build
-```
-
-Use the project's actual scripts from `package.json`; do not assume these exact commands exist.
-
-### Phase 5 — Review
-
-Inspect the git diff.
-
-Look specifically for:
-
-- unnecessary changes
-- duplicated logic
-- security bypasses
-- client-side fetching
-- accidental permission expansion
-- broken routes
-- broken existing functionality
-
-### Phase 6 — Report
-
-At the end, report:
-
-```text
-IMPLEMENTED
-- ...
-
-FILES CHANGED
-- ...
-
-DATABASE
-- ...
-
-AUTHORIZATION
-- ...
-
-IMAGE STORAGE
-- ...
-
-CACHE/REVALIDATION
-- ...
-
-TESTS
-- ...
-
-VALIDATION
-- ...
-
-REMAINING ISSUES
-- ...
-```
-
-If something could not be safely implemented because the existing codebase differs from the expected architecture, stop and explain the exact issue rather than inventing an implementation.
-
----
-
-# Final Acceptance Criteria
-
-The feature is complete only when all of these are true:
-
-- [ ] Hero image is controlled from Admin Dashboard
-- [ ] Only ADMIN can modify it
-- [ ] Server-side authorization is enforced
-- [ ] Existing image-upload infrastructure is reused
-- [ ] Image is stored persistently
-- [ ] Homepage reads the stored image server-side
-- [ ] No unnecessary client-side Hero fetch exists
-- [ ] Homepage cache/revalidation works after replacement
-- [ ] Old image is safely cleaned up when appropriate
-- [ ] Existing image remains intact if replacement fails
-- [ ] Hero has a safe fallback
-- [ ] Hero image is optimized for LCP/CLS
-- [ ] Existing homepage design is preserved
-- [ ] Tests cover authorization and mutation behavior
-- [ ] Existing tests remain passing
-- [ ] TypeScript/lint/build validation passes
-- [ ] No unrelated architectural refactor is introduced
-
-**Important: Inspect first, then implement. Do not guess the current architecture.**
+- Customer layout owns `AppShell`, `CartProvider`, customer data, customer search, and floating cart.
+- Staff layout owns only the staff shell, permission-filtered navigation, and staff-specific state.
+- Auth layout mounts neither customer nor staff UI.
+- Staff routes must never mount cart, checkout, payment, customer-address, customer-profile, or customer-search providers/components.
+- Routes represent stable business capabilities, never individual roles. Adding a role must not create a new route tree, shell, or sidebar implementation.
+- Route folders contain only a server guard, server data composition, and a feature-screen import. Place screens, actions, queries, types, and business components in their owning `src/features/<feature>/` module.
+
+## RBAC and session design
+
+- Add a `workspace` classification to roles: `customer` or `staff`, plus immutable system-role metadata for protected roles.
+- Use `roleId` as the internal foreign-key and authorization identity. A role's human-readable `name` is a display label; use a protected immutable system key only where code must recognize `super_admin`.
+- Session/JWT contains `user.id`, role ID, role name, workspace, permissions, and `sessionVersion`.
+- Role and permission changes increment affected users’ `sessionVersion` so claims refresh on the next request.
+- Replace fixed role-name branches for general routing with workspace-based routing:
+  - customer → customer home/profile;
+  - staff → `/staff`.
+- Keep code-owned permission constants/catalogue; roles in the database receive assignments from that approved catalogue. Remove the fixed `RoleName` union and static role-to-permission mapping as runtime authority.
+- Render staff menu items and dashboard cards from a code registry containing safe path, label, icon, section, and required permissions.
+- Each staff page has a server guard for workspace plus capability. Each mutation/API additionally validates ownership or store scope.
+- Store scope is not a permission: use a staff-to-store access join model that supports multiple stores and an optional primary store; resolve those assignments server-side in every store-scoped query/mutation. Global store access requires an explicit capability.
+
+## Super Admin and direct staff provisioning
+
+- Seed/bootstrap the first Super Admin only through controlled configuration or deployment setup; never through public registration.
+- Protect Super Admin from deletion, self-demotion, self-role-editing, and removal of the final active Super Admin.
+- Keep one shared `User` model, but add a nullable globally-unique staff `username`, nullable unique contact/recovery `email`, and active/disabled account state. Customer registration still requires email.
+- Super Admin creates a staff account directly with name, unique username, password, staff role, optional contact email, and optional store scope. The selected role must belong to the staff workspace.
+- Hash staff passwords with bcrypt. Super Admin cannot read them after creation; the initial password remains valid until the staff member or Super Admin changes it.
+- Add a dedicated `/staff/sign-in` username/password route. Keep `/sign-in` email/password plus OAuth for customers only. Each sign-in path rejects the other workspace.
+- Public OAuth must not create, convert, or sign in staff accounts through a customer flow.
+- Super Admin resets staff passwords directly, increments `sessionVersion`, and creates an audit record. Contact email is optional and not required for staff recovery in v1.
+- Staff can change their own password from staff settings by supplying the current password; this also increments `sessionVersion` and is audited.
+- Remove ordinary customer-role assignment from the general Users screen. Customer management remains separate from staff provisioning.
+- Audit staff creation, disable/enable, password reset, role changes, permission changes, store assignment, and Super Admin actions.
+
+## Customer/staff isolation and performance
+
+- The cart issue is caused by customer-shell ownership: `AppShell` currently always mounts `CartProvider`, and the provider uses role-specific client cleanup. The target is provider isolation, not more pathname/role conditions.
+- Customer cart, checkout, payment, address, and customer-order API routes must reject authenticated staff sessions; guest cart behavior remains explicitly supported only where intended.
+- Staff pages must make no `/api/cart`, customer profile, customer search, checkout, or payment requests.
+- Avoid root-level database-backed session work for public rendering when the provider strategy permits; resolve/reuse session at protected boundaries.
+- Use JWT claims for navigation so staff page rendering does not query roles/menus per request.
+- Keep read-heavy public data behind existing cache tags; keep authorization and ownership checks fresh. Use connection pooling, indexes, and measurement before scale-driven changes.
+
+## Migration phases
+
+1. Add role workspace/system metadata, backfill the seeded customer role, seed protected `super_admin`, add staff username/optional contact email/active state, and replace the one-manager/one-store relation with multi-store staff access plus optional primary store.
+2. Extend NextAuth session/JWT and authorization helpers with workspace-aware checks, session invalidation, and safe workspace home redirects.
+3. Build `/staff` layout, permission registry, permission-filtered sidebar, and adaptive staff dashboard.
+4. Migrate existing admin/store-manager capabilities incrementally to canonical staff routes, retaining current server authorization and store-scope checks.
+5. Remove legacy admin/store-manager routes only after each canonical staff route is ready; do not leave redirect routes.
+6. Build Super Admin-only direct staff creation, disable/enable, password reset, role, permission, and store-assignment control-plane workflows.
+7. Move customer-only providers fully inside customer route boundaries; remove role-based cart hiding/clearing and enforce customer-workspace API access.
+8. Measure and optimize: public-route caching, protected-route session queries, browser request counts, bundle size, Prisma query count, and database connection usage.
+
+## Required validation
+
+- Customer accounts cannot access `/staff`; staff accounts cannot access customer-only protected routes or APIs.
+- Customer and staff sign-in reject the other workspace; staff authentication uses unique username/password only.
+- Staff creation validates normalized username uniqueness, bcrypt hashing, active state, staff workspace role, and optional contact-email uniqueness.
+- Existing customer identities cannot be created as staff in v1.
+- Only Super Admin can create/disable/enable staff, reset staff passwords, create staff roles, modify role permissions, or assign staff scope.
+- No removal/demotion of the final Super Admin; all control-plane actions are audited.
+- Staff navigation/dashboard renders only authorized entries; direct page/action/API requests without permission are denied.
+- Store-scoped staff users cannot read or mutate a different store’s resources.
+- Multi-store staff can access only assigned stores; global store access requires its explicit capability.
+- Staff self-service password changes require the current password, invalidate stale session claims, and create an audit record.
+- Role/permission changes refresh JWT claims through `sessionVersion`.
+- Legacy `/admin/*` and `/store-manager/*` route trees are removed after staff migration.
+- Admin/store/staff browser sessions have zero cart, checkout, payment, customer profile, or customer search requests and do not load customer-commerce UI.
+
+## Unified Food Catalog decision
+
+- Replace the separate `Dish`, `Drink`, and `Combo` models with one database-backed `Food` catalog. This is a development-phase clean break; legacy product tables, actions, static combo data, and old product-specific UI may be removed when their replacements are ready.
+- Staff manages foods, categories, and tags through the staff workspace. Customers only see filtered catalog results and use cart, checkout, and payment flows.
+- `FoodCategory` is staff-managed browse/filter taxonomy (for example: dish, drink, dessert, snack). A food may have multiple categories.
+- `FoodTag` is staff-managed labeling taxonomy (for example: popular, new, spicy). A food may have multiple tags.
+- Keep `FoodKind` code-owned, not staff-configurable: `STANDARD` or `COMBO`. It represents stable business behavior rather than a customer-facing category.
+- Every food has a staff-managed percentage discount, constrained to 0–100. Standard-food final price is its base price less its percentage discount.
+- A combo is a `Food` with `FoodKind.COMBO` and 2–3 `FoodBundleItem` component rows. Staff selects component foods; components cannot be duplicated and circular combos are rejected.
+- Combo base price is calculated server-side from the current final prices of its component foods. The combo's own percentage discount is then applied. Staff does not directly enter a combo base price.
+- Cart and order records snapshot the final calculated price at the time of addition/order creation; later price or discount changes never modify historic orders.
+- A combo is unavailable if it is globally unavailable, any component is globally unavailable, or any component is unavailable at the selected store. Store availability is generic per-food data, replacing legacy product-type inventory records.
+- Customer catalog pages remain globally filtered by `Food.isAvailable`; the existing checkout-store selection remains the final store-specific availability authority in this migration. A pre-catalog customer store selector is separate future work.
+- Staff capabilities stay code-owned permissions: `food:view`, `food:create`, `food:update`, `food:delete`, plus `food-category:manage` and `food-tag:manage` for taxonomy maintenance. Roles receive these permissions from the database.

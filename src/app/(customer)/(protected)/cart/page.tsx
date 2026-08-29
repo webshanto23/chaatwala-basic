@@ -6,111 +6,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProductImage } from "@/components/shared/ProductImage";
 import { useCart } from "@/features/cart/context";
-import { useAuth, useUserData } from "@/contexts/auth-context";
-import { useState, useEffect, useRef } from "react";
-import { toast } from "sonner";
-import dynamic from "next/dynamic";
-import { useStoreSelection } from "@/features/stores/use-store-selection";
-
-const AddressFormModal = dynamic(() => import("@/components/account/AddressFormModal").then(m => m.default), { ssr: false });
+import { useAuth } from "@/contexts/auth-context";
 
 export default function CartPage() {
   const router = useRouter();
   const { cart, total, updateQuantity, removeItem, isLoading } = useCart();
   const { auth } = useAuth();
-  const { addresses, isLoading: addressLoading, refresh } = useUserData();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
-  const [addressModalOpen, setAddressModalOpen] = useState(false);
-  const toastShown = useRef(false);
-  const {
-    stores, selectedStoreId, selectStore, storesError, isLoadingStores, retryStores,
-    storeInvalid, unavailableItems, validationError, isValidatingStore,
-  } = useStoreSelection({
-    userId: auth.userId,
-    isSessionLoading: auth.isLoading,
-    items: cart.items,
-  });
-
-  useEffect(() => {
-    if (!auth.isAuthenticated) return;
-    if (addresses.length === 0 && !toastShown.current) {
-      toastShown.current = true;
-      toast.info("Please add your address to start Ordering");
-    }
-  }, [auth.isAuthenticated, addresses]);
-
-  const defaultAddress = addresses.find((a) => a.isDefault) || addresses[0] || null;
-  const shippingAddress = selectedAddressId
-    ? addresses.find((a) => a.id === selectedAddressId) ?? defaultAddress
-    : defaultAddress;
-
-  const handleStoreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    selectStore(e.target.value || null);
-  };
 
   const handleProceedToPayment = async () => {
     if (!auth.isAuthenticated) {
       router.push("/sign-in?redirect=/cart");
       return;
     }
-
-    if (!shippingAddress) {
-      toast.error("Please add a shipping address before checkout");
-      setAddressModalOpen(true);
-      return;
-    }
-
-    if (!selectedStoreId) {
-      toast.error("Please select a store before checkout");
-      return;
-    }
-
-    if (storeInvalid || cart.items.length === 0) {
-      toast.error("Some items are unavailable at the selected store");
-      return;
-    }
-
-    setIsProcessing(true);
-    setError(null);
-    try {
-      const idempotencyKey = crypto.randomUUID();
-      const res = await fetch("/api/payment/initiate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Idempotency-Key": idempotencyKey,
-        },
-        body: JSON.stringify({
-          storeId: selectedStoreId,
-          addressId: shippingAddress.id,
-          shippingAddress: {
-            fullName: shippingAddress.fullName,
-            phone: shippingAddress.phone,
-            line1: shippingAddress.line1,
-            line2: shippingAddress.line2,
-            city: shippingAddress.city,
-            postalCode: shippingAddress.postalCode,
-            country: shippingAddress.country,
-          },
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to initiate payment");
-      }
-      const data = await res.json();
-      if (data.gatewayUrl) {
-        window.location.href = data.gatewayUrl;
-      } else {
-        router.push("/checkout");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-    } finally {
-      setIsProcessing(false);
-    }
+    router.push("/checkout");
   };
 
   if (isLoading) {
@@ -200,60 +108,6 @@ export default function CartPage() {
 
                 <Separator />
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Select Store</label>
-                  <select
-                    value={selectedStoreId ?? ""}
-                    onChange={handleStoreChange}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="">-- Choose a store --</option>
-                    {stores.map((store) => (
-                      <option key={store.id} value={store.id}>
-                        {store.name} — {store.address}
-                      </option>
-                    ))}
-                  </select>
-                  {isLoadingStores && <p className="text-sm text-muted-foreground">Loading stores...</p>}
-                  {storesError && <p className="text-sm text-destructive">{storesError} <Button variant="link" className="h-auto p-0" onClick={() => void retryStores()}>Retry</Button></p>}
-                </div>
-
-                {storeInvalid && (
-                  <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-                    {unavailableItems.map((item) => item.name).join(", ")} is Out of stock, Please wait or Select Another Store.
-                  </div>
-                )}
-                {validationError && <p className="text-sm text-destructive">{validationError}</p>}
-
-                {shippingAddress ? (
-                  <div
-                    className="rounded-xl border border-border/70 bg-muted/30 p-4 space-y-1 cursor-pointer"
-                    onClick={() => setAddressModalOpen(true)}
-                  >
-                    <p className="text-sm font-semibold text-foreground">Shipping Address</p>
-                    <p className="text-sm text-muted-foreground">{shippingAddress.fullName}</p>
-                    <p className="text-sm text-muted-foreground">{shippingAddress.phone}</p>
-                    <p className="text-sm text-muted-foreground">{shippingAddress.line1}</p>
-                    {shippingAddress.line2 && (
-                      <p className="text-sm text-muted-foreground">{shippingAddress.line2}</p>
-                    )}
-                    <p className="text-sm text-muted-foreground">
-                      {shippingAddress.city}, {shippingAddress.postalCode}
-                    </p>
-                  </div>
-                ) : (
-                  <div
-                    className="rounded-xl border border-dashed border-border/70 bg-muted/20 p-4 text-center cursor-pointer"
-                    onClick={() => setAddressModalOpen(true)}
-                  >
-                    <p className="text-sm text-muted-foreground">Please add your address to start Ordering</p>
-                  </div>
-                )}
-
-                {addressLoading && !shippingAddress && (
-                  <p className="text-sm text-muted-foreground">Loading address...</p>
-                )}
-
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Subtotal</span>
                   <span className="text-sm font-medium">৳ {total}</span>
@@ -271,34 +125,18 @@ export default function CartPage() {
                   <span>৳ {total + 50}</span>
                 </div>
 
-                {error && (
-                  <p className="text-sm text-red-500">{error}</p>
-                )}
-
                 <Button
                   className="w-full mt-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
                   onClick={handleProceedToPayment}
-                  disabled={isProcessing || cart.items.length === 0 || !shippingAddress || !selectedStoreId || storeInvalid || isLoadingStores || isValidatingStore || Boolean(storesError || validationError)}
+                  disabled={cart.items.length === 0}
                 >
-                  {isProcessing ? "Processing..." : "Proceed to Checkout"}
+                  Continue to Checkout
                 </Button>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-
-      {addressModalOpen && (
-        <AddressFormModal
-          address={shippingAddress ?? undefined}
-          onClose={() => setAddressModalOpen(false)}
-          onSaved={(address) => {
-            setSelectedAddressId(address.id);
-            setAddressModalOpen(false);
-            refresh();
-          }}
-        />
-      )}
     </>
   );
 }

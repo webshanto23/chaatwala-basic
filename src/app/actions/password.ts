@@ -8,6 +8,7 @@ import { sendVerificationEmail, sendPasswordResetEmail, sendSetPasswordEmail } f
 import { checkRateLimit } from "@/lib/rate-limit";
 import { forgotPasswordSchema, resetPasswordSchema, changePasswordSchema, setPasswordSchema } from "@/lib/validations/password";
 import { z } from "zod";
+import { logAction } from "@/app/actions/audit";
 
 const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 const VERIFY_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -26,7 +27,7 @@ export async function forgotPassword(formData: FormData) {
       where: { email: validated.email },
     });
 
-    if (!user) {
+    if (!user?.email) {
       return { success: true, message: "If an account exists, we sent a password reset email." };
     }
 
@@ -92,7 +93,7 @@ export async function resetPassword(formData: FormData) {
     await prisma.$transaction([
       prisma.user.update({
         where: { id: tokenRecord.userId },
-        data: { password: hashedPassword },
+        data: { password: hashedPassword, sessionVersion: { increment: 1 } },
       }),
       prisma.passwordResetToken.delete({ where: { id: tokenRecord.id } }),
     ]);
@@ -133,8 +134,9 @@ export async function changePassword(formData: FormData) {
     const hashedPassword = await bcrypt.hash(validated.newPassword, 12);
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { password: hashedPassword },
+      data: { password: hashedPassword, sessionVersion: { increment: 1 } },
     });
+    await logAction({ userId: session.user.id, action: "PASSWORD_CHANGE", entity: "User", entityId: session.user.id });
 
     return { success: true, message: "Password changed successfully." };
   } catch (err) {
@@ -198,7 +200,7 @@ export async function setPassword(formData: FormData) {
       where: { email: tokenRecord.identifier },
     });
 
-    if (!user) {
+    if (!user?.email) {
       return { success: false, error: "Invalid or expired link." };
     }
 
@@ -207,7 +209,7 @@ export async function setPassword(formData: FormData) {
     await prisma.$transaction([
       prisma.user.update({
         where: { id: user.id },
-        data: { password: hashedPassword },
+        data: { password: hashedPassword, sessionVersion: { increment: 1 } },
       }),
       prisma.verificationToken.deleteMany({
         where: { identifier: tokenRecord.identifier },
@@ -240,7 +242,7 @@ export async function sendEmailVerification() {
       select: { email: true, emailVerified: true },
     });
 
-    if (!user) {
+    if (!user?.email) {
       return { success: false, error: "User not found." };
     }
 

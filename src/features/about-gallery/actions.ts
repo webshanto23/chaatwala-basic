@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
-import { requireRole } from "@/lib/authorize";
+import { requireSuperAdmin } from "@/lib/authorize";
 import { uploadImage } from "@/lib/image-upload";
 import { logAction } from "@/app/actions/audit";
 
@@ -24,7 +24,7 @@ async function deleteStoredImage(deleteUrl: string | null | undefined, context: 
 }
 
 async function requireCurrentAdmin() {
-  const { authorized, session } = await requireRole("admin");
+  const { authorized, session } = await requireSuperAdmin();
   if (!authorized || !session?.user) return null;
   return prisma.user.findUnique({ where: { id: session.user.id }, select: { id: true } });
 }
@@ -75,7 +75,7 @@ export async function uploadGalleryImage(formData: FormData): Promise<{ success:
   }
 
   revalidatePath("/about");
-  revalidatePath("/admin/about");
+  revalidatePath("/staff/content/about");
   revalidateTag("about-gallery", "default");
   return { success: true };
 }
@@ -101,7 +101,7 @@ export async function deleteGalleryImage(id: string): Promise<{ success: true } 
     console.error("Gallery image deletion audit logging failed", error);
   }
   revalidatePath("/about");
-  revalidatePath("/admin/about");
+  revalidatePath("/staff/content/about");
   revalidateTag("about-gallery", "default");
   await deleteStoredImage(galleryImage.imageDeleteUrl, "after database deletion");
 

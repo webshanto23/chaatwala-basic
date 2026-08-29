@@ -11,7 +11,6 @@ export type FoodItem = {
   rating: number;
   image: string;
   detail: string;
-  type: "dish" | "drink";
   tag?: "spicy" | "popular" | "new";
 };
 
@@ -42,7 +41,7 @@ export function SignatureSection({ title, items }: SignatureSectionProps) {
             size="sm"
             className="rounded-full border border-primary/15 bg-card/80 text-primary shadow-sm hover:bg-card"
           >
-            <Link href="products/dishes">View All</Link>
+            <Link href="/products">View All</Link>
           </Button>
         </div>
 
@@ -59,8 +58,8 @@ export function SignatureSection({ title, items }: SignatureSectionProps) {
               detail={item.detail}
               rating={item.rating}
               tag={item.tag}
-              productType={item.type}
-              href={`/products/${item.type === "dish" ? "dishes" : "drinks"}/${item.id}`}
+              productType="food"
+              href={`/products/${item.id}`}
             />
           ))}
         </div>
